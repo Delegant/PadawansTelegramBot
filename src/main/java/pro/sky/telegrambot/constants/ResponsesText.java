@@ -2,7 +2,7 @@ package pro.sky.telegrambot.constants;
 
 import java.util.ResourceBundle;
 
-public class ResponseText {
+public class ResponsesText {
     private static final ResourceBundle bundle = ResourceBundle.getBundle("default");
     public static final String START_TEXT = bundle.getString("START_TEXT");
     public static final String INFO_TEXT = bundle.getString("INFO_TEXT");
