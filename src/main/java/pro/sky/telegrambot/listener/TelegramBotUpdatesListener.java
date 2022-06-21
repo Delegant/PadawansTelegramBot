@@ -13,6 +13,9 @@ import pro.sky.telegrambot.service.MenuService;
 import javax.annotation.PostConstruct;
 import java.util.List;
 
+import static pro.sky.telegrambot.constants.ButtonsText.MAIN_MENU;
+import static pro.sky.telegrambot.constants.ResponsesText.START_TEXT;
+
 @Service
 public class TelegramBotUpdatesListener implements UpdatesListener {
 
@@ -38,10 +41,19 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         updates.forEach(update -> {
             logger.info("Processing update: {}", update);
 
+            Message message = update.message();
+            if (message.text().equals("/start")) {
+                telegramBot.execute(menuService.menuLoader(message, START_TEXT, MAIN_MENU));
+            }
+
 
 
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
 
+
+    // метод handleCallBack()
+    //switch(callBack)
+    // case: menuLoader()
 }

@@ -1,5 +1,6 @@
 package pro.sky.telegrambot.constants;
 
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class ButtonsText {
@@ -13,4 +14,5 @@ public class ButtonsText {
     public static final String HOW_GET_DOG = bundle.getString("HOW_GET_DOG_BUTTON");
     public static final String SENT_REPORT = bundle.getString("SENT_REPORT_BUTTON");
     public static final String CALL_VOLUNTEER = bundle.getString("CALL_VOLUNTEER_BUTTON");
+    public static final List<String> MAIN_MENU = List.of(INFO, ABOUT_US, CONTACTS, CALL_VOLUNTEER);
 }
