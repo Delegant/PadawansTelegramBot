@@ -5,4 +5,6 @@ import pro.sky.telegrambot.model.User;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
+    User findUserById(Long id);
+
 }
