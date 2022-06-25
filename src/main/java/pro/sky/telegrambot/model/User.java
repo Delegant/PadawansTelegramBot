@@ -7,7 +7,7 @@ import java.util.Objects;
 @Entity(name = "users")
 public class User {
 
-    private enum Role {
+    public enum Role {
         USER,
         PARENT,
         VOLUNTEER,
@@ -31,10 +31,9 @@ public class User {
     public User() {
     }
 
-    public User(Long chatId, String name, Role role) {
+    public User(Long chatId, String name) {
         this.chatId = chatId;
         this.name = name;
-        this.role = role;
     }
 
     public Long getId() {

@@ -5,6 +5,8 @@ import pro.sky.telegrambot.model.User;
 import pro.sky.telegrambot.repository.UserRepository;
 import pro.sky.telegrambot.service.RepoService;
 
+import java.util.Optional;
+
 @Service
 public class UserRepoService implements RepoService {
 
@@ -19,13 +21,15 @@ public class UserRepoService implements RepoService {
         userRepository.save(user);
     }
 
-    public void setRole(Long chatId) {
-       User user = getUserById(chatId);
-       user.setRole(User.Role.USER);
+    public void markRole(Long chatId, User.Role role) {
+        getUserById(chatId).ifPresent(u -> {
+            u.setRole(role);
+            userRepository.save(u);
+        });
     }
 
-    public User getUserById(Long chatId){
-        return userRepository.getByChatId(chatId);
+    public Optional<User> getUserById(Long chatId){
+        return userRepository.findUserByChatId(chatId);
     }
 
 }
