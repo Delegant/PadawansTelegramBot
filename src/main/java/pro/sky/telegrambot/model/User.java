@@ -1,9 +1,12 @@
 package pro.sky.telegrambot.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import javax.persistence.*;
 import java.util.Collection;
 import java.util.Objects;
 
+@Schema(description = "Пользователь")
 @Entity(name = "users")
 public class User {
 
@@ -14,17 +17,22 @@ public class User {
         ADMIN,
     }
 
+    @Schema(description = "Идентификатор пользователя")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long Id;
 
+    @Schema(description = "Идентификатор пользователя в Телеграм")
     private Long chatId;
 
+    @Schema(description = "Имя пользователя")
     private String name;
 
+    @Schema(description = "'Роль' пользователя")
     @Enumerated(EnumType.STRING)
     private Role role = Role.USER;
 
+    @Schema(description = "Отчеты пользователя")
     @OneToMany(mappedBy = "user")
     private Collection<Report> reports;
 

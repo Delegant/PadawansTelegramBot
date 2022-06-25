@@ -133,7 +133,4 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     }
 
-    // метод handleCallBack()
-    //switch(callBack)
-    // case: menuLoader()
 }
