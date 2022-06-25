@@ -15,4 +15,25 @@ public class ButtonsText {
     public static final String SENT_REPORT = bundle.getString("SENT_REPORT_BUTTON");
     public static final String CALL_VOLUNTEER = bundle.getString("CALL_VOLUNTEER_BUTTON");
     public static final List<String> MAIN_MENU = List.of(INFO, ABOUT_US, CONTACTS, CALL_VOLUNTEER);
+
+
+
+    /** The list of buttons for menu "Consultation"*/
+
+    public static final String MEETING_RULES = bundle.getString("MEETING_RULES_BUTTON");
+    public static final String DOC_LIST = bundle.getString("DOC_LIST_BUTTON");
+    public static final String TRANSPORT_RECOMMENDATION = bundle.getString("TRANSPORT_RECOMMENDATION_BUTTON");
+    public static final String HOUSE_PUPPY = bundle.getString("HOUSE_PUPPY_BUTTON");
+    public static final String HOUSE_OLD = bundle.getString("HOUSE_OLD_BUTTON");
+    public static final String HOUSE_DIS = bundle.getString("HOUSE_DIS_BUTTON");
+    public static final String SPEC_RECOMMENDATION = bundle.getString("SPEC_RECOMMENDATION_BUTTON");
+    public static final String SPEC_FEEDBACK = bundle.getString("SPEC_FEEDBACK_BUTTON");
+    public static final String REJECT_PET = bundle.getString("REJECT_PET_BUTTON");
+    public static final List<String> CONSULT_MENU = List.of(MEETING_RULES, DOC_LIST, TRANSPORT_RECOMMENDATION, HOUSE_PUPPY,HOUSE_OLD, HOUSE_DIS, SPEC_RECOMMENDATION,SPEC_FEEDBACK, REJECT_PET);
+
+
+    /** The text data is executed by consult menu buttons  */
+
+
+
 }
