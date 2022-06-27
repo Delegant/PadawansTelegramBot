@@ -37,3 +37,8 @@ create table pictures
 
 ALTER TABLE users
     ADD CONSTRAINT UQ_users_chatId UNIQUE(chatId);
+
+-- changeset anton:5
+
+ALTER TABLE users
+    rename column chatId to chat_id

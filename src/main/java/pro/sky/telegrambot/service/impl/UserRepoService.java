@@ -16,16 +16,19 @@ public class UserRepoService implements RepoService {
         this.userRepository = userRepository;
     }
 
-    public void createUser(Long chatId, String name) {
+    public User createUser(Long chatId, String name) {
         User user = new User(chatId, name);
-        userRepository.save(user);
+        return userRepository.save(user);
     }
 
-    public void markRole(Long chatId, User.Role role) {
-        getUserById(chatId).ifPresent(u -> {
-            u.setRole(role);
-            userRepository.save(u);
-        });
+    public User markRole(Long chatId, User.Role role) {
+        Optional<User> user = getUserById(chatId);
+        User result = null;
+        if (user.isPresent()) {
+            user.get().setRole(role);
+            result = userRepository.save(user.get());
+        }
+        return result;
     }
 
     public Optional<User> getUserById(Long chatId){

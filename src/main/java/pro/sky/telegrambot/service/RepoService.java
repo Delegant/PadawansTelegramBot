@@ -6,9 +6,9 @@ import java.util.Optional;
 
 public interface RepoService {
 
-    void createUser(Long chatId, String name);
+    User createUser(Long chatId, String name);
 
-    void markRole(Long chatId, User.Role role);
+    User markRole(Long chatId, User.Role role);
 
     Optional<User> getUserById(Long chatId);
 
