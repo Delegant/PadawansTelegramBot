@@ -32,3 +32,13 @@ create table pictures
     data        bytea NOT NULL,
     report_id   bigint NOT NULL REFERENCES reports(id)
 );
+
+-- changeset anton:4
+
+ALTER TABLE users
+    ADD CONSTRAINT UQ_users_chatId UNIQUE(chatId);
+
+-- changeset anton:5
+
+ALTER TABLE users
+    rename column chatId to chat_id
