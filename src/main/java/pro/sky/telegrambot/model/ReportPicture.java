@@ -1,22 +1,30 @@
 package pro.sky.telegrambot.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import javax.persistence.*;
 import java.util.Arrays;
 import java.util.Objects;
 
+@Schema(description = "Фотография для отчета")
 @Entity(name = "pictures")
 public class ReportPicture {
 
+    @Schema(description = "Идентификатор фотографии для отчета")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Schema(description = "Размер файла")
     private long fileSize;
 
+    @Schema(description = "Тип файла")
     private String mediaType;
 
+    @Schema(description = "Массив байтов - файл в байтовом виде")
     private byte[] data;
 
+    @Schema(description = "Идентификатор отчета к которому привязана фотография")
     @ManyToOne
     @JoinColumn(name = "report_id")
     private Report report;

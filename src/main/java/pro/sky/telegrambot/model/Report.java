@@ -1,10 +1,13 @@
 package pro.sky.telegrambot.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Objects;
 
+@Schema(description = "Отчет пользователя")
 @Entity(name = "reports")
 public class Report {
 
@@ -13,23 +16,30 @@ public class Report {
         UPDATED,
     }
 
+    @Schema(description = "Идентификатор отчета")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Schema(description = "Текст отчета")
     private String reportText;
 
+    @Schema(description = "Дата отчета")
     private LocalDateTime reportDate;
 
+    @Schema(description = "Дата обновления отчета")
     private LocalDateTime reportUpdateDate;
 
+    @Schema(description = "Пользователь - автор отчета")
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Schema(description = "Статус отчета: основной/дополненный")
     @Enumerated(EnumType.STRING)
     private Status status = Status.MAIN;
 
+    @Schema(description = "Фотографии для отчета")
     @OneToMany(mappedBy = "report")
     private Collection<ReportPicture> picturesOfReport;
 
