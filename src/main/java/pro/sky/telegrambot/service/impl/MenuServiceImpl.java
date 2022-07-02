@@ -25,9 +25,25 @@ public class MenuServiceImpl implements MenuService {
      */
     private InlineKeyboardMarkup keyboardFactory(List<String> list) {
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-        for (String s : list) {
-            inlineKeyboardMarkup.addRow(new InlineKeyboardButton(s).callbackData(s));
+        if (list.size() <= 5) {
+            for (int i = 0; i < list.size(); i++) {
+                inlineKeyboardMarkup.addRow(new InlineKeyboardButton(list.get(i)).callbackData(list.get(i)));
+            }
         }
+        if (list.size() > 5 && list.size() % 2 == 0) {
+            for (int i = 0; i < list.size(); i = i + 2) {
+                inlineKeyboardMarkup.addRow(new InlineKeyboardButton(list.get(i)).callbackData(list.get(i)),
+                        new InlineKeyboardButton(list.get(i+1)).callbackData(list.get(i+1)));
+            }
+        }
+        if (list.size() > 5 && list.size() % 2 != 0) {
+            for (int i = 0; i < list.size()-1; i = i + 2) {
+                inlineKeyboardMarkup.addRow(new InlineKeyboardButton(list.get(i)).callbackData(list.get(i)), new InlineKeyboardButton(list.get(i+1)).callbackData(list.get(i+1)));
+            }
+            inlineKeyboardMarkup.addRow(new InlineKeyboardButton(list.get(list.size()-1)).callbackData(list.get(list.size()-1)));
+        }
+
+
         return inlineKeyboardMarkup;
     }
 
@@ -61,4 +77,6 @@ public class MenuServiceImpl implements MenuService {
         return new SendMessage(update.callbackQuery().message().chat().id(), text)
                 .replyMarkup(keyboard);
     }
+
+
 }
