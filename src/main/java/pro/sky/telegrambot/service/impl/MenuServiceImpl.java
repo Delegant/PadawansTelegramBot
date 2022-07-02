@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.service.MenuService;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Класс, создающий сообщения с inline-клавиатурой
@@ -27,20 +28,20 @@ public class MenuServiceImpl implements MenuService {
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
         if (list.size() <= 5) {
             for (int i = 0; i < list.size(); i++) {
-                inlineKeyboardMarkup.addRow(new InlineKeyboardButton(list.get(i)).callbackData(list.get(i)));
+                inlineKeyboardMarkup.addRow(new InlineKeyboardButton(list.get(i)).callbackData(getCallBackData(list.get(i))));
             }
         }
         if (list.size() > 5 && list.size() % 2 == 0) {
             for (int i = 0; i < list.size(); i = i + 2) {
-                inlineKeyboardMarkup.addRow(new InlineKeyboardButton(list.get(i)).callbackData(list.get(i)),
-                        new InlineKeyboardButton(list.get(i+1)).callbackData(list.get(i+1)));
+                inlineKeyboardMarkup.addRow(new InlineKeyboardButton(list.get(i)).callbackData(getCallBackData(list.get(i))),
+                        new InlineKeyboardButton(list.get(i+1)).callbackData(getCallBackData(list.get(i+1))));
             }
         }
         if (list.size() > 5 && list.size() % 2 != 0) {
             for (int i = 0; i < list.size()-1; i = i + 2) {
-                inlineKeyboardMarkup.addRow(new InlineKeyboardButton(list.get(i)).callbackData(list.get(i)), new InlineKeyboardButton(list.get(i+1)).callbackData(list.get(i+1)));
+                inlineKeyboardMarkup.addRow(new InlineKeyboardButton(list.get(i)).callbackData(getCallBackData(list.get(i))), new InlineKeyboardButton(list.get(i+1)).callbackData(list.get(i+1)));
             }
-            inlineKeyboardMarkup.addRow(new InlineKeyboardButton(list.get(list.size()-1)).callbackData(list.get(list.size()-1)));
+            inlineKeyboardMarkup.addRow(new InlineKeyboardButton(list.get(list.size()-1)).callbackData(getCallBackData(list.get(list.size()-1))));
         }
 
 
@@ -78,5 +79,9 @@ public class MenuServiceImpl implements MenuService {
                 .replyMarkup(keyboard);
     }
 
+    public String getCallBackData(String message){
+      int hash = Objects.hash(message);
+      return Integer.toString(hash);
+    }
 
 }

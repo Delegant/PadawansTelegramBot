@@ -10,5 +10,6 @@ public interface MenuService {
 
     SendMessage menuLoader (Message message, String text, List<String> listButtons);
     SendMessage menuLoader (Update update, String text, List<String> listButtons);
+    String getCallBackData(String message);
 
 }
