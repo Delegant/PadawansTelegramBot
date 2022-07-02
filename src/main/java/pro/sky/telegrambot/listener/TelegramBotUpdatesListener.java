@@ -76,45 +76,45 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     public void handleUserMessages(Update update) {
         String action = update.callbackQuery().data();
         switch (action) {
-            case (INFO_CASE):
+            case INFO_CASE:
                 logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
                 telegramBot.execute(menuService.menuLoader(update, INFO_TEXT,  INFO_MENU));
                 break;
-            case (ABOUT_US_CASE):
+            case ABOUT_US_CASE:
                 logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
                 telegramBot.execute(menuService.menuLoader(update, ABOUT_US, BACK_TO_MAIN_MENU));
                 break;
-            case (SAFETY_REGULATIONS_CASE):
+            case SAFETY_REGULATIONS_CASE:
                 logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
                 telegramBot.execute(menuService.menuLoader(update, SAFETY_REGULATIONS, BACK_TO_MAIN_MENU));
                 break;
-            case (CONTACTS_CASE):
+            case CONTACTS_CASE:
                 logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
                 telegramBot.execute(new SendLocation(update.callbackQuery().message().chat().id(),51.165973F, 71.403983F));
                 telegramBot.execute(new SendPhoto(update.callbackQuery().message().chat().id(), address));
                 telegramBot.execute(menuService.menuLoader(update, SHELTER_CONTACTS, BACK_TO_MAIN_MENU));
                 break;
-            case (SHARE_CONTACTS_CASE):
+            case SHARE_CONTACTS_CASE:
                 logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
                 telegramBot.execute(menuService.menuLoader(update, SHARE_CONTACT, BACK_TO_MAIN_MENU));
                 break;
-            case (RECOMMENDATIONS_CASE):
+            case HOW_TO_GET_DOG_CASE:
                 logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
-                telegramBot.execute(menuService.menuLoader(update, DEFAULT_MENU_TEXT, RECOMMENDATIONS_MENU));
+                telegramBot.execute(menuService.menuLoader(update, DEFAULT_MENU_TEXT, HOW_TO_GET_DOG_MENU));
                 break;
-            case (PROCEDURE_MENU_CASE):
+            case PROCEDURE_MENU_CASE:
                 logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
                 telegramBot.execute(menuService.menuLoader(update, DEFAULT_MENU_TEXT, PROCEDURE_MENU));
                 break;
-            case (DOG_HANDLERS_MENU_CASE):
+            case DOG_HANDLERS_MENU_CASE:
                 logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
                 telegramBot.execute(menuService.menuLoader(update, DEFAULT_MENU_TEXT, DOG_HANDLERS_MENU));
                 break;
-            case (MAKING_HOUSE_MENU_CASE):
+            case MAKING_HOUSE_MENU_CASE:
                 logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
                 telegramBot.execute(menuService.menuLoader(update, DEFAULT_MENU_TEXT, MAKING_HOUSE_MENU));
                 break;
-            case (BACK_TO_MAIN_MENU_CASE):
+            case BACK_TO_MAIN_MENU_CASE:
                 logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
                 telegramBot.execute(menuService.menuLoader(update, DEFAULT_MENU_TEXT, MAIN_MENU));
                 break;

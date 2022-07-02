@@ -11,7 +11,6 @@ public class ResponsesText {
     public static final String SHELTER_CONTACTS = bundle.getString("SHELTER_CONTACTS");
     public static final String SAFETY_REGULATIONS = bundle.getString("SAFETY_REGULATIONS");
     public static final String SHARE_CONTACT = bundle.getString("SHARE_CONTACT");
-    public static final String RECOMMENDATIONS = bundle.getString("RECOMMENDATIONS");
 
     /** Messages for "Consultaion" menu*/
 
