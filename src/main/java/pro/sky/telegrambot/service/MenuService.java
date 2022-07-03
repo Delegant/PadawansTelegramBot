@@ -3,16 +3,21 @@ package pro.sky.telegrambot.service;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.request.EditMessageText;
+import com.pengrad.telegrambot.request.SendLocation;
 import com.pengrad.telegrambot.request.SendMessage;
+import com.pengrad.telegrambot.request.SendPhoto;
 
+import java.io.File;
 import java.util.List;
 
 public interface MenuService {
 
     SendMessage menuLoader (Message message, String text, List<String> listButtons);
     SendMessage menuLoader (Update update, String text, List<String> listButtons);
-    EditMessageText editMenu (Update update, String text, List<String> listButtons);
+    EditMessageText editMenuLoader(Update update, String text, List<String> listButtons);
+    SendPhoto sendPhotoLoader (Update update, File address);
+    SendLocation sendLocationLoader(Update update, Float latitude, Float longitude);
 
-    String hashFromButton(String message);
+    String getHashFromButton(String message);
 
 }
