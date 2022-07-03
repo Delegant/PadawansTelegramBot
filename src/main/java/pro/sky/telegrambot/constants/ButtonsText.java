@@ -20,12 +20,15 @@ public class ButtonsText {
     public static final String MEETING_WITH_DOG_BUTTON = bundle.getString("MEETING_WITH_DOG_BUTTON");
     public static final String LIST_OF_DOCUMENTS_BUTTON = bundle.getString("LIST_OF_DOCUMENTS_BUTTON");
     public static final String HOW_TO_CARRY_ANIMAL_BUTTON = bundle.getString("HOW_TO_CARRY_ANIMAL_BUTTON");
-    public static final String MAKING_HOUSE_FOR_PUPPY_BUTTON = bundle.getString("MAKING_HOUSE_FOR_PUPPY_BUTTON");
-    public static final String MAKING_HOUSE_FOR_DOG_BUTTON = bundle.getString("MAKING_HOUSE_FOR_DOG_BUTTON");
-    public static final String MAKING_HOUSE_FOR_DOG_WITH_DISABILITIES_BUTTON = bundle.getString("MAKING_HOUSE_FOR_DOG_WITH_DISABILITIES_BUTTON");
+    public static final String MAKING_HOUSE_BUTTON = bundle.getString("MAKING_HOUSE_BUTTON");
     public static final String DOG_HANDLER_ADVICES_BUTTON = bundle.getString("DOG_HANDLER_ADVICES_BUTTON");
     public static final String DOG_HANDLERS_BUTTON = bundle.getString("DOG_HANDLERS_BUTTON");
     public static final String DENY_LIST_BUTTON = bundle.getString("DENY_LIST_BUTTON");
+
+    public static final String FOR_PUPPY_BUTTON = bundle.getString("FOR_PUPPY_BUTTON");
+    public static final String FOR_DOG_BUTTON = bundle.getString("FOR_DOG_BUTTON");
+    public static final String FOR_DOG_WITH_DISABILITIES_BUTTON = bundle.getString("FOR_DOG_WITH_DISABILITIES_BUTTON");
+
 
     public static final List<String> BACK_TO_MAIN_MENU = List.of(
             BACK_TO_MAIN_MENU_BUTTON
@@ -34,7 +37,6 @@ public class ButtonsText {
    public static final List<String> MAIN_MENU = List.of(
            INFO_BUTTON,
            HOW_TO_GET_DOG_BUTTON,
-           CONTACTS_BUTTON,
            SEND_REPORT_BUTTON,
            CALL_VOLUNTEER_BUTTON
    );
@@ -52,11 +54,17 @@ public class ButtonsText {
             MEETING_WITH_DOG_BUTTON,
             LIST_OF_DOCUMENTS_BUTTON,
             HOW_TO_CARRY_ANIMAL_BUTTON,
-            MAKING_HOUSE_FOR_PUPPY_BUTTON,
-            MAKING_HOUSE_FOR_DOG_BUTTON
-  //          MAKING_HOUSE_FOR_DOG_WITH_DISABILITIES_BUTTON,
-  //          DOG_HANDLER_ADVICES_BUTTON,
- //           DOG_HANDLERS_BUTTON,
- //           DENY_LIST_BUTTON
+            MAKING_HOUSE_BUTTON,
+            DOG_HANDLER_ADVICES_BUTTON,
+            DOG_HANDLERS_BUTTON,
+            DENY_LIST_BUTTON,
+            BACK_TO_MAIN_MENU_BUTTON
    );
+
+    public static final List<String> MAKING_HOUSE_MENU = List.of(
+            FOR_PUPPY_BUTTON,
+            FOR_DOG_BUTTON,
+            FOR_DOG_WITH_DISABILITIES_BUTTON,
+            BACK_TO_MAIN_MENU_BUTTON
+    );
 }
