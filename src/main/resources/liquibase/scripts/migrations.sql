@@ -41,4 +41,53 @@ ALTER TABLE users
 -- changeset anton:5
 
 ALTER TABLE users
-    rename column chatId to chat_id
+    rename column chatId to chat_id;
+
+--changeset algmironov:6
+
+ALTER TABLE reports
+    rename column reportDate to report_date;
+
+ALTER TABLE reports
+    rename column reportText to report_text;
+
+ALTER TABLE reports
+    rename column reportUpdateDate to report_update_date;
+
+--changeset algmironov:7
+
+ALTER TABLE pictures
+    rename column fileSize to file_size;
+
+ALTER TABLE pictures
+    rename column mediaType to media_type;
+
+-- changeset algmironov:8
+CREATE TABLE pictureNames
+(
+    id                  SERIAL NOT NULL PRIMARY KEY,
+    file_name           TEXT,
+    report_id           bigint NOT NULL REFERENCES reports(id)
+
+);
+
+-- changeset algmironov:9
+ALTER TABLE pictureNames
+    ADD CONSTRAINT UQ_picturenames_file_name UNIQUE(file_name);
+
+ALTER TABLE reports
+    add column picture_names TEXT REFERENCES pictureNames(file_name);
+
+-- changeset algmironov:10
+ALTER TABLE pictureNames
+    rename column file_name to filename;
+
+-- changeset algmironov:11
+ALTER TABLE pictures
+    ADD COLUMN file_path TEXT;
+
+-- changeset algmironov:12
+ALTER TABLE pictures
+    ADD CONSTRAINT UQ_file_path_name UNIQUE(file_path);
+
+

@@ -12,7 +12,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.constants.ResponsesText;
+import pro.sky.telegrambot.model.User;
 import pro.sky.telegrambot.service.MenuService;
+import pro.sky.telegrambot.service.impl.UserRepoService;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
@@ -39,9 +41,12 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     private final MenuService menuService;
 
-    public TelegramBotUpdatesListener(TelegramBot telegramBot, MenuService menuService) {
+    private final UserRepoService repoService;
+
+    public TelegramBotUpdatesListener(TelegramBot telegramBot, MenuService menuService, UserRepoService repoService) {
         this.telegramBot = telegramBot;
         this.menuService = menuService;
+        this.repoService = repoService;
     }
 
     @PostConstruct
@@ -53,20 +58,45 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         return update.callbackQuery() != null;
     }
 
+    private User.Role checkUser(Update update) {
+        User botUser = null;
+        if (hasCallbackQuery(update)) {
+            botUser = new User(update.callbackQuery().message().chat().id(),
+                    update.callbackQuery().message().chat().lastName() + " " + update.callbackQuery().message().chat().firstName());
+        } else {
+            botUser = new User(update.message().chat().id(),
+                    update.message().chat().lastName() + " " + update.message().chat().firstName());
+        }
+        if (repoService.getUserById(botUser.getChatId()).isEmpty()) {
+            repoService.createUser(botUser.getChatId(), botUser.getName());
+        }
+        return botUser.getRole();
+    }
     @Override
     public int process(List<Update> updates) {
         updates.forEach(update -> {
             logger.info("Processing update: {}", update);
 
             Message message = update.message();
-
+            try {
                 if (!hasCallbackQuery(update)) {
-                    if (message.text().equals("/start")) {
+                    if (message.text() == null) {
+                        logger.info("!!!! file has been received by bot");
+                    } else if (message.text().equals("/start")) {
                         telegramBot.execute(menuService.menuLoader(message, START_TEXT, MAIN_MENU));
                     }
-                } else {
+                } else if(checkUser(update).equals(User.Role.USER)){
                     handleUserMessages(update);
+                } else if (checkUser(update).equals(User.Role.ADMIN)) {
+                    handleAdminMessages(update);
+                }else if (checkUser(update).equals(User.Role.VOLUNTEER)) {
+                    handleVolunteerMessages(update);
+                }else if (checkUser(update).equals(User.Role.PARENT)) {
+                    handleParentMessages(update);
                 }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
 
         });
@@ -121,15 +151,15 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         }
     }
 
-    public void handleParentMessages(Message message) {
+    public void handleParentMessages(Update update) {
 
     }
 
-    public void handleVolunteerMessages(Message message) {
+    public void handleVolunteerMessages(Update update) {
 
     }
 
-    public void handleAdminMessages(Message message) {
+    public void handleAdminMessages(Update update) {
 
     }
 
