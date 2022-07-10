@@ -1,10 +1,13 @@
 package pro.sky.telegrambot.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 
 @Schema(description = "Отчет пользователя")
@@ -40,8 +43,14 @@ public class Report {
     private Status status = Status.MAIN;
 
     @Schema(description = "Фотографии для отчета")
+    @JsonIgnore
     @OneToMany(mappedBy = "report")
     private Collection<ReportPicture> picturesOfReport;
+
+    @Schema(description = "Set названий картинок")
+    @JsonIgnore
+    @OneToMany(mappedBy = "filename")
+    private List<PictureName> pictureNames;
 
     public Report() {
     }
@@ -51,6 +60,14 @@ public class Report {
         this.reportText = reportText;
         this.reportDate = LocalDateTime.now();
         this.status = status;
+    }
+
+    public List<PictureName> getPictureNames() {
+        return pictureNames;
+    }
+
+    public void setPictureNames(List<PictureName> pictureNames) {
+        this.pictureNames = pictureNames;
     }
 
     public Long getId() {
@@ -131,7 +148,6 @@ public class Report {
                 ", reportUpdateDate=" + reportUpdateDate +
                 ", user=" + user +
                 ", status=" + status +
-                ", picturesOfReport=" + picturesOfReport +
                 '}';
     }
 }

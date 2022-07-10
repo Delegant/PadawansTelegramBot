@@ -1,5 +1,6 @@
 package pro.sky.telegrambot.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import javax.persistence.*;
@@ -18,6 +19,9 @@ public class ReportPicture {
     @Schema(description = "Размер файла")
     private long fileSize;
 
+    @Schema(description = "Путь к файлу (локальный)")
+    private String filePath;
+
     @Schema(description = "Тип файла")
     private String mediaType;
 
@@ -25,6 +29,7 @@ public class ReportPicture {
     private byte[] data;
 
     @Schema(description = "Идентификатор отчета к которому привязана фотография")
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "report_id")
     private Report report;
@@ -32,12 +37,21 @@ public class ReportPicture {
     public ReportPicture() {
     }
 
-    public ReportPicture(Long id, long fileSize, String mediaType, byte[] data, Report report) {
+    public ReportPicture(Long id, long fileSize, String filePath, String mediaType, byte[] data, Report report) {
         this.id = id;
         this.fileSize = fileSize;
+        this.filePath = filePath;
         this.mediaType = mediaType;
         this.data = data;
         this.report = report;
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
     }
 
     public Long getId() {
@@ -100,9 +114,9 @@ public class ReportPicture {
         return "ReportPicture{" +
                 "id=" + id +
                 ", fileSize=" + fileSize +
+                ", filePath='" + filePath + '\'' +
                 ", mediaType='" + mediaType + '\'' +
                 ", data=" + Arrays.toString(data) +
-                ", report=" + report +
                 '}';
     }
 }
