@@ -20,7 +20,7 @@ public class User {
     @Schema(description = "Идентификатор пользователя")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long Id;
+    private Long id;
 
     @Schema(description = "Идентификатор пользователя в Телеграм")
     private Long chatId;
@@ -45,11 +45,11 @@ public class User {
     }
 
     public Long getId() {
-        return Id;
+        return id;
     }
 
     public void setId(Long id) {
-        Id = id;
+        this.id = id;
     }
 
     public Long getChatId() {
@@ -81,7 +81,7 @@ public class User {
         if (this == o) return true;
         if (!(o instanceof User)) return false;
         User user = (User) o;
-        return getId().equals(user.getId()) && getChatId().equals(user.getChatId()) && getName().equals(user.getName()) && getRole() == user.getRole();
+        return Objects.equals(getId(), user.getId()) && getChatId().equals(user.getChatId()) && getName().equals(user.getName()) && getRole() == user.getRole();
     }
 
     @Override
@@ -92,7 +92,7 @@ public class User {
     @Override
     public String toString() {
         return "User{" +
-                "Id=" + Id +
+                "Id=" + id +
                 ", chatId=" + chatId +
                 ", name='" + name + '\'' +
                 ", role=" + role +

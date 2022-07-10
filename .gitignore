@@ -110,6 +110,7 @@ buildNumber.properties
 .project
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
-
 # End of https://www.toptal.com/developers/gitignore/api/intellij+iml,maven
 /src/main/resources/ReportPictures/
+*.jpg
+application-team.properties

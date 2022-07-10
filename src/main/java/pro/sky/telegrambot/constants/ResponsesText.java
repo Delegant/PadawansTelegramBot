@@ -12,7 +12,9 @@ public class ResponsesText {
     public static final String SAFETY_REGULATIONS = bundle.getString("SAFETY_REGULATIONS");
     public static final String SHARE_CONTACT = bundle.getString("SHARE_CONTACT");
 
-    /** Messages for "Consultaion" menu*/
+    /**
+     * Messages for "Consultaion" menu
+     */
 
     public static final String CONSULT_MENU_MESSAGE = bundle.getString("CONSULT_MENU");
     public static final String MEETING_WITH_DOG = bundle.getString("MEETING_WITH_DOG");
@@ -24,5 +26,5 @@ public class ResponsesText {
     public static final String DOG_HANDLER_ADVICES = bundle.getString("DOG_HANDLER_ADVICES");
     public static final String DOG_HANDLERS = bundle.getString("DOG_HANDLERS");
     public static final String DENY_LIST = bundle.getString("DENY_LIST");
-
+    public static final String ERROR_COMMAND_TEXT = bundle.getString("ERROR_COMMAND_TEXT");
 }

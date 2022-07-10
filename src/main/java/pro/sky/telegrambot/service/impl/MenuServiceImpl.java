@@ -3,11 +3,17 @@ package pro.sky.telegrambot.service.impl;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.request.*;
+import com.pengrad.telegrambot.model.request.ParseMode;
+import com.pengrad.telegrambot.request.EditMessageText;
+import com.pengrad.telegrambot.request.SendLocation;
 import com.pengrad.telegrambot.request.SendMessage;
+import com.pengrad.telegrambot.request.SendPhoto;
 import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.service.MenuService;
 
+import java.io.File;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Класс, создающий сообщения с inline-клавиатурой
@@ -28,25 +34,34 @@ public class MenuServiceImpl implements MenuService {
             throw new NullPointerException();
         }
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-        if (list.size() <= 5) {
+        if (list.size() <= 10) {
             for (int i = 0; i < list.size(); i++) {
-                inlineKeyboardMarkup.addRow(new InlineKeyboardButton(list.get(i)).callbackData(list.get(i)));
+                inlineKeyboardMarkup.addRow(
+                        new InlineKeyboardButton(list.get(i))
+                                .callbackData(getHashFromButton(list.get(i))));
             }
         }
-        if (list.size() > 5 && list.size() % 2 == 0) {
+        if (list.size() > 10 && list.size() % 2 == 0) {
             for (int i = 0; i < list.size(); i = i + 2) {
-                inlineKeyboardMarkup.addRow(new InlineKeyboardButton(list.get(i)).callbackData(list.get(i)),
-                        new InlineKeyboardButton(list.get(i+1)).callbackData(list.get(i+1)));
+                inlineKeyboardMarkup.addRow(
+                        new InlineKeyboardButton(list.get(i))
+                                .callbackData(getHashFromButton(list.get(i))),
+                        new InlineKeyboardButton(list.get(i + 1))
+                                .callbackData(getHashFromButton(list.get(i + 1))));
             }
         }
-        if (list.size() > 5 && list.size() % 2 != 0) {
-            for (int i = 0; i < list.size()-1; i = i + 2) {
-                inlineKeyboardMarkup.addRow(new InlineKeyboardButton(list.get(i)).callbackData(list.get(i)), new InlineKeyboardButton(list.get(i+1)).callbackData(list.get(i+1)));
+        if (list.size() > 10 && list.size() % 2 != 0) {
+            for (int i = 0; i < list.size() - 1; i = i + 2) {
+                inlineKeyboardMarkup.addRow(
+                        new InlineKeyboardButton(list.get(i))
+                                .callbackData(getHashFromButton(list.get(i))),
+                        new InlineKeyboardButton(list.get(i + 1))
+                                .callbackData(getHashFromButton(list.get(i + 1))));
             }
-            inlineKeyboardMarkup.addRow(new InlineKeyboardButton(list.get(list.size()-1)).callbackData(list.get(list.size()-1)));
+            inlineKeyboardMarkup.addRow(
+                    new InlineKeyboardButton(list.get(list.size() - 1))
+                            .callbackData(getHashFromButton(list.get(list.size() - 1))));
         }
-
-
         return inlineKeyboardMarkup;
     }
 
@@ -95,5 +110,30 @@ public class MenuServiceImpl implements MenuService {
         }
     }
 
+    @Override
+    public EditMessageText editMenuLoader(Update update, String text, List<String> listButtons) {
+        Message message = update.callbackQuery().message();
+        Object chatId = message.chat().id();
+        int messageId = message.messageId();
+        return new EditMessageText(chatId, messageId, text)
+                .parseMode(ParseMode.HTML)
+                .disableWebPagePreview(true)
+                .replyMarkup(keyboardFactory(listButtons));
+    }
+
+    @Override
+    public SendPhoto sendPhotoLoader(Update update, File address) {
+        return new SendPhoto(update.callbackQuery().message().chat().id(), address);
+    }
+
+    @Override
+    public SendLocation sendLocationLoader(Update update, Float latitude, Float longitude) {
+        return new SendLocation(update.callbackQuery().message().chat().id(), latitude, longitude);
+    }
+
+    public String getHashFromButton(String message) {
+        int hash = Objects.hash(message);
+        return Integer.toString(hash);
+    }
 
 }
