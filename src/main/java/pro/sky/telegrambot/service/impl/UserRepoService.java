@@ -21,18 +21,16 @@ public class UserRepoService implements RepoService {
         return userRepository.save(user);
     }
 
-    public User markRole(Long chatId, User.Role role) {
-        Optional<User> user = getUserById(chatId);
-        User result = null;
-        if (user.isPresent()) {
-            user.get().setRole(role);
-            result = userRepository.save(user.get());
+    public Optional<User> markRole(Long chatId, User.Role role) {
+        Optional<User> optionalUser = userRepository.findUserByChatId(chatId);
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            user.setRole(role);
+            return Optional.of(userRepository.save(user));
         }
-        return result;
+        return optionalUser;
     }
 
-    public Optional<User> getUserById(Long chatId){
-        return userRepository.findUserByChatId(chatId);
-    }
+
 
 }
