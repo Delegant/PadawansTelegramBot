@@ -1,4 +1,4 @@
-package pro.sky;
+package pro.sky.telegrambot.service.impl;
 
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
