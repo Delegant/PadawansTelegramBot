@@ -17,11 +17,13 @@ import pro.sky.telegrambot.repository.ReportsRepository;
 import pro.sky.telegrambot.repository.UserRepository;
 import pro.sky.telegrambot.service.ReportService;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotNull;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.nio.file.StandardOpenOption.CREATE_NEW;
 
@@ -99,6 +101,11 @@ public class ReportServiceImpl implements ReportService {
         return report;
     }
 
+    /**
+     * Метод, возвращающий расширение файла
+     * @param fileName имя файла
+     * @return строка с расширением файла
+     */
     private @NotNull String getExtensions(String fileName) {
         return fileName.substring(fileName.lastIndexOf(".") + 1);
     }
@@ -187,6 +194,29 @@ public class ReportServiceImpl implements ReportService {
 
         PageRequest pageRequest = PageRequest.of(0, 10);
         return picturesRepository.findAll(pageRequest).getContent();
+    }
+
+    /**
+     * Метод возвращает список названий файлов с фоттографиями, принадлежащими к отчету.
+     * @param reportId Идентификатор отчета
+     * @return список имен файлов фотографий
+     */
+    @Override
+    public List<String> getReportPicturesNames(Long reportId) {
+        Collection<PictureName> pictureNames = pictureNameRepository.findAllByReportId(reportId);
+        return pictureNames.stream().map(PictureName::getFilename).collect(Collectors.toList());
+    }
+
+    /**
+     * Метод, возвращающий фотографию по названию файла
+     * @param filename имя файла
+     * @return фотография
+     */
+    @Override
+    public ReportPicture getPictureFromStorageByFilename(String filename) {
+
+        ReportPicture picture =  Optional.of(picturesRepository.findByFilePathEndingWith(filename)).orElseThrow();
+        return picture;
     }
 
 }

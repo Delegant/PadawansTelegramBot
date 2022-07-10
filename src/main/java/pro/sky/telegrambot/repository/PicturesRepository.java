@@ -11,4 +11,8 @@ import java.util.Collection;
 public interface PicturesRepository extends JpaRepository<ReportPicture, Long> {
 
     Collection<ReportPicture> findAllByReport(Report report);
+
+    void findByFilePathContains(String filename);
+
+    ReportPicture findByFilePathEndingWith(String filename);
 }
