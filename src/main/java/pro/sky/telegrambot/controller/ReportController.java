@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import pro.sky.telegrambot.model.Report;
 import pro.sky.telegrambot.model.ReportPicture;
 import pro.sky.telegrambot.service.ReportService;
+import pro.sky.telegrambot.service.impl.ReportServiceImpl;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
@@ -58,8 +59,13 @@ public class ReportController {
         reportService.saveReport(userId, reportText);
     }
 
+    @Operation(
+            summary = "Сохранения нового отчета",
+            description = "Сохраняет новый отчет, принимая на вход объект - отчет"
+    )
     @PostMapping("/new")
     public ResponseEntity<Report> saveReport(@RequestBody @Parameter(description = "Отчет пользователя", required = true) Report report) {
+
         reportService.saveReport(report.getUser().getId(), report.getReportText());
         return ResponseEntity.ok(report);
 
@@ -104,6 +110,47 @@ public class ReportController {
     @GetMapping("/allPictures")
     public ResponseEntity<List<ReportPicture>> getAllPictures() {
         return ResponseEntity.ok(reportService.findAllPictures());
+    }
+
+
+    /**
+     * Эндпоинт возвращает список имен файлов фотографий, принадлежащих отчету
+     * @param reportId идентификатор отчета
+     * @return список имен файлов фотографий
+     * @see ReportServiceImpl#getReportPicturesNames
+     */
+    @Operation(
+            summary = "Вывод списка имен файлов фотографий",
+            description = "Выводит список имен файлов, котоsst были сохранены к отчету"
+    )
+    @GetMapping("/pictures/filenames/{reportId}")
+    public ResponseEntity<List<String>> getPicturesFilenames(@PathVariable @Parameter(description = "ID отчета") Long reportId) {
+        List<String> filenames = reportService.getReportPicturesNames(reportId);
+        return ResponseEntity.ok(filenames);
+    }
+
+
+    /**
+     * Эндпоинт, возвращающий фотографию по имени файла
+     * @param filename имя файла
+     * @param response ответ
+     * @throws IOException ошибка ввода/вывода
+     */
+    @Operation(
+            summary = "Вывод фотографии по имени файла",
+            description = "Выводит фотографию из локального хранилища по имени файла"
+    )
+    @GetMapping(value = "/{filename}/report-picture-from-storage")
+    public void downloadAvatar(@PathVariable String filename, HttpServletResponse response) throws IOException{
+        ReportPicture picture = reportService.getPictureFromStorageByFilename(filename);
+        Path path = Path.of(picture.getFilePath());
+        try(InputStream is = Files.newInputStream(path);
+            OutputStream os = response.getOutputStream()) {
+            response.setStatus(200);
+            response.setContentType(picture.getMediaType());
+            response.setContentLength((int) picture.getFileSize());
+            is.transferTo(os);
+        }
     }
 
 }

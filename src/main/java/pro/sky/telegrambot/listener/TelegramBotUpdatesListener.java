@@ -28,36 +28,83 @@ import static pro.sky.telegrambot.constants.ResponsesText.ABOUT_US;
 import static pro.sky.telegrambot.constants.ResponsesText.SAFETY_REGULATIONS;
 import static pro.sky.telegrambot.constants.ResponsesText.SHARE_CONTACT;
 
+/**
+ * Основной класс бота, где происходит обработка входящих обновлений из клиента
+ * Имплементирует UpdatesListener в качестве обработчика обновлений
+ * @see com.pengrad.telegrambot.UpdatesListener
+ */
 @Service
 public class TelegramBotUpdatesListener implements UpdatesListener {
 
+    /**
+     * Логгер для класса
+     */
     private Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
 
+    /**
+     * ResourceBundle используется для хранения текстов, которые отправляет бот в ответ на запрос пользователя
+     */
     private static final ResourceBundle bundle = ResourceBundle.getBundle("default");
 
+    /**
+     * директория с файлом - схемой проезда к приюту
+     */
     java.io.File address = new File("src/main/resources/MapPhoto/address.png");
 
+    /**
+     * поле инжектирует Телеграм-бота
+     * @see pro.sky.telegrambot.configuration.TelegramBotConfiguration
+     */
     private TelegramBot telegramBot;
 
+    /**
+     * Инжекстированный сервис-класс, отвечающий за обработку и создание клавиатур
+     * @see MenuService
+     */
     private final MenuService menuService;
 
+    /**
+     * Сервис репозитория, отвечащий за сохранение пользователей в БД
+     * @see UserRepoService
+     */
     private final UserRepoService repoService;
 
+    /**
+     * конструктор класса
+     * @param telegramBot Телеграм бот
+     * @param menuService обработчик-меню
+     * @param repoService сервис репозитория пользоваьелей
+     */
     public TelegramBotUpdatesListener(TelegramBot telegramBot, MenuService menuService, UserRepoService repoService) {
         this.telegramBot = telegramBot;
         this.menuService = menuService;
         this.repoService = repoService;
     }
 
+    /**
+     * Метод, запускающий (инициализирующий обработчик обновлений)
+     */
     @PostConstruct
     public void init() {
         telegramBot.setUpdatesListener(this);
     }
 
+    /**
+     * Метод, проверяющий обновление на наличие Колбека
+     * @param update обновление
+     * @return возвращает true, если есть колбек
+     */
     private boolean hasCallbackQuery(Update update) {
         return update.callbackQuery() != null;
     }
 
+    /**
+     * Метод, проверяющий наличие пользователя в базе и возвращающий роль пользователя
+     * для дальнейшей работы. Если пользователя в базе нет - сохраняет его и возвращает роль по-умолчанию - USER
+     * @param update обновление
+     * @return роль пользователя (USER.ROLE {USER, PARENT, VOLUNTEER, ADMIN})
+     * @see User
+     */
     private User.Role checkUser(Update update) {
         User botUser = null;
         if (hasCallbackQuery(update)) {
@@ -72,6 +119,12 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         }
         return botUser.getRole();
     }
+
+    /**
+     * Основной метод класса, в котором происходит обработка обновлений
+     * @param updates Обновления, поступившие от бота
+     * @return подтверждение обработки обновлений
+     */
     @Override
     public int process(List<Update> updates) {
         updates.forEach(update -> {
@@ -103,6 +156,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
 
+
+    /**
+     * Метод, обрабатывающий сообщения и нажатия кнопок от пользователя с ролью USER
+     * @param update обновление
+     */
     public void handleUserMessages(Update update) {
         String action = update.callbackQuery().data();
         switch (action) {
@@ -151,14 +209,26 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         }
     }
 
+    /**
+     * Метод, обрабатывающий сообщения и нажатия кнопок от пользователя с ролью PARENT
+     * @param update обновление
+     */
     public void handleParentMessages(Update update) {
 
     }
 
+    /**
+     * Метод, обрабатывающий сообщения и нажатия кнопок от пользователя с ролью VOLUNTEER
+     * @param update обновление
+     */
     public void handleVolunteerMessages(Update update) {
 
     }
 
+    /**
+     * Метод, обрабатывающий сообщения и нажатия кнопок от пользователя с ролью ADMIN
+     * @param update обновление
+     */
     public void handleAdminMessages(Update update) {
 
     }
