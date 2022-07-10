@@ -25,46 +25,46 @@ import static pro.sky.telegrambot.constants.ResponsesText.*;
 /**
  * Основной класс бота, где происходит обработка входящих обновлений из клиента
  * Имплементирует UpdatesListener в качестве обработчика обновлений
+ *
  * @see com.pengrad.telegrambot.UpdatesListener
  */
 @Service
 public class TelegramBotUpdatesListener implements UpdatesListener {
 
     /**
-     * Логгер для класса
-     */
-    private Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
-
-    /**
      * ResourceBundle используется для хранения текстов, которые отправляет бот в ответ на запрос пользователя
      */
     private static final ResourceBundle bundle = ResourceBundle.getBundle("default");
-
+    /**
+     * Инжекстированный сервис-класс, отвечающий за обработку и создание клавиатур
+     *
+     * @see MenuService
+     */
+    private final MenuService menuService;
+    /**
+     * Сервис репозитория, отвечащий за сохранение пользователей в БД
+     *
+     * @see UserRepoService
+     */
+    private final UserRepoService repoService;
     /**
      * директория с файлом - схемой проезда к приюту
      */
     java.io.File address = new File("src/main/resources/MapPhoto/address.png");
-
+    /**
+     * Логгер для класса
+     */
+    private Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
     /**
      * поле инжектирует Телеграм-бота
+     *
      * @see pro.sky.telegrambot.configuration.TelegramBotConfiguration
      */
     private TelegramBot telegramBot;
 
     /**
-     * Инжекстированный сервис-класс, отвечающий за обработку и создание клавиатур
-     * @see MenuService
-     */
-    private final MenuService menuService;
-
-    /**
-     * Сервис репозитория, отвечащий за сохранение пользователей в БД
-     * @see UserRepoService
-     */
-    private final UserRepoService repoService;
-
-    /**
      * конструктор класса
+     *
      * @param telegramBot Телеграм бот
      * @param menuService обработчик-меню
      * @param repoService сервис репозитория пользоваьелей
@@ -86,20 +86,21 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Метод, проверяющий наличие пользователя в базе и возвращающий роль пользователя
      * для дальнейшей работы. Если пользователя в базе нет - сохраняет его и возвращает роль по-умолчанию - USER
+     *
      * @param update обновление
      * @return роль пользователя (USER.ROLE {USER, PARENT, VOLUNTEER, ADMIN})
      * @see User
      */
     private User.Role checkUser(Update update) {
         User botUser = null;
-        if (hasCallbackQuery(update)) {
+        if (update.callbackQuery() == null) {
             botUser = new User(update.callbackQuery().message().chat().id(),
                     update.callbackQuery().message().chat().lastName() + " " + update.callbackQuery().message().chat().firstName());
         } else {
             botUser = new User(update.message().chat().id(),
                     update.message().chat().lastName() + " " + update.message().chat().firstName());
         }
-        if (repoService.getUserById(botUser.getChatId()).isEmpty()) {
+        if (repoService.getUserByChatId(botUser.getChatId()).isEmpty()) {
             repoService.createUser(botUser.getChatId(), botUser.getName());
         }
         return botUser.getRole();
@@ -107,6 +108,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     /**
      * Основной метод класса, в котором происходит обработка обновлений
+     *
      * @param updates Обновления, поступившие от бота
      * @return подтверждение обработки обновлений
      */
@@ -117,30 +119,30 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
             Message message = update.message();
             try {
-            if (update.callbackQuery() == null) {
-                if (message.text().equals("/start")) {
-                    telegramBot.execute(menuService.menuLoader(message, START_TEXT, MAIN_MENU));
+                if (update.callbackQuery() == null) {
+                    if (message.text().equals("/start")) {
+                        telegramBot.execute(menuService.menuLoader(message, START_TEXT, MAIN_MENU));
+                    }
+                } else {
+                    handleUserMessages(
+                            (someButtonName) -> {
+                                String hashFromButton = menuService.getHashFromButton(someButtonName);
+                                return update.callbackQuery().data().equals(hashFromButton);
+                            },
+                            (text, menu) -> {
+                                logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
+                                telegramBot.execute(menuService.editMenuLoader(update, text, menu));
+                            },
+                            (filePath) -> {
+                                logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
+                                telegramBot.execute(menuService.sendPhotoLoader(update, filePath));
+                            },
+                            (latitude, longitude) -> {
+                                logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
+                                telegramBot.execute(menuService.sendLocationLoader(update, latitude, longitude));
+                            }
+                    );
                 }
-            } else {
-                handleUserMessages(
-                        (someButtonName) -> {
-                            String hashFromButton = menuService.getHashFromButton(someButtonName);
-                            return update.callbackQuery().data().equals(hashFromButton);
-                        },
-                        (text, menu) -> {
-                            logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
-                            telegramBot.execute(menuService.editMenuLoader(update, text, menu));
-                        },
-                        (filePath) -> {
-                            logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
-                            telegramBot.execute(menuService.sendPhotoLoader(update, filePath));
-                        },
-                        (latitude, longitude) -> {
-                            logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
-                            telegramBot.execute(menuService.sendLocationLoader(update, latitude, longitude));
-                        }
-                );
-            }
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -150,9 +152,10 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     /**
      * Метод, обрабатывающий сообщения и нажатия кнопок от пользователя с ролью USER
-     * @param whatIsMenu функция для попадания в нужную ветку условий
-     * @param doSendMessage биконсьюмер для отправки текста
-     * @param goSendPhoto консьюмер для отправки фото
+     *
+     * @param whatIsMenu     функция для попадания в нужную ветку условий
+     * @param doSendMessage  биконсьюмер для отправки текста
+     * @param goSendPhoto    консьюмер для отправки фото
      * @param goSendLocation биконсьюмер для отправки локации
      */
     public void handleUserMessages(Function<String, Boolean> whatIsMenu,
@@ -203,6 +206,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     /**
      * Метод, обрабатывающий сообщения и нажатия кнопок от пользователя с ролью PARENT
+     *
      * @param update обновление
      */
     public void handleParentMessages(Update update) {
@@ -211,6 +215,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     /**
      * Метод, обрабатывающий сообщения и нажатия кнопок от пользователя с ролью VOLUNTEER
+     *
      * @param update обновление
      */
     public void handleVolunteerMessages(Update update) {
@@ -219,6 +224,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     /**
      * Метод, обрабатывающий сообщения и нажатия кнопок от пользователя с ролью ADMIN
+     *
      * @param update обновление
      */
     public void handleAdminMessages(Update update) {

@@ -22,7 +22,7 @@ public class UserRepoService implements RepoService {
     }
 
     public Optional<User> markRole(Long chatId, User.Role role) {
-        Optional<User> optionalUser = userRepository.findUserByChatId(chatId);
+        Optional<User> optionalUser = getUserByChatId(chatId);
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
             user.setRole(role);
@@ -31,6 +31,9 @@ public class UserRepoService implements RepoService {
         return optionalUser;
     }
 
-
+    @Override
+    public Optional<User> getUserByChatId(Long chatId) {
+        return userRepository.findUserByChatId(chatId);
+    }
 
 }

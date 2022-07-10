@@ -59,4 +59,16 @@ class UserRepoServiceTest {
         when(userRepository.findUserByChatId(CHAT_ID)).thenReturn(Optional.empty());
         assertEquals(out.markRole(CHAT_ID, adminRole), Optional.empty());
     }
+
+    @Test
+    void isGetUserChatIdReturnOptionalWithUser(){
+        when(userRepository.findUserByChatId(CHAT_ID)).thenReturn(Optional.of(userFromDataBase));
+        assertEquals(out.getUserByChatId(CHAT_ID), Optional.of(userFromDataBase));
+    }
+
+    @Test
+    void isGetUserChatIdReturnOptionalWithoutUser(){
+        when(userRepository.findUserByChatId(CHAT_ID)).thenReturn(Optional.empty());
+        assertEquals(out.getUserByChatId(CHAT_ID), Optional.empty());
+    }
 }

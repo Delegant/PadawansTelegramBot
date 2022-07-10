@@ -17,7 +17,6 @@ import pro.sky.telegrambot.repository.ReportsRepository;
 import pro.sky.telegrambot.repository.UserRepository;
 import pro.sky.telegrambot.service.ReportService;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotNull;
 import java.io.*;
 import java.nio.file.Files;
@@ -90,7 +89,7 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public Report saveReport(Long userId, String reportText) {
         Report report = new Report();
-        User user = repoService.getUserById(userId).
+        User user = repoService.getUserByChatId(userId).
                 orElseThrow(() -> new UserIsNotAllowedToSendReportException("User Is not a Parent and cannot send reports!"));
         report.setReportText(reportText);
         report.setUser(user);
