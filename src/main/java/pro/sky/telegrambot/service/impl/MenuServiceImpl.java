@@ -24,6 +24,9 @@ public class MenuServiceImpl implements MenuService {
      * @see MenuServiceImpl#menuLoader(Update, String, List)
      */
     private InlineKeyboardMarkup keyboardFactory(List<String> list) {
+        if (list == null) {
+            throw new NullPointerException();
+        }
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
         for (String s : list) {
             inlineKeyboardMarkup.addRow(new InlineKeyboardButton(s).callbackData(s));
@@ -41,9 +44,16 @@ public class MenuServiceImpl implements MenuService {
      */
     @Override
     public SendMessage menuLoader (Message message, String text, List<String> listButtons) {
-        Keyboard keyboard = keyboardFactory(listButtons);
-        return new SendMessage(message.chat().id(), text)
-                .replyMarkup(keyboard);
+        if (message == null || text == null || listButtons == null) {
+            throw new NullPointerException();
+        }
+        try {
+            Keyboard keyboard = keyboardFactory(listButtons);
+            return new SendMessage(message.chat().id(), text)
+                    .replyMarkup(keyboard);
+        } catch (RuntimeException e) {
+            throw new RuntimeException("The list of buttons is invalid");
+        }
     }
 
     /**
@@ -57,8 +67,15 @@ public class MenuServiceImpl implements MenuService {
      * @return - возвращает новое сформированное сообщение
      */
     public SendMessage menuLoader(Update update, String text, List<String> listButtons) {
+        if (update == null || text == null || listButtons == null) {
+            throw new NullPointerException();
+        }
+        try{
         Keyboard keyboard = keyboardFactory(listButtons);
         return new SendMessage(update.callbackQuery().message().chat().id(), text)
                 .replyMarkup(keyboard);
+        } catch (RuntimeException e) {
+            throw new RuntimeException("The list of buttons is invalid");
+        }
     }
 }
