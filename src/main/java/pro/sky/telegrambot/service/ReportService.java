@@ -7,18 +7,21 @@ import pro.sky.telegrambot.repository.PicturesRepository;
 import pro.sky.telegrambot.repository.ReportsRepository;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Stream;
 
 public interface ReportService {
 
     Report saveReport(Long userId, String reportText);
 
     Collection<Report> getReportsByParent(Long userId);
+    Collection<ReportPicture> getReportPicturesByReportId(Long reportId);
 
     Collection<ReportPicture> savePictures(Long reportId, List<MultipartFile> files) throws IOException;
 
 
-
-
+    List<ReportPicture> findAllPictures();
 }
