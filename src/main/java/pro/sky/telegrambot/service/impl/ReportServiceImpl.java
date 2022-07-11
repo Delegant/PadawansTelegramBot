@@ -16,6 +16,7 @@ import pro.sky.telegrambot.repository.PicturesRepository;
 import pro.sky.telegrambot.repository.ReportsRepository;
 import pro.sky.telegrambot.repository.UserRepository;
 import pro.sky.telegrambot.service.ReportService;
+import pro.sky.telegrambot.service.UserService;
 
 import javax.validation.constraints.NotNull;
 import java.io.*;
@@ -54,9 +55,9 @@ public class ReportServiceImpl implements ReportService {
     private final PictureNameRepository pictureNameRepository;
 
     /**
-     * @see UserRepoService
+     * @see UserServiceImpl
      */
-    private final UserRepoService repoService;
+    private final UserService userService;
 
     @Value("${path.to.reportpictures.folder}")
     private String picturesDirectory;
@@ -66,17 +67,17 @@ public class ReportServiceImpl implements ReportService {
      * @param reportsRepository  репозиторий отчетов
      * @param picturesRepository  репозиторий картинок
      * @param userRepository  репозиторий пользователей
-     * @param repoService сервис репозитория пользователей
+     * @param userService сервис репозитория пользователей
      */
     public ReportServiceImpl(ReportsRepository reportsRepository,
                              PicturesRepository picturesRepository,
                              UserRepository userRepository,
-                             UserRepoService repoService,
+                             UserService userService,
                              PictureNameRepository pictureNameRepository) {
         this.reportsRepository = reportsRepository;
         this.picturesRepository = picturesRepository;
         this.userRepository = userRepository;
-        this.repoService = repoService;
+        this.userService = userService;
         this.pictureNameRepository = pictureNameRepository;
     }
 
@@ -89,7 +90,7 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public Report saveReport(Long userId, String reportText) {
         Report report = new Report();
-        User user = repoService.getUserByChatId(userId).
+        User user = userService.getUserById(userId).
                 orElseThrow(() -> new UserIsNotAllowedToSendReportException("User Is not a Parent and cannot send reports!"));
         report.setReportText(reportText);
         report.setUser(user);
@@ -190,7 +191,6 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public List<ReportPicture> findAllPictures() {
-
         PageRequest pageRequest = PageRequest.of(0, 10);
         return picturesRepository.findAll(pageRequest).getContent();
     }

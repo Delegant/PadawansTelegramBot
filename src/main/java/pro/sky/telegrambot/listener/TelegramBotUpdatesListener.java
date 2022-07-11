@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.model.User;
 import pro.sky.telegrambot.service.MenuService;
-import pro.sky.telegrambot.service.impl.UserRepoService;
+import pro.sky.telegrambot.service.impl.UserServiceImpl;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
@@ -44,9 +44,9 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Сервис репозитория, отвечащий за сохранение пользователей в БД
      *
-     * @see UserRepoService
+     * @see UserServiceImpl
      */
-    private final UserRepoService repoService;
+    private final UserServiceImpl repoService;
     /**
      * директория с файлом - схемой проезда к приюту
      */
@@ -69,7 +69,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * @param menuService обработчик-меню
      * @param repoService сервис репозитория пользоваьелей
      */
-    public TelegramBotUpdatesListener(TelegramBot telegramBot, MenuService menuService, UserRepoService repoService) {
+    public TelegramBotUpdatesListener(TelegramBot telegramBot, MenuService menuService, UserServiceImpl repoService) {
         this.telegramBot = telegramBot;
         this.menuService = menuService;
         this.repoService = repoService;

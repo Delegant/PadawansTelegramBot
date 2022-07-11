@@ -12,28 +12,15 @@ import pro.sky.telegrambot.repository.UserRepository;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static pro.sky.telegrambot.constants.UserServiceConstants.*;
 
 @ExtendWith(MockitoExtension.class)
-class UserRepoServiceTest {
-    public static final String NAME = "Luk";
-    private static final Long EXPECTED_ID = 1L;
-    private static final Long CHAT_ID = 123L;
-    public static final User newUser = new User(CHAT_ID, NAME);
-    public static final User userFromDataBase = new User(CHAT_ID, NAME);
-    public static final User adminFromDataBase = new User(CHAT_ID, NAME);
-    public static final User.Role adminRole = User.Role.ADMIN;
-
-    static {
-        userFromDataBase.setId(EXPECTED_ID);
-        adminFromDataBase.setId(EXPECTED_ID);
-        adminFromDataBase.setRole(adminRole);
-    }
+class UserServiceImplTest {
 
     @InjectMocks
-    UserRepoService out;
+    UserServiceImpl out;
     @Mock
     private UserRepository userRepository;
 

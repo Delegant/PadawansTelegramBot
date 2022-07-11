@@ -5,10 +5,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.jpa.repository.query.Procedure;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,35 +15,31 @@ import pro.sky.telegrambot.service.ReportService;
 import pro.sky.telegrambot.service.impl.ReportServiceImpl;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Stream;
 
 @Tag(name = "Report Controller", description = "API для сохранения отчетов, фотографий для отчетов и поиска отчетов по базе данных")
 @RestController
 @RequestMapping("/reports")
 public class ReportController {
 
-    Logger logger = LoggerFactory.getLogger(ReportController.class);
-
     private final ReportService reportService;
-
-    @Value("${path.to.reportpictures.folder}")
-    private String picturesDirectory;
+    Logger logger = LoggerFactory.getLogger(ReportController.class);
 
     public ReportController(ReportService reportService) {
         this.reportService = reportService;
     }
 
+    /**
+     * Сохраняет новый отчет.
+     * @param userId идентификатор пользователя
+     * @param reportText текст отчета
+     */
     @Operation(
             summary = "Сохранение нового отчета",
             description = "Сохраняет новый отчет, получая на вход два параметра: Id юзера и текст отчета"
@@ -55,7 +47,6 @@ public class ReportController {
     @PostMapping("/newReport/{userId}&{reportText}")
     public void saveNewReport(@PathVariable("userId") @Parameter(description = "Идентификатор пользователя") Long userId,
                               @PathVariable("reportText") @Parameter(description = "Текст отчета") String reportText) {
-
         reportService.saveReport(userId, reportText);
     }
 
@@ -65,10 +56,8 @@ public class ReportController {
     )
     @PostMapping("/new")
     public ResponseEntity<Report> saveReport(@RequestBody @Parameter(description = "Отчет пользователя", required = true) Report report) {
-
         reportService.saveReport(report.getUser().getId(), report.getReportText());
         return ResponseEntity.ok(report);
-
     }
 
     @Operation(
@@ -77,7 +66,7 @@ public class ReportController {
     )
     @PostMapping(value = "/{reportId}/pictures", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> saveReportPictures(@PathVariable @Parameter(description = "Идентификатор отчета") Long reportId,
-                                                     @RequestParam @Parameter(description = "Список фотографий для отчета") List<MultipartFile> files) throws IOException {
+                                                     @RequestParam @Parameter(description = "Список фотографий для отчета") List<MultipartFile> files) {
         try {
             reportService.savePictures(reportId, files);
         } catch (Exception e) {
@@ -111,10 +100,9 @@ public class ReportController {
     public ResponseEntity<List<ReportPicture>> getAllPictures() {
         return ResponseEntity.ok(reportService.findAllPictures());
     }
-
-
     /**
      * Эндпоинт возвращает список имен файлов фотографий, принадлежащих отчету
+     *
      * @param reportId идентификатор отчета
      * @return список имен файлов фотографий
      * @see ReportServiceImpl#getReportPicturesNames
@@ -128,10 +116,9 @@ public class ReportController {
         List<String> filenames = reportService.getReportPicturesNames(reportId);
         return ResponseEntity.ok(filenames);
     }
-
-
     /**
      * Эндпоинт, возвращающий фотографию по имени файла
+     *
      * @param filename имя файла
      * @param response ответ
      * @throws IOException ошибка ввода/вывода
@@ -141,16 +128,15 @@ public class ReportController {
             description = "Выводит фотографию из локального хранилища по имени файла"
     )
     @GetMapping(value = "/{filename}/report-picture-from-storage")
-    public void downloadAvatar(@PathVariable String filename, HttpServletResponse response) throws IOException{
+    public void downloadAvatar(@PathVariable String filename, HttpServletResponse response) throws IOException {
         ReportPicture picture = reportService.getPictureFromStorageByFilename(filename);
         Path path = Path.of(picture.getFilePath());
-        try(InputStream is = Files.newInputStream(path);
-            OutputStream os = response.getOutputStream()) {
+        try (InputStream is = Files.newInputStream(path);
+             OutputStream os = response.getOutputStream()) {
             response.setStatus(200);
             response.setContentType(picture.getMediaType());
             response.setContentLength((int) picture.getFileSize());
             is.transferTo(os);
         }
     }
-
 }
