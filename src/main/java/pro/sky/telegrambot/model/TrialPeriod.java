@@ -10,7 +10,7 @@ import java.util.Objects;
  * TrialPeriod - класс, описывающий испытательный период для лиц, взявших животное из приюта.
  */
 @Schema(description = "Класс, описывающий испытательный период для лиц, взявших животное из приюта.")
-@Entity
+@Entity(name = "trial_periods")
 public class TrialPeriod {
 
     /**
@@ -64,10 +64,10 @@ public class TrialPeriod {
     public TrialPeriod() {
     }
 
-    public TrialPeriod(User userId, Long setBy, TrialPeriodStatus status) {
+    public TrialPeriod(User userId, Long setBy) {
         this.userId = userId;
         this.setBy = setBy;
-        this.status = status;
+        this.status = TrialPeriodStatus.STARTED;
         this.startDate = LocalDateTime.now();
         this.endDate = startDate.plusDays(30);
     }

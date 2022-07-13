@@ -1,5 +1,6 @@
 package pro.sky.telegrambot.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import javax.persistence.*;
@@ -37,6 +38,7 @@ public class User {
     private Collection<Report> reports;
 
     @Schema(description = "Список испытательных периодов (на случай если пользователь заберет несколько животных")
+    @JsonIgnore
     @OneToMany
     private Collection<TrialPeriod> trialPeriods;
 
@@ -46,6 +48,14 @@ public class User {
     public User(Long chatId, String name) {
         this.chatId = chatId;
         this.name = name;
+    }
+
+    public Collection<TrialPeriod> getTrialPeriods() {
+        return trialPeriods;
+    }
+
+    public void setTrialPeriods(Collection<TrialPeriod> trialPeriods) {
+        this.trialPeriods = trialPeriods;
     }
 
     public Long getId() {

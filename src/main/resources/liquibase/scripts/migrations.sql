@@ -93,11 +93,24 @@ ALTER TABLE pictures
 -- changeset algmironov:13
 CREATE TABLE messages
 (
-    message_id  SERIAL NOT NULL PRIMARY KEY,
-    sender_id bigint NOT NULL REFERENCES users(chat_id),
-    message_text TEXT NOT NULL,
-    sent_date timestamp NOT NULL,
-    read_status varchar(255) NOT NULL DEFAULT 'UNREAD'
+    message_id      SERIAL NOT NULL PRIMARY KEY,
+    sender_id       bigint NOT NULL REFERENCES users(chat_id),
+    message_text    TEXT NOT NULL,
+    sent_date       timestamp NOT NULL,
+    read_status     varchar(255) NOT NULL DEFAULT 'UNREAD'
 );
 
-
+-- changeset algmironov:14
+CREATE TABLE trial_periods
+(
+    id  SERIAL NOT NULL PRIMARY KEY,
+    user_id bigint NOT NULL REFERENCES users(chat_id),
+    start_date timestamp NOT NULL,
+    end_date timestamp,
+    additional_days int,
+    set_by bigint NOT NULL REFERENCES users(chat_id),
+    accepted_by bigint REFERENCES users(chat_id),
+    prolonged_by bigint REFERENCES users(chat_id),
+    denied_by bigint REFERENCES users(chat_id),
+    status  varchar(255) NOT NULL DEFAULT 'STARTED'
+);
