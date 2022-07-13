@@ -10,7 +10,7 @@ import java.util.Collection;
 @Repository
 public interface ReportsRepository extends JpaRepository<Report, Long> {
 
-    Collection<Report> findAllByUser(Long userId);
+    Collection<Report> findAllByUserId(Long userId);
 
     Collection<Report> findAllByUser(User user);
 

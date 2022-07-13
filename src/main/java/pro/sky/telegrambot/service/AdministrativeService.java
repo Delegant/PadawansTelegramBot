@@ -1,16 +1,18 @@
 package pro.sky.telegrambot.service;
 
 import pro.sky.telegrambot.model.IncomingMessage;
+import pro.sky.telegrambot.model.Report;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface AdministrativeService {
 
     public void setParent(Long volunteerId, Long userId);
 
-    public List<String> getListOfReportsByUserName(Long volunteerId, String userName);
+    public Collection<Report> getListOfReportsByUserName(Long volunteerId, String userName);
 
-    public List<String> getListOfReportsByUserId(Long volunteerId, Long UserId);
+    public Collection<Report> getListOfReportsByUserId(Long volunteerId, Long UserId);
 
     public List<IncomingMessage> getUnreadIncomingMessages(Long volulnteerId);
 

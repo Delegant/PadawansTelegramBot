@@ -36,6 +36,10 @@ public class User {
     @OneToMany(mappedBy = "user")
     private Collection<Report> reports;
 
+    @Schema(description = "Список испытательных периодов (на случай если пользователь заберет несколько животных")
+    @OneToMany
+    private Collection<TrialPeriod> trialPeriods;
+
     public User() {
     }
 

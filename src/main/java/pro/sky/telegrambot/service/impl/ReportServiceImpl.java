@@ -100,6 +100,16 @@ public class ReportServiceImpl implements ReportService {
         return report;
     }
 
+    @Override
+    public Collection<Report> getListOfReportsByUserName(String username) {
+        return reportsRepository.findAllByUserId(userRepository.findByName(username).get().getId());
+    }
+
+    @Override
+    public Collection<Report> getListOfReportsByUserId(Long userId) {
+        return reportsRepository.findAllByUserId(userId);
+    }
+
     /**
      * Метод, возвращающий расширение файла
      * @param fileName имя файла
@@ -174,7 +184,7 @@ public class ReportServiceImpl implements ReportService {
      */
     @Override
     public Collection<Report> getReportsByParent(Long userId) {
-        return reportsRepository.findAllByUser(userId);
+        return reportsRepository.findAllByUserId(userId);
     }
 
     /**

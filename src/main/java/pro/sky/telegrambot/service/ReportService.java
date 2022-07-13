@@ -21,6 +21,10 @@ public interface ReportService {
 
     Collection<ReportPicture> getReportPicturesByReportId(Long reportId);
 
+    Collection<Report> getListOfReportsByUserName(String username);
+
+    Collection<Report> getListOfReportsByUserId(Long userId);
+
     Collection<ReportPicture> savePictures(Long reportId, List<MultipartFile> files) throws IOException;
 
     List<ReportPicture> findAllPictures();
