@@ -29,7 +29,7 @@ class ReportControllerTest {
 
     @Test
     void shouldCallSaveReportInServiceWhenRunSaveReport() {
-        out.saveReport(report);
+        out.saveReport(reportForTest);
         Mockito.verify(reportService).saveReport(EXPECTED_ID, SOME_REPORT_TEXT);
     }
 

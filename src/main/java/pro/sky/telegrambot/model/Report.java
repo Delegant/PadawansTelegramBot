@@ -1,20 +1,18 @@
 package pro.sky.telegrambot.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.*;
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Schema(description = "Отчет пользователя")
 @Entity(name = "reports")
 public class Report {
 
-    private enum Status {
+    public enum Status {
         MAIN,
         UPDATED,
     }
