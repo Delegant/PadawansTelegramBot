@@ -29,10 +29,33 @@ public class ButtonsText {
     public static final String FOR_DOG_BUTTON = bundle.getString("FOR_DOG_BUTTON");
     public static final String FOR_DOG_WITH_DISABILITIES_BUTTON = bundle.getString("FOR_DOG_WITH_DISABILITIES_BUTTON");
 
+    //volunteers menu buttons
+    public static final String ADD_PARENT_BUTTON = bundle.getString("ADD_PARENT");
+    public static final String CHECK_REPORTS_BUTTON = bundle.getString("CHECK_REPORTS");
+    public static final String VIEW_INCOMING_MESSAGES_BUTTON = bundle.getString("VIEW_INCOMING_MESSAGES");
+    public static final String TRIAL_PERIOD_FOR_VOLUNTEERS_MENU_BUTTON = bundle.getString("TRIAL_PERIOD_FOR_VOLUNTEERS_MENU");
+    public static final String CONTACT_PARENT_BUTTON = bundle.getString("CONTACT_PARENT");
+
+    public static final String APPLY_TRIAL_PERIOD_BUTTON = bundle.getString("APPLY_TRIAL_PERIOD");
+    public static final String PROLONG_TRIAL_PERIOD_BUTTON = bundle.getString("PROLONG_TRIAL_PERIOD");
+    public static final String DECLINE_TRIAL_PERIOD_BUTTON = bundle.getString("DECLINE_TRIAL_PERIOD");
+
+    public static final String FIND_REPORT_BY_NAME_BUTTON = bundle.getString("FIND_REPORT_BY_NAME");
+    public static final String FIND_REPORT_BY_USERID_BUTTON = bundle.getString("FIND_REPORT_BY_USERID");
+    public static final String GET_REPORT_BY_ID_BUTTON = bundle.getString("GET_REPORT_BY_ID");
+    public static final String UNREAD_REPORTS_BUTTON = bundle.getString("UNREAD_REPORTS");
+
+    public static final String BACK_TO_VOLUNTEERS_MENU_BUTTON = "Вернуться в меню волонтеров";
+
 
     public static final List<String> BACK_TO_MAIN_MENU = List.of(
             BACK_TO_MAIN_MENU_BUTTON
     );
+
+    public static final List<String> BACK_TO_VOLUNTEERS_MENU = List.of(
+            BACK_TO_VOLUNTEERS_MENU_BUTTON
+    );
+
 
    public static final List<String> MAIN_MENU = List.of(
            INFO_BUTTON,
@@ -66,5 +89,33 @@ public class ButtonsText {
             FOR_DOG_BUTTON,
             FOR_DOG_WITH_DISABILITIES_BUTTON,
             BACK_TO_MAIN_MENU_BUTTON
+    );
+
+    public static final List<String> VOLUNTEER_MAIN_MENU = List.of(
+            ADD_PARENT_BUTTON,
+            CHECK_REPORTS_BUTTON,
+            VIEW_INCOMING_MESSAGES_BUTTON,
+            TRIAL_PERIOD_FOR_VOLUNTEERS_MENU_BUTTON,
+            CONTACT_PARENT_BUTTON
+    );
+
+    public static final List<String> TRIAL_PERIOD_MENU = List.of(
+            APPLY_TRIAL_PERIOD_BUTTON,
+            PROLONG_TRIAL_PERIOD_BUTTON,
+            DECLINE_TRIAL_PERIOD_BUTTON,
+            BACK_TO_VOLUNTEERS_MENU_BUTTON
+
+    );
+
+    public static final List<String> REPORTS_MENU = List.of(
+            FIND_REPORT_BY_NAME_BUTTON,
+            FIND_REPORT_BY_USERID_BUTTON,
+            GET_REPORT_BY_ID_BUTTON,
+            UNREAD_REPORTS_BUTTON,
+            BACK_TO_VOLUNTEERS_MENU_BUTTON
+    );
+
+    public static final List<String> ADMIN_MAIN_MENU = List.of(
+
     );
 }

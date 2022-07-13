@@ -76,7 +76,7 @@ public class MenuServiceImpl implements MenuService {
     @Override
     public SendMessage menuLoader (Message message, String text, List<String> listButtons) {
         if (message == null || text == null || listButtons == null) {
-            throw new NullPointerException();
+            throw new NullPointerException("!!!! One or more parameter is null");
         }
         try {
             Keyboard keyboard = keyboardFactory(listButtons);
@@ -99,7 +99,7 @@ public class MenuServiceImpl implements MenuService {
      */
     public SendMessage menuLoader(Update update, String text, List<String> listButtons) {
         if (update == null || text == null || listButtons == null) {
-            throw new NullPointerException();
+            throw new NullPointerException("!!!! One or more parameter is null");
         }
         try{
         Keyboard keyboard = keyboardFactory(listButtons);

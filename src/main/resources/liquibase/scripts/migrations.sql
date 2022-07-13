@@ -90,4 +90,14 @@ ALTER TABLE pictures
 ALTER TABLE pictures
     ADD CONSTRAINT UQ_file_path_name UNIQUE(file_path);
 
+-- changeset algmironov:13
+CREATE TABLE messages
+(
+    message_id  SERIAL NOT NULL PRIMARY KEY,
+    sender_id bigint NOT NULL REFERENCES users(chat_id),
+    message_text TEXT NOT NULL,
+    sent_date timestamp NOT NULL,
+    read_status varchar(255) NOT NULL DEFAULT 'UNREAD'
+);
+
 

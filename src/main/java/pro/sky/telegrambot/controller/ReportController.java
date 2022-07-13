@@ -26,10 +26,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Stream;
 
 @Tag(name = "Report Controller", description = "API для сохранения отчетов, фотографий для отчетов и поиска отчетов по базе данных")
@@ -141,7 +138,7 @@ public class ReportController {
             description = "Выводит фотографию из локального хранилища по имени файла"
     )
     @GetMapping(value = "/{filename}/report-picture-from-storage")
-    public void downloadAvatar(@PathVariable String filename, HttpServletResponse response) throws IOException{
+    public void downloadPicture(@PathVariable String filename, HttpServletResponse response) throws IOException{
         ReportPicture picture = reportService.getPictureFromStorageByFilename(filename);
         Path path = Path.of(picture.getFilePath());
         try(InputStream is = Files.newInputStream(path);
@@ -152,5 +149,4 @@ public class ReportController {
             is.transferTo(os);
         }
     }
-
 }

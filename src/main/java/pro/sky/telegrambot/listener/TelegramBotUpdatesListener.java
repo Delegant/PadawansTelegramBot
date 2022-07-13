@@ -121,27 +121,55 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             try {
                 if (update.callbackQuery() == null) {
                     if (message.text().equals("/start")) {
-                        telegramBot.execute(menuService.menuLoader(message, START_TEXT, MAIN_MENU));
+                        if (checkUser(update).equals(User.Role.USER)) {
+                            telegramBot.execute(menuService.menuLoader(message, START_TEXT, MAIN_MENU));
+                        } else if (checkUser(update).equals(User.Role.PARENT)) {
+                            telegramBot.execute(menuService.menuLoader(message, START_TEXT, MAIN_MENU));
+                        } else if (checkUser(update).equals(User.Role.VOLUNTEER)) {
+                            telegramBot.execute(menuService.menuLoader(message, VOLUNTEER_START_TEXT, VOLUNTEER_MAIN_MENU));
+                        } else if (checkUser(update).equals(User.Role.ADMIN)) {
+
+                        }
                     }
                 } else {
-                    handleUserMessages(
+                    if (checkUser(update).equals(User.Role.USER) || checkUser(update).equals(User.Role.PARENT)) {
+                        handleUserMessages(
                             (someButtonName) -> {
-                                String hashFromButton = menuService.getHashFromButton(someButtonName);
+                                    String hashFromButton = menuService.getHashFromButton(someButtonName);
                                 return update.callbackQuery().data().equals(hashFromButton);
                             },
                             (text, menu) -> {
-                                logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
-                                telegramBot.execute(menuService.editMenuLoader(update, text, menu));
+                                        logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
+                                        telegramBot.execute(menuService.editMenuLoader(update, text, menu));
                             },
                             (filePath) -> {
-                                logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
-                                telegramBot.execute(menuService.sendPhotoLoader(update, filePath));
+                                        logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
+                                        telegramBot.execute(menuService.sendPhotoLoader(update, filePath));
                             },
                             (latitude, longitude) -> {
-                                logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
-                                telegramBot.execute(menuService.sendLocationLoader(update, latitude, longitude));
+                                        logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
+                                        telegramBot.execute(menuService.sendLocationLoader(update, latitude, longitude));
                             }
-                    );
+                        );
+                    } else if (checkUser(update).equals(User.Role.VOLUNTEER)) {
+                        handleVolunteerMessages(
+                                (someButtonName) -> {
+                                    String hashFromButton = menuService.getHashFromButton(someButtonName);
+                                    return update.callbackQuery().data().equals(hashFromButton);
+                                },
+                                (text, menu) -> {
+                                    logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
+                                    telegramBot.execute(menuService.editMenuLoader(update, text, menu));
+                                },
+                                (filePath) -> {
+                                    logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
+                                    telegramBot.execute(menuService.sendPhotoLoader(update, filePath));
+                                }
+                        );
+
+                    } else if (checkUser(update).equals(User.Role.ADMIN)) {
+
+                    }
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -216,9 +244,19 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Метод, обрабатывающий сообщения и нажатия кнопок от пользователя с ролью VOLUNTEER
      *
-     * @param update обновление
+     * @param whatIsMenu     функция для попадания в нужную ветку условий
+     * @param doSendMessage  биконсьюмер для отправки текста
+     * @param goSendPhoto    консьюмер для отправки фото
+
      */
-    public void handleVolunteerMessages(Update update) {
+    public void handleVolunteerMessages(Function<String, Boolean> whatIsMenu,
+                                        BiConsumer<String, List<String>> doSendMessage,
+                                        Consumer<File> goSendPhoto) {
+        if (whatIsMenu.apply(ADD_PARENT_BUTTON)) {
+            doSendMessage.accept(ADD_PARENT, BACK_TO_VOLUNTEERS_MENU);
+        } else if (whatIsMenu.apply(CHECK_REPORTS_BUTTON)) {
+            doSendMessage.accept(CHECK_REPORTS, BACK_TO_VOLUNTEERS_MENU);
+        }
 
     }
 
