@@ -21,6 +21,7 @@ import java.util.function.Function;
 
 import static pro.sky.telegrambot.constants.ButtonsText.*;
 import static pro.sky.telegrambot.constants.ResponsesText.*;
+import static pro.sky.telegrambot.model.User.Role;
 
 /**
  * Основной класс бота, где происходит обработка входящих обновлений из клиента
@@ -46,7 +47,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      *
      * @see UserRepoService
      */
-    private final UserRepoService repoService;
+    private final UserRepoService userService;
     /**
      * директория с файлом - схемой проезда к приюту
      */
@@ -67,12 +68,12 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      *
      * @param telegramBot Телеграм бот
      * @param menuService обработчик-меню
-     * @param repoService сервис репозитория пользоваьелей
+     * @param userService сервис репозитория пользоваьелей
      */
-    public TelegramBotUpdatesListener(TelegramBot telegramBot, MenuService menuService, UserRepoService repoService) {
+    public TelegramBotUpdatesListener(TelegramBot telegramBot, MenuService menuService, UserRepoService userService) {
         this.telegramBot = telegramBot;
         this.menuService = menuService;
-        this.repoService = repoService;
+        this.userService = userService;
     }
 
     /**
@@ -87,23 +88,16 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * Метод, проверяющий наличие пользователя в базе и возвращающий роль пользователя
      * для дальнейшей работы. Если пользователя в базе нет - сохраняет его и возвращает роль по-умолчанию - USER
      *
-     * @param update обновление
+     * @param message ообщение из обновления
      * @return роль пользователя (USER.ROLE {USER, PARENT, VOLUNTEER, ADMIN})
      * @see User
      */
-    private User.Role checkUser(Update update) {
-        User botUser = null;
-        if (update.callbackQuery() == null) {
-            botUser = new User(update.callbackQuery().message().chat().id(),
-                    update.callbackQuery().message().chat().lastName() + " " + update.callbackQuery().message().chat().firstName());
-        } else {
-            botUser = new User(update.message().chat().id(),
-                    update.message().chat().lastName() + " " + update.message().chat().firstName());
-        }
-        if (repoService.getUserByChatId(botUser.getChatId()).isEmpty()) {
-            repoService.createUser(botUser.getChatId(), botUser.getName());
-        }
-        return botUser.getRole();
+    private User.Role checkUser(Message message) {
+        Long chatId = message.chat().id();
+        String lastName = message.chat().lastName();
+        String firstName = message.chat().firstName();
+        User currentUser = userService.getUserByChatId(chatId).orElseGet(() -> userService.createUser(chatId, lastName + " " + firstName));
+        return currentUser.getRole();
     }
 
     /**
@@ -116,61 +110,42 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     public int process(List<Update> updates) {
         updates.forEach(update -> {
             logger.info("Processing update: {}", update);
-
-            Message message = update.message();
+            Message message = (update.message() != null) ? update.message() : update.callbackQuery().message();
             try {
-                if (update.callbackQuery() == null) {
-                    if (message.text().equals("/start")) {
-                        if (checkUser(update).equals(User.Role.USER)) {
-                            telegramBot.execute(menuService.menuLoader(message, START_TEXT, MAIN_MENU));
-                        } else if (checkUser(update).equals(User.Role.PARENT)) {
-                            telegramBot.execute(menuService.menuLoader(message, START_TEXT, MAIN_MENU));
-                        } else if (checkUser(update).equals(User.Role.VOLUNTEER)) {
-                            telegramBot.execute(menuService.menuLoader(message, VOLUNTEER_START_TEXT, VOLUNTEER_MAIN_MENU));
-                        } else if (checkUser(update).equals(User.Role.ADMIN)) {
-
-                        }
-                    }
-                } else {
-                    if (checkUser(update).equals(User.Role.USER) || checkUser(update).equals(User.Role.PARENT)) {
-                        handleUserMessages(
-                            (someButtonName) -> {
-                                    String hashFromButton = menuService.getHashFromButton(someButtonName);
-                                return update.callbackQuery().data().equals(hashFromButton);
-                            },
-                            (text, menu) -> {
-                                        logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
-                                        telegramBot.execute(menuService.editMenuLoader(update, text, menu));
-                            },
-                            (filePath) -> {
-                                        logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
-                                        telegramBot.execute(menuService.sendPhotoLoader(update, filePath));
-                            },
-                            (latitude, longitude) -> {
-                                        logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
-                                        telegramBot.execute(menuService.sendLocationLoader(update, latitude, longitude));
-                            }
-                        );
-                    } else if (checkUser(update).equals(User.Role.VOLUNTEER)) {
-                        handleVolunteerMessages(
-                                (someButtonName) -> {
-                                    String hashFromButton = menuService.getHashFromButton(someButtonName);
-                                    return update.callbackQuery().data().equals(hashFromButton);
-                                },
-                                (text, menu) -> {
-                                    logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
-                                    telegramBot.execute(menuService.editMenuLoader(update, text, menu));
-                                },
-                                (filePath) -> {
-                                    logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
-                                    telegramBot.execute(menuService.sendPhotoLoader(update, filePath));
-                                }
-                        );
-
-                    } else if (checkUser(update).equals(User.Role.ADMIN)) {
-
-                    }
+                Function<String, Boolean> whatIsMenu = (someButtonName) -> {
+                    String hashFromButton = menuService.getHashFromButton(someButtonName);
+                    return update.callbackQuery().data().equals(hashFromButton);
+                };
+                BiConsumer<String, List<String>> doSendMessage = (text, menu) -> {
+                    logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
+                    telegramBot.execute(menuService.editMenuLoader(update, text, menu));
+                };
+                Consumer<File> goSendPhoto = (filePath) -> {
+                    logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
+                    telegramBot.execute(menuService.sendPhotoLoader(update, filePath));
+                };
+                BiConsumer<Float, Float> goSendLocation = (latitude, longitude) -> {
+                    logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
+                    telegramBot.execute(menuService.sendLocationLoader(update, latitude, longitude));
+                };
+                if (update.message() != null) {
+                    whatIsMenu = (someButtonName) -> message.text().equals(someButtonName);
+                    doSendMessage = (text, menu) -> {
+                        logger.info("==== Processing update with message: {}", message.text());
+                        telegramBot.execute(menuService.menuLoader(message, text, menu));
+                    };
+                } else if (update.message() == null && update.callbackQuery() == null) {
+                    logger.warn("==== Update didn't have message or callBack: {}", update);
+                    whatIsMenu = EXCEPTION::equals;
                 }
+                if (checkUser(message).equals(Role.USER) || checkUser(message).equals(Role.PARENT)) {
+                    handleUserMessages(whatIsMenu, doSendMessage, goSendPhoto, goSendLocation);
+                } else if (checkUser(message).equals(Role.VOLUNTEER)) {
+                    handleVolunteerMessages(whatIsMenu, doSendMessage, goSendPhoto);
+                } else if (checkUser(message).equals(Role.ADMIN)) {
+
+                }
+
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -191,7 +166,9 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                                    Consumer<File> goSendPhoto,
                                    BiConsumer<Float, Float> goSendLocation
     ) {
-        if (whatIsMenu.apply(INFO_BUTTON)) {
+        if (whatIsMenu.apply(START)) {
+            doSendMessage.accept(START_TEXT, MAIN_MENU);
+        } else if (whatIsMenu.apply(INFO_BUTTON)) {
             doSendMessage.accept(INFO_TEXT, INFO_MENU);
         } else if (whatIsMenu.apply(ABOUT_US_BUTTON)) {
             doSendMessage.accept(ABOUT_US, BACK_TO_MAIN_MENU);
@@ -244,10 +221,9 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Метод, обрабатывающий сообщения и нажатия кнопок от пользователя с ролью VOLUNTEER
      *
-     * @param whatIsMenu     функция для попадания в нужную ветку условий
-     * @param doSendMessage  биконсьюмер для отправки текста
-     * @param goSendPhoto    консьюмер для отправки фото
-
+     * @param whatIsMenu    функция для попадания в нужную ветку условий
+     * @param doSendMessage биконсьюмер для отправки текста
+     * @param goSendPhoto   консьюмер для отправки фото
      */
     public void handleVolunteerMessages(Function<String, Boolean> whatIsMenu,
                                         BiConsumer<String, List<String>> doSendMessage,

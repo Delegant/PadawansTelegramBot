@@ -6,10 +6,12 @@ import java.util.ResourceBundle;
 public class ButtonsText {
 
     private static final ResourceBundle bundle = ResourceBundle.getBundle("default");
+    public static final String START = bundle.getString("START");
     public static final String INFO_BUTTON = bundle.getString("INFO_BUTTON");
     public static final String HOW_TO_GET_DOG_BUTTON = bundle.getString("HOW_TO_GET_DOG_BUTTON");
     public static final String SEND_REPORT_BUTTON = bundle.getString("SEND_REPORT_BUTTON");
     public static final String CALL_VOLUNTEER_BUTTON = bundle.getString("CALL_VOLUNTEER_BUTTON");
+    public static final String EXCEPTION = bundle.getString("EXCEPTION");
 
     public static final String ABOUT_US_BUTTON = bundle.getString("ABOUT_US_BUTTON");
     public static final String CONTACTS_BUTTON = bundle.getString("CONTACTS_BUTTON");
