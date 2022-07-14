@@ -36,6 +36,9 @@ public class User {
     @OneToMany(mappedBy = "user")
     private Collection<Report> reports;
 
+//    @Schema(description = "Стек меню в котором находиться юзер")
+//    private String currentMenu;
+
     public User() {
     }
 

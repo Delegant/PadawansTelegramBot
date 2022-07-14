@@ -7,6 +7,7 @@ import com.pengrad.telegrambot.model.Update;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import pro.sky.telegrambot.constants.ButtonsText;
 import pro.sky.telegrambot.model.User;
 import pro.sky.telegrambot.service.MenuService;
 import pro.sky.telegrambot.service.impl.UserRepoService;
@@ -19,8 +20,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static pro.sky.telegrambot.constants.ButtonsText.*;
-import static pro.sky.telegrambot.constants.ResponsesText.*;
 import static pro.sky.telegrambot.model.User.Role;
 
 /**
@@ -32,10 +31,6 @@ import static pro.sky.telegrambot.model.User.Role;
 @Service
 public class TelegramBotUpdatesListener implements UpdatesListener {
 
-    /**
-     * ResourceBundle используется для хранения текстов, которые отправляет бот в ответ на запрос пользователя
-     */
-    private static final ResourceBundle bundle = ResourceBundle.getBundle("default");
     /**
      * Инжекстированный сервис-класс, отвечающий за обработку и создание клавиатур
      *
@@ -92,12 +87,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * @return роль пользователя (USER.ROLE {USER, PARENT, VOLUNTEER, ADMIN})
      * @see User
      */
-    private User.Role checkUser(Message message) {
+    private User checkUser(Message message) {
         Long chatId = message.chat().id();
         String lastName = message.chat().lastName();
         String firstName = message.chat().firstName();
-        User currentUser = userService.getUserByChatId(chatId).orElseGet(() -> userService.createUser(chatId, lastName + " " + firstName));
-        return currentUser.getRole();
+        return userService.getUserByChatId(chatId).orElseGet(() -> userService.createUser(chatId, lastName + " " + firstName));
     }
 
     /**
@@ -111,14 +105,20 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         updates.forEach(update -> {
             logger.info("Processing update: {}", update);
             Message message = (update.message() != null) ? update.message() : update.callbackQuery().message();
+            User currentUser = checkUser(message);
+            Role roleCurrentUser = currentUser.getRole();
+            ButtonsText buttonsText = ButtonsText.getButtonText("cat");
             try {
-                Function<String, Boolean> whatIsMenu = (someButtonName) -> {
-                    String hashFromButton = menuService.getHashFromButton(someButtonName);
+                Function<String, Boolean> whatIsMenu = (someButtonNameKey) -> {
+                    String someButtonNameValue = buttonsText.getString(someButtonNameKey);
+                    String hashFromButton = menuService.getHashFromButton(someButtonNameValue);
                     return update.callbackQuery().data().equals(hashFromButton);
                 };
-                BiConsumer<String, List<String>> doSendMessage = (text, menu) -> {
+                BiConsumer<String, String> doSendMessage = (textKey, menuKey) -> {
                     logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
-                    telegramBot.execute(menuService.editMenuLoader(update, text, menu));
+                    List<String> menuValue = buttonsText.getMenu(menuKey);
+                    String textValue = buttonsText.getString(textKey);
+                    telegramBot.execute(menuService.editMenuLoader(update, textValue, menuValue));
                 };
                 Consumer<File> goSendPhoto = (filePath) -> {
                     logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
@@ -129,21 +129,20 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     telegramBot.execute(menuService.sendLocationLoader(update, latitude, longitude));
                 };
                 if (update.message() != null) {
-                    whatIsMenu = (someButtonName) -> message.text().equals(someButtonName);
-                    doSendMessage = (text, menu) -> {
+                    whatIsMenu = (someButtonName) -> message.text().equals(buttonsText.getString(someButtonName));
+                    doSendMessage = (textKey, menuKey) -> {
                         logger.info("==== Processing update with message: {}", message.text());
-                        telegramBot.execute(menuService.menuLoader(message, text, menu));
+                        List<String> menuValue = buttonsText.getMenu(menuKey);
+                        String textValue = buttonsText.getString(textKey);
+                        telegramBot.execute(menuService.menuLoader(message, textValue, menuValue));
                     };
-                } else if (update.message() == null && update.callbackQuery() == null) {
-                    logger.warn("==== Update didn't have message or callBack: {}", update);
-                    whatIsMenu = EXCEPTION::equals;
                 }
-                if (checkUser(message).equals(Role.USER) || checkUser(message).equals(Role.PARENT)) {
+                if (roleCurrentUser.equals(Role.USER) || roleCurrentUser.equals(Role.PARENT)) {
                     handleUserMessages(whatIsMenu, doSendMessage, goSendPhoto, goSendLocation);
-                } else if (checkUser(message).equals(Role.VOLUNTEER)) {
+                } else if (roleCurrentUser.equals(Role.VOLUNTEER)) {
                     handleVolunteerMessages(whatIsMenu, doSendMessage, goSendPhoto);
-                } else if (checkUser(message).equals(Role.ADMIN)) {
-
+//                } else if (roleCurrentUser.equals(Role.ADMIN)) {
+//
                 }
 
             } catch (Exception e) {
@@ -162,50 +161,54 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * @param goSendLocation биконсьюмер для отправки локации
      */
     public void handleUserMessages(Function<String, Boolean> whatIsMenu,
-                                   BiConsumer<String, List<String>> doSendMessage,
+                                   BiConsumer<String, String> doSendMessage,
                                    Consumer<File> goSendPhoto,
                                    BiConsumer<Float, Float> goSendLocation
     ) {
-        if (whatIsMenu.apply(START)) {
-            doSendMessage.accept(START_TEXT, MAIN_MENU);
-        } else if (whatIsMenu.apply(INFO_BUTTON)) {
-            doSendMessage.accept(INFO_TEXT, INFO_MENU);
-        } else if (whatIsMenu.apply(ABOUT_US_BUTTON)) {
-            doSendMessage.accept(ABOUT_US, BACK_TO_MAIN_MENU);
-        } else if (whatIsMenu.apply(SAFETY_REGULATIONS_BUTTON)) {
-            doSendMessage.accept(SAFETY_REGULATIONS, BACK_TO_MAIN_MENU);
-        } else if (whatIsMenu.apply(CONTACTS_BUTTON)) {
+        if (whatIsMenu.apply("START_BUTTON")) {
+            doSendMessage.accept("BASE_TEXT", "BASE_MENU");
+        } else if (whatIsMenu.apply("CAT_BUTTON")) {
+            doSendMessage.accept("START_TEXT", "MAIN_MENU");
+        } else if (whatIsMenu.apply("DOG_BUTTON")) {
+            doSendMessage.accept("START_TEXT", "MAIN_MENU");
+        } else if (whatIsMenu.apply("INFO_BUTTON")) {
+            doSendMessage.accept("INFO_TEXT", "INFO_MENU");
+        } else if (whatIsMenu.apply("ABOUT_US_BUTTON")) {
+            doSendMessage.accept("ABOUT_US", "BACK_TO_MAIN_MENU");
+        } else if (whatIsMenu.apply("SAFETY_REGULATIONS_BUTTON")) {
+            doSendMessage.accept("SAFETY_REGULATIONS", "BACK_TO_MAIN_MENU");
+        } else if (whatIsMenu.apply("CONTACTS_BUTTON")) {
             goSendLocation.accept(51.165973F, 71.403983F);
             goSendPhoto.accept(address);
-            doSendMessage.accept(SHELTER_CONTACTS, BACK_TO_MAIN_MENU);
-        } else if (whatIsMenu.apply(SHARE_CONTACT_BUTTON)) {
-            doSendMessage.accept(SHARE_CONTACT, BACK_TO_MAIN_MENU);
-        } else if (whatIsMenu.apply(HOW_TO_GET_DOG_BUTTON)) {
-            doSendMessage.accept(CONSULT_MENU_MESSAGE, HOW_TO_GET_DOG_MENU);
-        } else if (whatIsMenu.apply(MEETING_WITH_DOG_BUTTON)) {
-            doSendMessage.accept(MEETING_WITH_DOG, BACK_TO_MAIN_MENU);
-        } else if (whatIsMenu.apply(LIST_OF_DOCUMENTS_BUTTON)) {
-            doSendMessage.accept(LIST_OF_DOCUMENTS, BACK_TO_MAIN_MENU);
-        } else if (whatIsMenu.apply(HOW_TO_CARRY_ANIMAL_BUTTON)) {
-            doSendMessage.accept(HOW_TO_CARRY_ANIMAL, BACK_TO_MAIN_MENU);
-        } else if (whatIsMenu.apply(MAKING_HOUSE_BUTTON)) {
-            doSendMessage.accept(DEFAULT_MENU_TEXT, MAKING_HOUSE_MENU);
-        } else if (whatIsMenu.apply(FOR_PUPPY_BUTTON)) {
-            doSendMessage.accept(MAKING_HOUSE_FOR_PUPPY, BACK_TO_MAIN_MENU);
-        } else if (whatIsMenu.apply(FOR_DOG_BUTTON)) {
-            doSendMessage.accept(MAKING_HOUSE_FOR_DOG, BACK_TO_MAIN_MENU);
-        } else if (whatIsMenu.apply(FOR_DOG_WITH_DISABILITIES_BUTTON)) {
-            doSendMessage.accept(MAKING_HOUSE_FOR_DOG_WITH_DISABILITIES, BACK_TO_MAIN_MENU);
-        } else if (whatIsMenu.apply(DOG_HANDLER_ADVICES_BUTTON)) {
-            doSendMessage.accept(DOG_HANDLER_ADVICES, BACK_TO_MAIN_MENU);
-        } else if (whatIsMenu.apply(DOG_HANDLERS_BUTTON)) {
-            doSendMessage.accept(DOG_HANDLERS, BACK_TO_MAIN_MENU);
-        } else if (whatIsMenu.apply(DENY_LIST_BUTTON)) {
-            doSendMessage.accept(DENY_LIST, BACK_TO_MAIN_MENU);
-        } else if (whatIsMenu.apply(BACK_TO_MAIN_MENU_BUTTON)) {
-            doSendMessage.accept(DEFAULT_MENU_TEXT, MAIN_MENU);
+            doSendMessage.accept("SHELTER_CONTACTS", "BACK_TO_MAIN_MENU");
+        } else if (whatIsMenu.apply("SHARE_CONTACT_BUTTON")) {
+            doSendMessage.accept("SHARE_CONTACT", "BACK_TO_MAIN_MENU");
+        } else if (whatIsMenu.apply("HOW_TO_GET_DOG_BUTTON")) {
+            doSendMessage.accept("CONSULT_MENU_MESSAGE", "HOW_TO_GET_DOG_MENU");
+        } else if (whatIsMenu.apply("MEETING_WITH_DOG_BUTTON")) {
+            doSendMessage.accept("MEETING_WITH_DOG", "BACK_TO_MAIN_MENU");
+        } else if (whatIsMenu.apply("LIST_OF_DOCUMENTS_BUTTON")) {
+            doSendMessage.accept("LIST_OF_DOCUMENTS", "BACK_TO_MAIN_MENU");
+        } else if (whatIsMenu.apply("HOW_TO_CARRY_ANIMAL_BUTTON")) {
+            doSendMessage.accept("HOW_TO_CARRY_ANIMAL", "BACK_TO_MAIN_MENU");
+        } else if (whatIsMenu.apply("MAKING_HOUSE_BUTTON")) {
+            doSendMessage.accept("DEFAULT_MENU_TEXT", "MAKING_HOUSE_MENU");
+        } else if (whatIsMenu.apply("FOR_PUPPY_BUTTON")) {
+            doSendMessage.accept("MAKING_HOUSE_FOR_PUPPY", "BACK_TO_MAIN_MENU");
+        } else if (whatIsMenu.apply("FOR_DOG_BUTTON")) {
+            doSendMessage.accept("MAKING_HOUSE_FOR_DOG", "BACK_TO_MAIN_MENU");
+        } else if (whatIsMenu.apply("FOR_DOG_WITH_DISABILITIES_BUTTON")) {
+            doSendMessage.accept("MAKING_HOUSE_FOR_DOG_WITH_DISABILITIES", "BACK_TO_MAIN_MENU");
+        } else if (whatIsMenu.apply("DOG_HANDLER_ADVICES_BUTTON")) {
+            doSendMessage.accept("DOG_HANDLER_ADVICES", "BACK_TO_MAIN_MENU");
+        } else if (whatIsMenu.apply("DOG_HANDLERS_BUTTON")) {
+            doSendMessage.accept("DOG_HANDLERS", "BACK_TO_MAIN_MENU");
+        } else if (whatIsMenu.apply("DENY_LIST_BUTTON")) {
+            doSendMessage.accept("DENY_LIST", "BACK_TO_MAIN_MENU");
+        } else if (whatIsMenu.apply("BACK_TO_MAIN_MENU_BUTTON")) {
+            doSendMessage.accept("DEFAULT_MENU_TEXT", "MAIN_MENU");
         } else {
-            doSendMessage.accept(ERROR_COMMAND_TEXT, MAIN_MENU);
+            doSendMessage.accept("ERROR_COMMAND_TEXT", "MAIN_MENU");
         }
     }
 
@@ -226,12 +229,12 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * @param goSendPhoto   консьюмер для отправки фото
      */
     public void handleVolunteerMessages(Function<String, Boolean> whatIsMenu,
-                                        BiConsumer<String, List<String>> doSendMessage,
+                                        BiConsumer<String, String> doSendMessage,
                                         Consumer<File> goSendPhoto) {
-        if (whatIsMenu.apply(ADD_PARENT_BUTTON)) {
-            doSendMessage.accept(ADD_PARENT, BACK_TO_VOLUNTEERS_MENU);
-        } else if (whatIsMenu.apply(CHECK_REPORTS_BUTTON)) {
-            doSendMessage.accept(CHECK_REPORTS, BACK_TO_VOLUNTEERS_MENU);
+        if (whatIsMenu.apply("ADD_PARENT_BUTTON")) {
+            doSendMessage.accept("ADD_PARENT", "BACK_TO_VOLUNTEERS_MENU");
+        } else if (whatIsMenu.apply("CHECK_REPORTS_BUTTON")) {
+            doSendMessage.accept("CHECK_REPORTS", "BACK_TO_VOLUNTEERS_MENU");
         }
 
     }

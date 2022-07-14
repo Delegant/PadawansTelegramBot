@@ -1,6 +1,9 @@
 package pro.sky.telegrambot.service.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import pro.sky.telegrambot.listener.TelegramBotUpdatesListener;
 import pro.sky.telegrambot.model.User;
 import pro.sky.telegrambot.repository.UserRepository;
 import pro.sky.telegrambot.service.RepoService;
@@ -11,12 +14,14 @@ import java.util.Optional;
 public class UserRepoService implements RepoService {
 
     private final UserRepository userRepository;
+    private final Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
 
     public UserRepoService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
     public User createUser(Long chatId, String name) {
+        logger.info("==== Processing create user: {}, {}", chatId, name);
         User user = new User(chatId, name);
         return userRepository.save(user);
     }
