@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import javax.persistence.*;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.Set;
 
 @Schema(description = "Пользователь")
 @Entity(name = "users")
@@ -36,8 +37,9 @@ public class User {
     @OneToMany(mappedBy = "user")
     private Collection<Report> reports;
 
-//    @Schema(description = "Стек меню в котором находиться юзер")
-//    private String currentMenu;
+    @Schema(description = "Стэк переходов пользователя по меню")
+    @OneToMany(mappedBy = "user")
+    private Set<MenuStack> menuStackSet;
 
     public User() {
     }

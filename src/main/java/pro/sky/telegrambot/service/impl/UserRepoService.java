@@ -1,5 +1,6 @@
 package pro.sky.telegrambot.service.impl;
 
+import com.pengrad.telegrambot.model.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -39,6 +40,22 @@ public class UserRepoService implements RepoService {
     @Override
     public Optional<User> getUserByChatId(Long chatId) {
         return userRepository.findUserByChatId(chatId);
+    }
+
+    /**
+     * Метод, проверяющий наличие пользователя в базе и возвращающий пользователя
+     * для дальнейшей работы. Если пользователя в базе нет - создает и сохраняет нового - USER
+     *
+     * @param message сообщение из обновления
+     * @return USER - не может быть null
+     * @see User
+     */
+    @Override
+    public User getUserByMessage(Message message) {
+            Long chatId = message.chat().id();
+            String lastName = message.chat().lastName();
+            String firstName = message.chat().firstName();
+            return getUserByChatId(chatId).orElseGet(() -> createUser(chatId, lastName + " " + firstName));
     }
 
 }

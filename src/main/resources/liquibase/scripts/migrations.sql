@@ -100,4 +100,14 @@ CREATE TABLE messages
     read_status varchar(255) NOT NULL DEFAULT 'UNREAD'
 );
 
+-- changeset anton:14
+
+CREATE TABLE menuStack
+(
+    id bigint NOT NULL PRIMARY KEY,
+    user_id  bigint NOT NULL REFERENCES users(chat_id),
+    text_pack_key varchar(255) NOT NULL DEFAULT 'DOG',
+    menu_state varchar(255) NOT NULL DEFAULT 'BASE_MENU'
+);
+
 

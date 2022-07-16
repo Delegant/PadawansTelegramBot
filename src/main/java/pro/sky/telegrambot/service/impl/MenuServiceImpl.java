@@ -11,7 +11,7 @@ import com.pengrad.telegrambot.request.SendPhoto;
 import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.service.MenuService;
 
-import static pro.sky.telegrambot.constants.ButtonsText.HIDDEN;
+import static pro.sky.telegrambot.constants.ButtonsText.HIDDEN_BUTTON;
 
 import java.io.File;
 import java.util.List;
@@ -36,7 +36,7 @@ public class MenuServiceImpl implements MenuService {
         if (list == null) {
             throw new NullPointerException();
         }
-        list = list.stream().filter(buttonText -> !buttonText.equals(HIDDEN)).collect(Collectors.toList());
+        list = list.stream().filter(buttonText -> !buttonText.equals(HIDDEN_BUTTON)).collect(Collectors.toList());
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
         if (list.size() <= 10) {
             for (int i = 0; i < list.size(); i++) {

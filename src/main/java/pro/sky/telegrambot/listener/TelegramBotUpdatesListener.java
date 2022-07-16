@@ -10,12 +10,12 @@ import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.constants.ButtonsText;
 import pro.sky.telegrambot.model.User;
 import pro.sky.telegrambot.service.MenuService;
+import pro.sky.telegrambot.service.MenuStackService;
 import pro.sky.telegrambot.service.impl.UserRepoService;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.util.List;
-import java.util.ResourceBundle;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -44,6 +44,13 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     private final UserRepoService userService;
     /**
+     * Инжекстированный сервис-класс, отвечающий за отслеживанием положения
+     * пользователей в БД
+     *
+     * @see MenuService
+     */
+    private final MenuStackService menuStackService;
+    /**
      * директория с файлом - схемой проезда к приюту
      */
     java.io.File address = new File("src/main/resources/MapPhoto/address.png");
@@ -60,15 +67,16 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     /**
      * конструктор класса
-     *
-     * @param telegramBot Телеграм бот
+     *  @param telegramBot Телеграм бот
      * @param menuService обработчик-меню
      * @param userService сервис репозитория пользоваьелей
+     * @param menuStackService сервис репозитория положения юезера в меню
      */
-    public TelegramBotUpdatesListener(TelegramBot telegramBot, MenuService menuService, UserRepoService userService) {
+    public TelegramBotUpdatesListener(TelegramBot telegramBot, MenuService menuService, UserRepoService userService, MenuStackService menuStackService) {
         this.telegramBot = telegramBot;
         this.menuService = menuService;
         this.userService = userService;
+        this.menuStackService = menuStackService;
     }
 
     /**
@@ -77,21 +85,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     @PostConstruct
     public void init() {
         telegramBot.setUpdatesListener(this);
-    }
-
-    /**
-     * Метод, проверяющий наличие пользователя в базе и возвращающий роль пользователя
-     * для дальнейшей работы. Если пользователя в базе нет - сохраняет его и возвращает роль по-умолчанию - USER
-     *
-     * @param message ообщение из обновления
-     * @return роль пользователя (USER.ROLE {USER, PARENT, VOLUNTEER, ADMIN})
-     * @see User
-     */
-    private User checkUser(Message message) {
-        Long chatId = message.chat().id();
-        String lastName = message.chat().lastName();
-        String firstName = message.chat().firstName();
-        return userService.getUserByChatId(chatId).orElseGet(() -> userService.createUser(chatId, lastName + " " + firstName));
     }
 
     /**
@@ -105,8 +98,12 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         updates.forEach(update -> {
             logger.info("Processing update: {}", update);
             Message message = (update.message() != null) ? update.message() : update.callbackQuery().message();
-            User currentUser = checkUser(message);
+            User currentUser = userService.getUserByMessage(message);
             Role roleCurrentUser = currentUser.getRole();
+
+            String currentUserTextPack = menuStackService.getTextPackKey(currentUser.getChatId());
+            String lastUserMenu = menuStackService.getLastMenuState(currentUser.getChatId());
+
             ButtonsText buttonsText = ButtonsText.getButtonText("cat");
             try {
                 Function<String, Boolean> whatIsMenu = (someButtonNameKey) -> {
@@ -116,8 +113,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 };
                 BiConsumer<String, String> doSendMessage = (textKey, menuKey) -> {
                     logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
-                    List<String> menuValue = buttonsText.getMenu(menuKey);
                     String textValue = buttonsText.getString(textKey);
+                    List<String> menuValue = buttonsText.getMenu(menuKey);
                     telegramBot.execute(menuService.editMenuLoader(update, textValue, menuValue));
                 };
                 Consumer<File> goSendPhoto = (filePath) -> {
@@ -166,11 +163,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                                    BiConsumer<Float, Float> goSendLocation
     ) {
         if (whatIsMenu.apply("START_BUTTON")) {
-            doSendMessage.accept("BASE_TEXT", "BASE_MENU");
+            doSendMessage.accept("START_TEXT", "BASE_MENU");
         } else if (whatIsMenu.apply("CAT_BUTTON")) {
-            doSendMessage.accept("START_TEXT", "MAIN_MENU");
+            doSendMessage.accept("GREETING_TEXT", "MAIN_MENU");
         } else if (whatIsMenu.apply("DOG_BUTTON")) {
-            doSendMessage.accept("START_TEXT", "MAIN_MENU");
+            doSendMessage.accept("GREETING_TEXT", "MAIN_MENU");
         } else if (whatIsMenu.apply("INFO_BUTTON")) {
             doSendMessage.accept("INFO_TEXT", "INFO_MENU");
         } else if (whatIsMenu.apply("ABOUT_US_BUTTON")) {
