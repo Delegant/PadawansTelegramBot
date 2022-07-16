@@ -114,3 +114,24 @@ CREATE TABLE trial_periods
     denied_by bigint REFERENCES users(chat_id),
     status  varchar(255) NOT NULL DEFAULT 'STARTED'
 );
+
+-- changeset algmironov:15
+ALTER TABLE trial_periods
+    rename column user_id to user_id_id;
+
+-- changeset algmironov:16
+ALTER TABLE trial_periods
+    rename column user_id_id to chat_id;
+
+-- changeset algmironov:17
+ALTER TABLE trial_periods
+    rename column chat_id to user_id;
+
+-- changeset algmironov:18
+ALTER TABLE trial_periods
+    drop column user_id;
+
+ALTER TABLE trial_periods
+    ADD COLUMN user_id bigint references users(id);
+
+

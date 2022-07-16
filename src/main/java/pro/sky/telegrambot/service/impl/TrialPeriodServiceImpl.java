@@ -41,7 +41,7 @@ public class TrialPeriodServiceImpl implements TrialPeriodService {
     @Override
     public void closeTrialPeriod(Long userId, Long volunteerId) {
         User parent = userRepoService.getUserByChatId(userId).orElseThrow(() -> new UserNotFoundException("!!!! user not found"));
-        TrialPeriod period = trialPeriodRepository.findByUserId(userId);
+        TrialPeriod period = trialPeriodRepository.findByUser(parent);
         period.setStatus(TrialPeriod.TrialPeriodStatus.ENDED);
         period.setEndDate(LocalDateTime.now());
         period.setAcceptedBy(volunteerId);
@@ -52,7 +52,7 @@ public class TrialPeriodServiceImpl implements TrialPeriodService {
     @Override
     public void prolongTrialPeriod(Long userId, int addedDays, Long volunteerId) {
         User parent = userRepoService.getUserByChatId(userId).orElseThrow(() -> new UserNotFoundException("!!!! user not found"));
-        TrialPeriod period = trialPeriodRepository.findByUserId(userId);
+        TrialPeriod period = trialPeriodRepository.findByUser(parent);
         period.setAdditionalDays(period.getEndDate().plusDays(addedDays));
         period.setStatus(TrialPeriod.TrialPeriodStatus.PROLONGED);
         period.setProlongedBy(volunteerId);
@@ -63,7 +63,7 @@ public class TrialPeriodServiceImpl implements TrialPeriodService {
     @Override
     public void declineTrialPeriod(Long userId, Long volunteerId) {
         User parent = userRepoService.getUserByChatId(userId).orElseThrow(() -> new UserNotFoundException("!!!! user not found"));
-        TrialPeriod period = trialPeriodRepository.findByUserId(userId);
+        TrialPeriod period = trialPeriodRepository.findByUser(parent);
         period.setStatus(TrialPeriod.TrialPeriodStatus.DENIED);
         period.setDeniedBy(volunteerId);
         period.setEndDate(LocalDateTime.now());

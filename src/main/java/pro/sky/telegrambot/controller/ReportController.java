@@ -49,9 +49,9 @@ public class ReportController {
             summary = "Сохранение нового отчета",
             description = "Сохраняет новый отчет, получая на вход два параметра: Id юзера и текст отчета"
     )
-    @PostMapping("/newReport/{userId}&{reportText}")
+    @PostMapping("/newReport/{userId}")
     public void saveNewReport(@PathVariable("userId") @Parameter(description = "Идентификатор пользователя") Long userId,
-                              @PathVariable("reportText") @Parameter(description = "Текст отчета") String reportText) {
+                              @RequestParam @Parameter(description = "Текст отчета") String reportText) {
 
         reportService.saveReport(userId, reportText);
     }

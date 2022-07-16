@@ -30,11 +30,12 @@ public class TrialPeriod {
 
     @Schema(description = "Идентификатор испытательного периода" )
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
     @Schema(description = "Идентификатор пользователя-усыновителя")
-    private User userId;
+    private User user;
 
     @Schema(description = "Дата начала испытательного периода")
     private LocalDateTime startDate;
@@ -64,8 +65,8 @@ public class TrialPeriod {
     public TrialPeriod() {
     }
 
-    public TrialPeriod(User userId, Long setBy) {
-        this.userId = userId;
+    public TrialPeriod(User user, Long setBy) {
+        this.user = user;
         this.setBy = setBy;
         this.status = TrialPeriodStatus.STARTED;
         this.startDate = LocalDateTime.now();
@@ -81,11 +82,11 @@ public class TrialPeriod {
     }
 
     public User getUserId() {
-        return userId;
+        return user;
     }
 
-    public void setUserId(User userId) {
-        this.userId = userId;
+    public void setUserId(User chatId) {
+        this.user = chatId;
     }
 
     public LocalDateTime getStartDate() {
@@ -169,7 +170,7 @@ public class TrialPeriod {
     public String toString() {
         return "TrialPeriod{" +
                 "id=" + id +
-                ", userId=" + userId +
+                ", userId=" + user +
                 ", startDate=" + startDate +
                 ", endDate=" + endDate +
                 ", additionalDays=" + additionalDays +
