@@ -55,6 +55,13 @@ public class Report {
     public Report() {
     }
 
+    public Report(Long id, String reportText) {
+        this.id = id;
+        this.reportText = reportText;
+        this.reportDate = LocalDateTime.now();
+        this.status = Status.MAIN;
+    }
+
     public Report(Long id, String reportText, Status status) {
         this.id = id;
         this.reportText = reportText;

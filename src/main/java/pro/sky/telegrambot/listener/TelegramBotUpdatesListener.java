@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.model.User;
 import pro.sky.telegrambot.service.MenuService;
+import pro.sky.telegrambot.service.ReportService;
+import pro.sky.telegrambot.service.impl.ReportServiceImpl;
 import pro.sky.telegrambot.service.impl.UserRepoService;
 
 import javax.annotation.PostConstruct;
@@ -63,6 +65,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     private TelegramBot telegramBot;
 
+    private ReportService reportService;
+
     /**
      * конструктор класса
      *
@@ -70,10 +74,14 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * @param menuService обработчик-меню
      * @param userService сервис репозитория пользоваьелей
      */
-    public TelegramBotUpdatesListener(TelegramBot telegramBot, MenuService menuService, UserRepoService userService) {
+    public TelegramBotUpdatesListener(TelegramBot telegramBot,
+                                      MenuService menuService,
+                                      UserRepoService userService,
+                                      ReportService reportService) {
         this.telegramBot = telegramBot;
         this.menuService = menuService;
         this.userService = userService;
+        this.reportService = reportService;
     }
 
     /**
@@ -110,40 +118,56 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     public int process(List<Update> updates) {
         updates.forEach(update -> {
             logger.info("Processing update: {}", update);
+//            Message message = null;
+//            if (update.message() == null) {
+//                message = update.callbackQuery().message();
+//            } else if (update.message().photo() != null) {
+//                reportService.getPictureFromMessage(update.message().from().id(), update.message());
+//            } else {
+//                message = update.message();
+//            }
             Message message = (update.message() != null) ? update.message() : update.callbackQuery().message();
             try {
-                Function<String, Boolean> whatIsMenu = (someButtonName) -> {
-                    String hashFromButton = menuService.getHashFromButton(someButtonName);
-                    return update.callbackQuery().data().equals(hashFromButton);
-                };
-                BiConsumer<String, List<String>> doSendMessage = (text, menu) -> {
-                    logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
-                    telegramBot.execute(menuService.editMenuLoader(update, text, menu));
-                };
-                Consumer<File> goSendPhoto = (filePath) -> {
-                    logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
-                    telegramBot.execute(menuService.sendPhotoLoader(update, filePath));
-                };
-                BiConsumer<Float, Float> goSendLocation = (latitude, longitude) -> {
-                    logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
-                    telegramBot.execute(menuService.sendLocationLoader(update, latitude, longitude));
-                };
-                if (update.message() != null) {
-                    whatIsMenu = (someButtonName) -> message.text().equals(someButtonName);
-                    doSendMessage = (text, menu) -> {
-                        logger.info("==== Processing update with message: {}", message.text());
-                        telegramBot.execute(menuService.menuLoader(message, text, menu));
-                    };
-                } else if (update.message() == null && update.callbackQuery() == null) {
-                    logger.warn("==== Update didn't have message or callBack: {}", update);
-                    whatIsMenu = EXCEPTION::equals;
-                }
-                if (checkUser(message).equals(Role.USER) || checkUser(message).equals(Role.PARENT)) {
-                    handleUserMessages(whatIsMenu, doSendMessage, goSendPhoto, goSendLocation);
-                } else if (checkUser(message).equals(Role.VOLUNTEER)) {
-                    handleVolunteerMessages(whatIsMenu, doSendMessage, goSendPhoto);
-                } else if (checkUser(message).equals(Role.ADMIN)) {
+                if (update.callbackQuery() != null && update.message() != null) {
 
+                    Function<String, Boolean> whatIsMenu = (someButtonName) -> {
+                        String hashFromButton = menuService.getHashFromButton(someButtonName);
+                        return update.callbackQuery().data().equals(hashFromButton);
+                    };
+
+                    BiConsumer<String, List<String>> doSendMessage = (text, menu) -> {
+                        logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
+                        telegramBot.execute(menuService.editMenuLoader(update, text, menu));
+                    };
+                    Consumer<File> goSendPhoto = (filePath) -> {
+                        logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
+                        telegramBot.execute(menuService.sendPhotoLoader(update, filePath));
+                    };
+                    BiConsumer<Float, Float> goSendLocation = (latitude, longitude) -> {
+                        logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
+                        telegramBot.execute(menuService.sendLocationLoader(update, latitude, longitude));
+                    };
+                    if (update.message() != null && update.message().text() != null) {
+                        whatIsMenu = (someButtonName) -> message.text().equals(someButtonName);
+                        doSendMessage = (text, menu) -> {
+                            logger.info("==== Processing update with message: {}", message.text());
+                            telegramBot.execute(menuService.menuLoader(message, text, menu));
+                        };
+                    }
+                    else if (update.message() == null && update.callbackQuery() == null) {
+                        logger.warn("==== Update didn't have message or callBack: {}", update);
+                        whatIsMenu = EXCEPTION::equals;
+                    }
+
+                    if (checkUser(message).equals(Role.USER) || checkUser(message).equals(Role.PARENT)) {
+                        handleUserMessages(whatIsMenu, doSendMessage, goSendPhoto, goSendLocation);
+                    } else if (checkUser(message).equals(Role.VOLUNTEER)) {
+                        handleVolunteerMessages(whatIsMenu, doSendMessage, goSendPhoto);
+                    } else if (checkUser(message).equals(Role.ADMIN)) {
+                        reportService.getPictureFromMessage(update.message().from().id(), update.message());
+                }
+            } else if (update.message().photo() != null) {
+                    reportService.getPictureFromMessage(update.message().from().id(), update.message());
                 }
 
             } catch (Exception e) {

@@ -1,5 +1,11 @@
 package pro.sky.telegrambot.service.impl;
 
+import com.pengrad.telegrambot.TelegramBot;
+import com.pengrad.telegrambot.model.Message;
+import com.pengrad.telegrambot.model.PhotoSize;
+import com.pengrad.telegrambot.request.GetFile;
+import com.pengrad.telegrambot.response.GetFileResponse;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +25,10 @@ import pro.sky.telegrambot.service.ReportService;
 
 import javax.validation.constraints.NotNull;
 import java.io.*;
+import java.net.URL;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -51,6 +61,8 @@ public class ReportServiceImpl implements ReportService {
      */
     private final UserRepository userRepository;
 
+    private TelegramBot telegramBot;
+
     private final PictureNameRepository pictureNameRepository;
 
     /**
@@ -72,12 +84,14 @@ public class ReportServiceImpl implements ReportService {
                              PicturesRepository picturesRepository,
                              UserRepository userRepository,
                              UserRepoService repoService,
-                             PictureNameRepository pictureNameRepository) {
+                             PictureNameRepository pictureNameRepository,
+                             TelegramBot telegramBot) {
         this.reportsRepository = reportsRepository;
         this.picturesRepository = picturesRepository;
         this.userRepository = userRepository;
         this.repoService = repoService;
         this.pictureNameRepository = pictureNameRepository;
+        this.telegramBot = telegramBot;
     }
 
     /**
@@ -226,8 +240,50 @@ public class ReportServiceImpl implements ReportService {
         return Optional.of(picturesRepository.findByFilePathEndingWith(filename)).orElseThrow();
     }
 
+    @Override
+    public Report saveReport(Report report) {
+        return reportsRepository.save(report);
+    }
+
+    @Override
+    public String getPictureFromMessage(Long userId, Message message) {
+
+        User user = repoService.getUserByChatId(userId).orElse(new User(message.chat().id(),
+                message.chat().lastName() + message.chat().firstName()));
+
+        List<PhotoSize> photos = Arrays.asList(message.photo());
+
+        String fileId = Objects.requireNonNull(photos.stream().max(Comparator.comparing(PhotoSize::fileSize))
+                .orElse(null)).fileId();
+
+        GetFile request = new GetFile(fileId);
+        GetFileResponse getFileResponse = telegramBot.execute(request);
+
+        com.pengrad.telegrambot.model.File file = getFileResponse.file();
+        file.fileId();
+        file.filePath();
+        file.fileSize();
+
+        String fullPath = telegramBot.getFullFilePath(file);
+
+        String path = "https://api.telegram.org/file/bot5493410760:AAGz1VXLWe-Uu5_UVj3dD_ODnBA7aLHO-TY/AQADlr0xG7SVmEp-";
 
 
+        try {
+            FileUtils.copyURLToFile(
+                    new URL(fullPath),
+                    new File(picturesDirectory + "/downloadedFromTelegramFile.jpg"),
+                    1000000,
+                    100000000);
+
+        } catch (Exception e) {
+            logger.error(String.valueOf(e));
+        }
+
+
+
+        return file.filePath();
+    }
 }
 
 

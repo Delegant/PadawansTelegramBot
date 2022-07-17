@@ -56,6 +56,24 @@ public class ReportController {
         reportService.saveReport(userId, reportText);
     }
 
+
+    @Operation(
+            summary = "Сохранение нового отчета и фотографий",
+            description = "Сохраняет одновременно и текст отчета и фотографии к нему."
+    )
+    @PostMapping(value = "/reportWithPicture/{userId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> saveNewReportWithPicture(@PathVariable("userId") @Parameter(description = "Идентификатор пользователя") Long userId,
+                                         @RequestParam @Parameter(description = "Текст отчета") String reportText,
+                                         @RequestParam @Parameter(description = "Список фотографий для отчета") List<MultipartFile> files) throws IOException {
+        Report report = reportService.saveReport(userId, reportText);
+
+        reportService.savePictures(report.getId(), files);
+
+        return ResponseEntity.ok("New report with pictures has been saved successfully!");
+
+
+    }
+
     @Operation(
             summary = "Сохранения нового отчета",
             description = "Сохраняет новый отчет, принимая на вход объект - отчет"
@@ -149,4 +167,6 @@ public class ReportController {
             is.transferTo(os);
         }
     }
+
+
 }

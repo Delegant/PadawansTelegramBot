@@ -11,7 +11,9 @@ import pro.sky.telegrambot.model.User;
 import pro.sky.telegrambot.service.AdministrativeService;
 import pro.sky.telegrambot.service.RepoService;
 import pro.sky.telegrambot.service.ReportService;
+import pro.sky.telegrambot.service.TrialPeriodService;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -30,14 +32,18 @@ public class AdministrativeServiceImpl implements AdministrativeService {
 
     private MessageServiceImpl messageService;
 
+    private TrialPeriodService trialPeriodService;
+
     public AdministrativeServiceImpl(RepoService userRepositoryService,
                                      RepoService repoService,
                                      ReportService reportService,
-                                     MessageServiceImpl messageService) {
+                                     MessageServiceImpl messageService,
+                                     TrialPeriodService trialPeriodService) {
         this.userRepositoryService = userRepositoryService;
         this.repoService = repoService;
         this.reportService = reportService;
         this.messageService = messageService;
+        this.trialPeriodService = trialPeriodService;
     }
 
     private boolean checkVolunteer(Long volunteerId) {
@@ -54,6 +60,7 @@ public class AdministrativeServiceImpl implements AdministrativeService {
         if (checkVolunteer(volunteerId)) {
             newParent.setRole(User.Role.PARENT);
             logger.info("Role of user: {} has been changed to PARENT", newParent );
+            startTrialPeriod(volunteerId, userId);
         }
     }
 
@@ -94,20 +101,40 @@ public class AdministrativeServiceImpl implements AdministrativeService {
     }
 
     @Override
+    public void startTrialPeriod(Long volunteerId, Long parentId) {
+        User parent = repoService.getUserByChatId(parentId).orElseThrow(() -> new UserNotFoundException("!!!! There is no user with such ID"));
+        if (checkVolunteer(volunteerId)) {
+            trialPeriodService.startTrialPeriod(parentId, volunteerId);
+            logger.info("Trial period for User: " + parent + " has been started at " + LocalDateTime.now());
+        }
+    }
+    @Override
     public void applyTrialPeriod(Long volunteerId, Long parentId) {
         User parent = repoService.getUserByChatId(parentId).orElseThrow(() -> new UserNotFoundException("!!!! There is no user with such ID"));
         if (checkVolunteer(volunteerId)) {
-            //todo
+            trialPeriodService.closeTrialPeriod(parentId, volunteerId);
+            logger.info("Trial period for Parent: " + parent + " has been approved");
         }
     }
 
     @Override
-    public void prolongTrialPeriod(Long volunteerId, Long parentId) {
-
+    public void prolongTrialPeriod(Long volunteerId, int addedDays, Long parentId) {
+        User parent = repoService.getUserByChatId(parentId).orElseThrow(() -> new UserNotFoundException("!!!! There is no user with such ID"));
+        if (checkVolunteer(volunteerId)) {
+            trialPeriodService.prolongTrialPeriod(parentId, addedDays, volunteerId);
+            logger.info("Trial period of Parent: " + parent + " has been prolonged for " + addedDays + " days");
+        }
     }
 
     @Override
     public void declineTrialPeriod(Long volunteerId, Long parentId) {
-
+        User parent = repoService.getUserByChatId(parentId).orElseThrow(() -> new UserNotFoundException("!!!! There is no user with such ID"));
+        if (checkVolunteer(volunteerId)) {
+            trialPeriodService.declineTrialPeriod(parentId, volunteerId);
+            logger.info("Trial period for Parent: " + parent + " has been declined");
+        }
     }
+
+
+
 }

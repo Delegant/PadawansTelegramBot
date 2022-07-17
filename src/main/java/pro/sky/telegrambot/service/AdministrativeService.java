@@ -8,19 +8,23 @@ import java.util.List;
 
 public interface AdministrativeService {
 
-    public void setParent(Long volunteerId, Long userId);
+    void setParent(Long volunteerId, Long userId);
 
-    public Collection<Report> getListOfReportsByUserName(Long volunteerId, String userName);
+    Collection<Report> getListOfReportsByUserName(Long volunteerId, String userName);
 
-    public Collection<Report> getListOfReportsByUserId(Long volunteerId, Long UserId);
+    Collection<Report> getListOfReportsByUserId(Long volunteerId, Long UserId);
 
-    public List<IncomingMessage> getUnreadIncomingMessages(Long volulnteerId);
+    List<IncomingMessage> getUnreadIncomingMessages(Long volulnteerId);
 
-    public IncomingMessage getUnreadMessage(Long volunteerId, Long messageId);
+    IncomingMessage getUnreadMessage(Long volunteerId, Long messageId);
 
-    public void applyTrialPeriod(Long volunteerId, Long parentId);
+    void startTrialPeriod(Long volunteerId, Long userId);
 
-    public void prolongTrialPeriod(Long volunteerId, Long parentId);
+    void applyTrialPeriod(Long volunteerId, Long parentId);
 
-    public void declineTrialPeriod(Long volunteerId, Long parentId);
+    void prolongTrialPeriod(Long volunteerId, int addedDays, Long parentId);
+
+    void declineTrialPeriod(Long volunteerId, Long parentId);
+
+
 }
