@@ -104,10 +104,11 @@ CREATE TABLE messages
 
 CREATE TABLE menuStack
 (
-    id bigint NOT NULL PRIMARY KEY,
-    user_id  bigint NOT NULL REFERENCES users(chat_id),
-    text_pack_key varchar(255) NOT NULL DEFAULT 'DOG',
-    menu_state varchar(255) NOT NULL DEFAULT 'BASE_MENU'
+    id SERIAL NOT NULL PRIMARY KEY,
+    user_id  bigint NOT NULL CONSTRAINT users_ref REFERENCES users,
+    text_pack_key varchar(255) DEFAULT 'DOG',
+    text_key varchar(255) NOT NULL DEFAULT 'DEFAULT_MENU_TEXT',
+    menu_state varchar(255) NOT NULL DEFAULT 'SPECIES_PET_SELECTION_MENU'
 );
 
 

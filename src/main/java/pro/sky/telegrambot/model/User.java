@@ -24,6 +24,7 @@ public class User {
     private Long id;
 
     @Schema(description = "Идентификатор пользователя в Телеграм")
+//    @Column(name = "chat_id")
     private Long chatId;
 
     @Schema(description = "Имя пользователя")

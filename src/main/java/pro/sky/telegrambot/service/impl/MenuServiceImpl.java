@@ -34,7 +34,7 @@ public class MenuServiceImpl implements MenuService {
      */
     private InlineKeyboardMarkup keyboardFactory(List<String> list) {
         if (list == null) {
-            throw new NullPointerException();
+            throw new NullPointerException("Inline menu list have null");
         }
         list = list.stream().filter(buttonText -> !buttonText.equals(HIDDEN_BUTTON)).collect(Collectors.toList());
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
