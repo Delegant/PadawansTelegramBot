@@ -134,4 +134,13 @@ ALTER TABLE trial_periods
 ALTER TABLE trial_periods
     ADD COLUMN user_id bigint references users(id);
 
+-- changeset anton:19
 
+CREATE TABLE menuStack
+(
+    id SERIAL NOT NULL PRIMARY KEY,
+    user_id  bigint NOT NULL CONSTRAINT users_ref REFERENCES users,
+    text_pack_key varchar(255) DEFAULT 'DOG',
+    text_key varchar(255) NOT NULL DEFAULT 'DEFAULT_MENU_TEXT',
+    menu_state varchar(255) NOT NULL DEFAULT 'SPECIES_PET_SELECTION_MENU'
+);

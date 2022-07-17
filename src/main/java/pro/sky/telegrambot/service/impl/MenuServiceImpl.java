@@ -11,9 +11,12 @@ import com.pengrad.telegrambot.request.SendPhoto;
 import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.service.MenuService;
 
+import static pro.sky.telegrambot.constants.ButtonsText.HIDDEN_BUTTON;
+
 import java.io.File;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Класс, создающий сообщения с inline-клавиатурой
@@ -31,8 +34,9 @@ public class MenuServiceImpl implements MenuService {
      */
     private InlineKeyboardMarkup keyboardFactory(List<String> list) {
         if (list == null) {
-            throw new NullPointerException();
+            throw new NullPointerException("Inline menu list have null");
         }
+        list = list.stream().filter(buttonText -> !buttonText.equals(HIDDEN_BUTTON)).collect(Collectors.toList());
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
         if (list.size() <= 10) {
             for (int i = 0; i < list.size(); i++) {
