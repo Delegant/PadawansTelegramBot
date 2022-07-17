@@ -11,7 +11,7 @@ import pro.sky.telegrambot.constants.ButtonsText;
 import pro.sky.telegrambot.model.User;
 import pro.sky.telegrambot.service.MenuService;
 import pro.sky.telegrambot.service.MenuStackService;
-import pro.sky.telegrambot.service.impl.UserRepoService;
+import pro.sky.telegrambot.service.impl.UserServiceImpl;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
@@ -41,9 +41,9 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Сервис репозитория, отвечащий за сохранение пользователей в БД
      *
-     * @see UserRepoService
+     * @see UserServiceImpl
      */
-    private final UserRepoService userService;
+    private final UserServiceImpl userService;
     /**
      * Инжекстированный сервис-класс, отвечающий за отслеживанием положения
      * пользователей в БД
@@ -73,7 +73,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * @param userService сервис репозитория пользоваьелей
      * @param menuStackService сервис репозитория положения юезера в меню
      */
-    public TelegramBotUpdatesListener(TelegramBot telegramBot, MenuService menuService, UserRepoService userService, MenuStackService menuStackService) {
+    public TelegramBotUpdatesListener(TelegramBot telegramBot, MenuService menuService, UserServiceImpl userService, MenuStackService menuStackService) {
         this.telegramBot = telegramBot;
         this.menuService = menuService;
         this.userService = userService;

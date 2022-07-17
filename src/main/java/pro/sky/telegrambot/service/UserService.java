@@ -5,7 +5,7 @@ import pro.sky.telegrambot.model.User;
 
 import java.util.Optional;
 
-public interface RepoService {
+public interface UserService {
 
     User createUser(Long chatId, String name);
 

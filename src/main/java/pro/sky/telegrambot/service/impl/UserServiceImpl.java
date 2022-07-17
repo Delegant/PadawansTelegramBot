@@ -7,17 +7,17 @@ import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.listener.TelegramBotUpdatesListener;
 import pro.sky.telegrambot.model.User;
 import pro.sky.telegrambot.repository.UserRepository;
-import pro.sky.telegrambot.service.RepoService;
+import pro.sky.telegrambot.service.UserService;
 
 import java.util.Optional;
 
 @Service
-public class UserRepoService implements RepoService {
+public class UserServiceImpl implements pro.sky.telegrambot.service.UserService {
 
     private final UserRepository userRepository;
     private final Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
 
-    public UserRepoService(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 

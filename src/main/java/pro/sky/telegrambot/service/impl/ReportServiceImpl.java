@@ -54,9 +54,9 @@ public class ReportServiceImpl implements ReportService {
     private final PictureNameRepository pictureNameRepository;
 
     /**
-     * @see UserRepoService
+     * @see UserServiceImpl
      */
-    private final UserRepoService repoService;
+    private final UserServiceImpl repoService;
 
     @Value("${path.to.reportpictures.folder}")
     private String picturesDirectory;
@@ -71,7 +71,7 @@ public class ReportServiceImpl implements ReportService {
     public ReportServiceImpl(ReportsRepository reportsRepository,
                              PicturesRepository picturesRepository,
                              UserRepository userRepository,
-                             UserRepoService repoService,
+                             UserServiceImpl repoService,
                              PictureNameRepository pictureNameRepository) {
         this.reportsRepository = reportsRepository;
         this.picturesRepository = picturesRepository;
