@@ -67,7 +67,7 @@ public class ReportController {
                                          @RequestParam @Parameter(description = "Список фотографий для отчета") List<MultipartFile> files) throws IOException {
         Report report = reportService.saveReport(userId, reportText);
 
-        reportService.savePictures(report.getId(), files);
+        reportService.savePictures(report.getId(), userId, files);
 
         return ResponseEntity.ok("New report with pictures has been saved successfully!");
 
@@ -92,9 +92,10 @@ public class ReportController {
     )
     @PostMapping(value = "/{reportId}/pictures", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> saveReportPictures(@PathVariable @Parameter(description = "Идентификатор отчета") Long reportId,
+                                                     @RequestParam @Parameter(description = "идентификатор пользователя") Long userId,
                                                      @RequestParam @Parameter(description = "Список фотографий для отчета") List<MultipartFile> files) throws IOException {
         try {
-            reportService.savePictures(reportId, files);
+            reportService.savePictures(reportId, userId, files);
         } catch (Exception e) {
             logger.error("!!!! Cannot save pictures because of exception " + e);
         }

@@ -2,6 +2,8 @@ package pro.sky.telegrambot.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.hibernate.annotations.Fetch;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -34,7 +36,7 @@ public class Report {
     private LocalDateTime reportUpdateDate;
 
     @Schema(description = "Пользователь - автор отчета")
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     private User user;
 
@@ -73,6 +75,7 @@ public class Report {
         return pictureNames;
     }
 
+    @Transactional
     public void setPictureNames(List<PictureName> pictureNames) {
         this.pictureNames = pictureNames;
     }
@@ -109,6 +112,7 @@ public class Report {
         this.reportUpdateDate = LocalDateTime.now();
     }
 
+    @Transactional
     public User getUser() {
         return user;
     }

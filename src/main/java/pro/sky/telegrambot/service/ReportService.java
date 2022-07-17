@@ -28,7 +28,7 @@ public interface ReportService {
 
     Collection<Report> getListOfReportsByUserId(Long userId);
 
-    Collection<ReportPicture> savePictures(Long reportId, List<MultipartFile> files) throws IOException;
+    Collection<ReportPicture> savePictures(Long reportId, Long userId, List<MultipartFile> files) throws IOException;
 
     List<ReportPicture> findAllPictures();
 
@@ -36,7 +36,7 @@ public interface ReportService {
 
     ReportPicture getPictureFromStorageByFilename(String filename);
 
-    String getPictureFromMessage(Long userId, Message message);
+    void getPictureFromMessage(Long userId, Message message) throws IOException;
 
 
 }

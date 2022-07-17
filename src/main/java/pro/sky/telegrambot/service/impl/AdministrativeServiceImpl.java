@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @Service
 public class AdministrativeServiceImpl implements AdministrativeService {
 
-    private Logger logger = LoggerFactory.getLogger(AdministrativeServiceImpl.class);
+    private final Logger logger = LoggerFactory.getLogger(AdministrativeServiceImpl.class);
 
     private final RepoService userRepositoryService;
 
@@ -30,9 +30,9 @@ public class AdministrativeServiceImpl implements AdministrativeService {
 
     private final ReportService reportService;
 
-    private MessageServiceImpl messageService;
+    private final MessageServiceImpl messageService;
 
-    private TrialPeriodService trialPeriodService;
+    private final TrialPeriodService trialPeriodService;
 
     public AdministrativeServiceImpl(RepoService userRepositoryService,
                                      RepoService repoService,
