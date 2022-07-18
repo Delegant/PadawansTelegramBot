@@ -26,5 +26,7 @@ public interface AdministrativeService {
 
     void declineTrialPeriod(Long volunteerId, Long parentId);
 
+    void setNewVolunteer(Long adminId, Long userId);
 
+    void setNewAdmin(Long adminId, Long userId);
 }

@@ -27,7 +27,11 @@ public class PictureName {
         this.filename = filename;
     }
 
-
+    public PictureName(Long id, String filename, Report report) {
+        this.id = id;
+        this.filename = filename;
+        this.report = report;
+    }
 
     public PictureName() {
     }

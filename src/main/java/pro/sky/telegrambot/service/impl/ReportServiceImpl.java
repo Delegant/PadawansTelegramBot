@@ -8,7 +8,6 @@ import com.pengrad.telegrambot.response.GetFileResponse;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.io.FileUtils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,6 +15,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
+import pro.sky.telegrambot.Dao.Impl.PictureNameDao;
+import pro.sky.telegrambot.Dao.Impl.ReportDao;
+import pro.sky.telegrambot.Dao.Impl.ReportPictureDao;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import pro.sky.telegrambot.exceptions.UserIsNotAllowedToSendReportException;
 import pro.sky.telegrambot.exceptions.UserNotFoundException;
@@ -27,17 +30,21 @@ import pro.sky.telegrambot.repository.PictureNameRepository;
 import pro.sky.telegrambot.repository.PicturesRepository;
 import pro.sky.telegrambot.repository.ReportsRepository;
 import pro.sky.telegrambot.repository.UserRepository;
+import pro.sky.telegrambot.service.PictureService;
 import pro.sky.telegrambot.service.ReportService;
 
+import javax.persistence.EntityManager;
 import javax.validation.constraints.NotNull;
 import java.io.*;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -68,7 +75,9 @@ public class ReportServiceImpl implements ReportService {
      */
     private final UserRepository userRepository;
 
-    private TelegramBot telegramBot;
+    private final EntityManager entityManager;
+
+    private final TelegramBot telegramBot;
 
     private final PictureNameRepository pictureNameRepository;
 
@@ -76,6 +85,14 @@ public class ReportServiceImpl implements ReportService {
      * @see UserServiceImpl
      */
     private final UserServiceImpl repoService;
+
+    private final ReportDao reportDao;
+
+    private final PictureNameDao pictureNameDao;
+
+    private final ReportPictureDao reportPictureDao;
+
+    private final PictureService pictureService;
 
     @Value("${path.to.reportpictures.folder}")
     private String picturesDirectory;
@@ -92,14 +109,25 @@ public class ReportServiceImpl implements ReportService {
                              UserRepository userRepository,
                              UserServiceImpl repoService,
                              PictureNameRepository pictureNameRepository,
-                             TelegramBot telegramBot) {
+                             TelegramBot telegramBot,
+                             EntityManager entityManager,
+                             ReportDao reportDao,
+                             PictureService pictureService,
+                             PictureNameDao pictureNameDao,
+                             ReportPictureDao reportPictureDao) {
         this.reportsRepository = reportsRepository;
         this.picturesRepository = picturesRepository;
         this.userRepository = userRepository;
         this.repoService = repoService;
         this.pictureNameRepository = pictureNameRepository;
         this.telegramBot = telegramBot;
+        this.entityManager = entityManager;
+        this.reportDao = reportDao;
+        this.pictureService = pictureService;
+        this.pictureNameDao = pictureNameDao;
+        this.reportPictureDao = reportPictureDao;
     }
+
 
     /**
      * Метод, сохраняющий новый отчет в репозитории
@@ -153,7 +181,20 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public Collection<ReportPicture> savePictures(Long reportId,Long userId, List<MultipartFile> files) throws IOException {
         logger.info("==== Saving picture for report");
-        Report report = reportsRepository.getById(reportId);
+
+        Report report = reportDao.get(reportId).orElse(new Report());
+
+        LocalDateTime newReportCreationTime = report.getReportDate().plusHours(15);
+
+        if (newReportCreationTime.isAfter(report.getReportDate())) {
+            report = new Report();
+            report.setReportText("Empty");
+            report.setReportDate();
+            report.setUser(userRepository.findUserByChatId(userId).get());
+            report.setDefaultStatus();
+            reportsRepository.save(report);
+
+        }
 
         Collection<ReportPicture> pictures = new ArrayList<ReportPicture>();
 
@@ -168,6 +209,9 @@ public class ReportServiceImpl implements ReportService {
                 j++;
             } while (new File(filePath.toString()).exists() || picturesRepository.findByFilePath(filePath.toString()).isPresent());
 
+            if (new File(checkFileName).exists()) {
+                filePath = Path.of(picturesDirectory, userId + "_" + reportId + "_" + i + 1 + "." + getExtensions(Objects.requireNonNull(file.getOriginalFilename())));
+            }
             Files.createDirectories(filePath.getParent());
             Files.deleteIfExists(filePath);
 
@@ -186,7 +230,7 @@ public class ReportServiceImpl implements ReportService {
             picture.setFileSize(file.getSize());
             picture.setFilePath(filePath.toString());
             pictures.add(picture);
-            picturesRepository.save(picture);
+            pictureService.savePicture(picture);
 
             PictureName pictureName = new PictureName();
             pictureName.setFilename(filePath.getFileName().toString());
@@ -194,8 +238,7 @@ public class ReportServiceImpl implements ReportService {
             pictureNameRepository.save(pictureName);
         }
         List<PictureName> picturesNames = new ArrayList<>(pictureNameRepository.findAllByReportId(reportId));
-//        report.setPictureNames(picturesNames);
-//        report.setPicturesOfReport(pictures);
+
         logger.info("==== Picture saved successfully");
         return pictures;
     }
@@ -334,6 +377,19 @@ public class ReportServiceImpl implements ReportService {
         files.add(multipartFile);
 
         return files;
+    }
+    /**
+     * Метод получает id пользователя и выдает id последнего отчета из репозитория
+     * @param userId id пользователя
+     * @return возвращает id последнего отчета пользователя
+     */
+    private Long getLastReportIdOfUser(Long userId) {
+        Long lastReportIndex = 0L;
+
+        Long userIdInRepository = repoService.getUserByChatId(userId).orElseThrow(() -> new UserNotFoundException("User not found")).getId();
+        Collection<Report> reports = reportsRepository.findAllByUserId(userIdInRepository);
+        lastReportIndex = reports.stream().max(Comparator.comparing(Report::getReportDate)).get().getId();
+        return lastReportIndex;
     }
 
     /**
