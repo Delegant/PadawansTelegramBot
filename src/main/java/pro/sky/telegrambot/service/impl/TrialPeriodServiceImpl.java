@@ -9,6 +9,7 @@ import pro.sky.telegrambot.model.TrialPeriod;
 import pro.sky.telegrambot.model.User;
 import pro.sky.telegrambot.repository.TrialPeriodRepository;
 import pro.sky.telegrambot.service.TrialPeriodService;
+import pro.sky.telegrambot.service.UserService;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -18,18 +19,18 @@ import java.util.Collection;
 public class TrialPeriodServiceImpl implements TrialPeriodService {
 
     private final TrialPeriodRepository trialPeriodRepository;
-    private final UserRepoService userRepoService;
+    private final UserService userService;
 
     private final Logger logger = LoggerFactory.getLogger(TrialPeriodServiceImpl.class);
 
-    public TrialPeriodServiceImpl(TrialPeriodRepository trialPeriodRepository, UserRepoService userRepoService) {
+    public TrialPeriodServiceImpl(TrialPeriodRepository trialPeriodRepository, UserService userService) {
         this.trialPeriodRepository = trialPeriodRepository;
-        this.userRepoService = userRepoService;
+        this.userService = userService;
     }
 
     @Override
     public void startTrialPeriod(Long userId, Long volunteerId) {
-        User parent = userRepoService.getUserByChatId(userId).orElseThrow(() -> new UserNotFoundException("!!!! user not found"));
+        User parent = userService.getUserByChatId(userId).orElseThrow(() -> new UserNotFoundException("!!!! user not found"));
         TrialPeriod trialPeriod = new TrialPeriod(parent, volunteerId);
         Collection<TrialPeriod> periods = new ArrayList<>();
         periods.add(trialPeriod);
@@ -40,7 +41,7 @@ public class TrialPeriodServiceImpl implements TrialPeriodService {
 
     @Override
     public void closeTrialPeriod(Long userId, Long volunteerId) {
-        User parent = userRepoService.getUserByChatId(userId).orElseThrow(() -> new UserNotFoundException("!!!! user not found"));
+        User parent = userService.getUserByChatId(userId).orElseThrow(() -> new UserNotFoundException("!!!! user not found"));
         TrialPeriod period = trialPeriodRepository.findByUser(parent);
         period.setStatus(TrialPeriod.TrialPeriodStatus.ENDED);
         period.setEndDate(LocalDateTime.now());
@@ -51,7 +52,7 @@ public class TrialPeriodServiceImpl implements TrialPeriodService {
 
     @Override
     public void prolongTrialPeriod(Long userId, int addedDays, Long volunteerId) {
-        User parent = userRepoService.getUserByChatId(userId).orElseThrow(() -> new UserNotFoundException("!!!! user not found"));
+        User parent = userService.getUserByChatId(userId).orElseThrow(() -> new UserNotFoundException("!!!! user not found"));
         TrialPeriod period = trialPeriodRepository.findByUser(parent);
         period.setAdditionalDays(period.getEndDate().plusDays(addedDays));
         period.setStatus(TrialPeriod.TrialPeriodStatus.PROLONGED);
@@ -62,7 +63,7 @@ public class TrialPeriodServiceImpl implements TrialPeriodService {
 
     @Override
     public void declineTrialPeriod(Long userId, Long volunteerId) {
-        User parent = userRepoService.getUserByChatId(userId).orElseThrow(() -> new UserNotFoundException("!!!! user not found"));
+        User parent = userService.getUserByChatId(userId).orElseThrow(() -> new UserNotFoundException("!!!! user not found"));
         TrialPeriod period = trialPeriodRepository.findByUser(parent);
         period.setStatus(TrialPeriod.TrialPeriodStatus.DENIED);
         period.setDeniedBy(volunteerId);

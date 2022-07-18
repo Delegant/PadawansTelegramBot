@@ -36,8 +36,8 @@ class ReportControllerTest {
 
     @Test
     void shouldCallServiceSavePicturesWhenSaveReportPictures() throws IOException {
-        out.saveReportPictures(EXPECTED_ID, files);
-        Mockito.verify(reportService).savePictures(EXPECTED_ID, files);
+        out.saveReportPictures(EXPECTED_ID, EXPECTED_ID, files);
+        Mockito.verify(reportService).savePictures(EXPECTED_ID, EXPECTED_ID, files);
     }
 
     @Test
