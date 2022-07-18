@@ -14,7 +14,7 @@ public class PictureName {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @JoinColumn(name = "file_name")
+    @JoinColumn(name = "filename")
     private String filename;
 
     @ManyToOne

@@ -90,4 +90,25 @@ ALTER TABLE pictures
 ALTER TABLE pictures
     ADD CONSTRAINT UQ_file_path_name UNIQUE(file_path);
 
+-- changeset algmironov:13
+CREATE TABLE messages
+(
+    message_id  SERIAL NOT NULL PRIMARY KEY,
+    sender_id bigint NOT NULL REFERENCES users(chat_id),
+    message_text TEXT NOT NULL,
+    sent_date timestamp NOT NULL,
+    read_status varchar(255) NOT NULL DEFAULT 'UNREAD'
+);
+
+-- changeset anton:14
+
+CREATE TABLE menuStack
+(
+    id SERIAL NOT NULL PRIMARY KEY,
+    user_id  bigint NOT NULL CONSTRAINT users_ref REFERENCES users,
+    text_pack_key varchar(255) DEFAULT 'DOG',
+    text_key varchar(255) NOT NULL DEFAULT 'DEFAULT_MENU_TEXT',
+    menu_state varchar(255) NOT NULL DEFAULT 'SPECIES_PET_SELECTION_MENU'
+);
+
 

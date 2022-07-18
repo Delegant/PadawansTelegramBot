@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import javax.persistence.*;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.Set;
 
 @Schema(description = "Пользователь")
 @Entity(name = "users")
@@ -23,6 +24,7 @@ public class User {
     private Long id;
 
     @Schema(description = "Идентификатор пользователя в Телеграм")
+//    @Column(name = "chat_id")
     private Long chatId;
 
     @Schema(description = "Имя пользователя")
@@ -35,6 +37,10 @@ public class User {
     @Schema(description = "Отчеты пользователя")
     @OneToMany(mappedBy = "user")
     private Collection<Report> reports;
+
+    @Schema(description = "Стэк переходов пользователя по меню")
+    @OneToMany(mappedBy = "user")
+    private Set<MenuStack> menuStackSet;
 
     public User() {
     }

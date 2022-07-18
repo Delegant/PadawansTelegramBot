@@ -54,9 +54,9 @@ public class ReportServiceImpl implements ReportService {
     private final PictureNameRepository pictureNameRepository;
 
     /**
-     * @see UserRepoService
+     * @see UserServiceImpl
      */
-    private final UserRepoService repoService;
+    private final UserServiceImpl repoService;
 
     @Value("${path.to.reportpictures.folder}")
     private String picturesDirectory;
@@ -71,7 +71,7 @@ public class ReportServiceImpl implements ReportService {
     public ReportServiceImpl(ReportsRepository reportsRepository,
                              PicturesRepository picturesRepository,
                              UserRepository userRepository,
-                             UserRepoService repoService,
+                             UserServiceImpl repoService,
                              PictureNameRepository pictureNameRepository) {
         this.reportsRepository = reportsRepository;
         this.picturesRepository = picturesRepository;
@@ -196,7 +196,7 @@ public class ReportServiceImpl implements ReportService {
     }
 
     /**
-     * Метод возвращает список названий файлов с фоттографиями, принадлежащими к отчету.
+     * Метод возвращает список названий файлов с фотографиями, принадлежащими к отчету.
      * @param reportId Идентификатор отчета
      * @return список имен файлов фотографий
      */
@@ -213,10 +213,10 @@ public class ReportServiceImpl implements ReportService {
      */
     @Override
     public ReportPicture getPictureFromStorageByFilename(String filename) {
-
-        ReportPicture picture =  Optional.of(picturesRepository.findByFilePathEndingWith(filename)).orElseThrow();
-        return picture;
+        return Optional.of(picturesRepository.findByFilePathEndingWith(filename)).orElseThrow();
     }
+
+
 
 }
 
