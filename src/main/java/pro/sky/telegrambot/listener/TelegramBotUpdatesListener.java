@@ -11,6 +11,7 @@ import pro.sky.telegrambot.constants.ButtonsText;
 import pro.sky.telegrambot.model.User;
 import pro.sky.telegrambot.service.MenuService;
 import pro.sky.telegrambot.service.ReportService;
+import pro.sky.telegrambot.service.UserService;
 import pro.sky.telegrambot.service.impl.ReportServiceImpl;
 import pro.sky.telegrambot.service.MenuStackService;
 import pro.sky.telegrambot.service.impl.UserServiceImpl;
@@ -60,15 +61,15 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Логгер для класса
      */
-    private Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
+    private final Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
     /**
      * поле инжектирует Телеграм-бота
      *
      * @see pro.sky.telegrambot.configuration.TelegramBotConfiguration
      */
-    private TelegramBot telegramBot;
+    private final TelegramBot telegramBot;
 
-    private ReportService reportService;
+    private final ReportService reportService;
 
     /**
      * конструктор класса
@@ -77,7 +78,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * @param userService сервис репозитория пользоваьелей
      * @param menuStackService сервис репозитория положения юезера в меню
      */
-    public TelegramBotUpdatesListener(TelegramBot telegramBot, MenuService menuService, UserServiceImpl userService, MenuStackService menuStackService) {
+    public TelegramBotUpdatesListener(TelegramBot telegramBot,
+                                      MenuService menuService,
+                                      UserServiceImpl userService,
+                                      MenuStackService menuStackService,
+                                      ReportService reportService) {
         this.telegramBot = telegramBot;
         this.menuService = menuService;
         this.userService = userService;
@@ -110,51 +115,56 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             AtomicReference<ButtonsText> buttonsText = new AtomicReference<>(ButtonsText.getButtonText(textPackKey));
             menuStackService.createMenuStack(currentUser, textPackKey);
             try {
-                Function<String, Boolean> whatIsMenu = (someButtonNameKey) -> {
-                    String someButtonNameValue = buttonsText.get().getString(someButtonNameKey);
-                    String hashSomeButton =  menuService.getHashFromButton(someButtonNameValue);
-                    return update.callbackQuery().data().equals(hashSomeButton);
-                };
-                BiConsumer<String, String> doSendMessage = (textKey, menuKey) -> {
-                    logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
-                    menuStackService.saveMenuStackParam(currentUser, textKey, menuKey);
-                    String textValue = buttonsText.get().getString(textKey);
-                    List<String> menuValue = buttonsText.get().getMenu(menuKey);
-                    telegramBot.execute(menuService.editMenuLoader(update, textValue, menuValue));
-                };
-                Consumer<File> doSendPhoto = (filePath) -> {
-                    logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
-                    telegramBot.execute(menuService.sendPhotoLoader(update, filePath));
-                };
-                BiConsumer<Float, Float> goSendLocation = (latitude, longitude) -> {
-                    logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
-                    telegramBot.execute(menuService.sendLocationLoader(update, latitude, longitude));
-                };
-                BiConsumer<String, String> finalDoSendMessage = doSendMessage;
-                Runnable goBack = () -> {
-                    menuStackService.dropLastMenuStack(currentUser);
-                    finalDoSendMessage.accept(menuStackService.getLastTextKeyByUser(currentUser), menuStackService.getLastMenuStateByUser(currentUser));
-                };
-                BiConsumer<String, String> doChangeSetting = (textKey, menuKey) -> {
-                    menuStackService.setTextPackKey(currentUser, update.callbackQuery().data());
-                    buttonsText.set(ButtonsText.getButtonText(update.callbackQuery().data()));
-                    finalDoSendMessage.accept(textKey, menuKey);
-                };
-                if (update.message() != null) {
-                    whatIsMenu = (someButtonName) -> message.text().equals(buttonsText.get().getString(someButtonName));
-                    doSendMessage = (textKey, menuKey) -> {
-                        logger.info("==== Processing update with message: {}", message.text());
-                        List<String> menuValue = buttonsText.get().getMenu(menuKey);
-                        String textValue = buttonsText.get().getString(textKey);
-                        telegramBot.execute(menuService.menuLoader(message, textValue, menuValue));
+                if (update.callbackQuery() != null || (update.message() != null && update.message().photo() == null)) {
+                    Function<String, Boolean> whatIsMenu = (someButtonNameKey) -> {
+                        String someButtonNameValue = buttonsText.get().getString(someButtonNameKey);
+                        String hashSomeButton = menuService.getHashFromButton(someButtonNameValue);
+                        return update.callbackQuery().data().equals(hashSomeButton);
                     };
-                }
-                if (roleCurrentUser.equals(Role.USER) || roleCurrentUser.equals(Role.PARENT)) {
-                    handleUserMessages(whatIsMenu, doSendMessage, doSendPhoto, goSendLocation, goBack, doChangeSetting);
-                } else if (roleCurrentUser.equals(Role.VOLUNTEER)) {
-                    handleVolunteerMessages(whatIsMenu, doSendMessage, doSendPhoto, goBack);
+                    BiConsumer<String, String> doSendMessage = (textKey, menuKey) -> {
+                        logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
+                        menuStackService.saveMenuStackParam(currentUser, textKey, menuKey);
+                        String textValue = buttonsText.get().getString(textKey);
+                        List<String> menuValue = buttonsText.get().getMenu(menuKey);
+                        telegramBot.execute(menuService.editMenuLoader(update, textValue, menuValue));
+                    };
+                    Consumer<File> doSendPhoto = (filePath) -> {
+                        logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
+                        telegramBot.execute(menuService.sendPhotoLoader(update, filePath));
+                    };
+                    BiConsumer<Float, Float> goSendLocation = (latitude, longitude) -> {
+                        logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
+                        telegramBot.execute(menuService.sendLocationLoader(update, latitude, longitude));
+                    };
+                    BiConsumer<String, String> finalDoSendMessage = doSendMessage;
+                    Runnable goBack = () -> {
+                        menuStackService.dropLastMenuStack(currentUser);
+                        finalDoSendMessage.accept(menuStackService.getLastTextKeyByUser(currentUser), menuStackService.getLastMenuStateByUser(currentUser));
+                    };
+                    BiConsumer<String, String> doChangeSetting = (textKey, menuKey) -> {
+                        menuStackService.setTextPackKey(currentUser, update.callbackQuery().data());
+                        buttonsText.set(ButtonsText.getButtonText(update.callbackQuery().data()));
+                        finalDoSendMessage.accept(textKey, menuKey);
+                    };
+
+                    if (update.message() != null) {
+                        whatIsMenu = (someButtonName) -> message.text().equals(buttonsText.get().getString(someButtonName));
+                        doSendMessage = (textKey, menuKey) -> {
+                            logger.info("==== Processing update with message: {}", message.text());
+                            List<String> menuValue = buttonsText.get().getMenu(menuKey);
+                            String textValue = buttonsText.get().getString(textKey);
+                            telegramBot.execute(menuService.menuLoader(message, textValue, menuValue));
+                        };
+                    }
+                    if (roleCurrentUser.equals(Role.USER) || roleCurrentUser.equals(Role.PARENT)) {
+                        handleUserMessages(whatIsMenu, doSendMessage, doSendPhoto, goSendLocation, goBack, doChangeSetting);
+                    } else if (roleCurrentUser.equals(Role.VOLUNTEER)) {
+                        handleVolunteerMessages(whatIsMenu, doSendMessage, doSendPhoto, goBack);
 //                } else if (roleCurrentUser.equals(Role.ADMIN)) {
 //
+                    }
+                } else if (message.photo() != null) {
+                    reportService.getPictureFromMessage(message.from().id(), message);
                 }
 
             } catch (Exception e) {
@@ -177,8 +187,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                                    Consumer<File> doSendPhoto,
                                    BiConsumer<Float, Float> doSendLocation,
                                    Runnable doGoBack,
-                                   BiConsumer<String,String> doChangeSetting
-    ) {
+                                   BiConsumer<String,String> doChangeSetting)
+    {
         if (whatIsMenu.apply("START_BUTTON")) {
             doSendMessage.accept("START_TEXT", "SPECIES_PET_SELECTION_MENU");
         } else if(whatIsMenu.apply("BACK_BUTTON")) {

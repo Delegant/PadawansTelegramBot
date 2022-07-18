@@ -129,6 +129,10 @@ public class Report {
         this.status = status;
     }
 
+    public void setDefaultStatus() {
+        this.status = Status.MAIN;
+    }
+
     public Collection<ReportPicture> getPicturesOfReport() {
         return picturesOfReport;
     }
