@@ -1,5 +1,6 @@
 package pro.sky.telegrambot.service;
 
+import com.pengrad.telegrambot.model.Message;
 import org.springframework.web.multipart.MultipartFile;
 import pro.sky.telegrambot.model.Report;
 import pro.sky.telegrambot.model.ReportPicture;
@@ -17,17 +18,25 @@ public interface ReportService {
 
     Report saveReport(Long userId, String reportText);
 
+    Report saveReport(Report report);
+
     Collection<Report> getReportsByParent(Long userId);
 
     Collection<ReportPicture> getReportPicturesByReportId(Long reportId);
 
-    Collection<ReportPicture> savePictures(Long reportId, List<MultipartFile> files) throws IOException;
+    Collection<Report> getListOfReportsByUserName(String username);
+
+    Collection<Report> getListOfReportsByUserId(Long userId);
+
+    Collection<ReportPicture> savePictures(Long reportId, Long userId, List<MultipartFile> files) throws IOException;
 
     List<ReportPicture> findAllPictures();
 
     List<String> getReportPicturesNames(Long reportId);
 
     ReportPicture getPictureFromStorageByFilename(String filename);
+
+    void getPictureFromMessage(Long userId, Message message) throws IOException;
 
 
 }

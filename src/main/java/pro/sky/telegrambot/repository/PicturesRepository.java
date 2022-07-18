@@ -6,6 +6,7 @@ import pro.sky.telegrambot.model.Report;
 import pro.sky.telegrambot.model.ReportPicture;
 
 import java.util.Collection;
+import java.util.Optional;
 
 @Repository
 public interface PicturesRepository extends JpaRepository<ReportPicture, Long> {
@@ -15,4 +16,6 @@ public interface PicturesRepository extends JpaRepository<ReportPicture, Long> {
     void findByFilePathContains(String filename);
 
     ReportPicture findByFilePathEndingWith(String filename);
+
+    Optional<ReportPicture> findByFilePath(String filename);
 }

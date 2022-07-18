@@ -10,7 +10,7 @@ import java.util.Objects;
 @Entity(name = "messages")
 public class IncomingMessage {
 
-    private enum ReadStatus {
+    public enum ReadStatus {
         UNREAD,
         READ,
     }

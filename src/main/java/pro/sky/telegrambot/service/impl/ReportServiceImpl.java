@@ -1,12 +1,24 @@
 package pro.sky.telegrambot.service.impl;
 
+import com.pengrad.telegrambot.TelegramBot;
+import com.pengrad.telegrambot.model.Message;
+import com.pengrad.telegrambot.model.PhotoSize;
+import com.pengrad.telegrambot.request.GetFile;
+import com.pengrad.telegrambot.response.GetFileResponse;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.disk.DiskFileItem;
+import org.apache.commons.io.FileUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import pro.sky.telegrambot.exceptions.UserIsNotAllowedToSendReportException;
+import pro.sky.telegrambot.exceptions.UserNotFoundException;
 import pro.sky.telegrambot.model.PictureName;
 import pro.sky.telegrambot.model.Report;
 import pro.sky.telegrambot.model.ReportPicture;
@@ -19,8 +31,13 @@ import pro.sky.telegrambot.service.ReportService;
 
 import javax.validation.constraints.NotNull;
 import java.io.*;
+import java.net.URL;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -51,6 +68,8 @@ public class ReportServiceImpl implements ReportService {
      */
     private final UserRepository userRepository;
 
+    private TelegramBot telegramBot;
+
     private final PictureNameRepository pictureNameRepository;
 
     /**
@@ -72,12 +91,14 @@ public class ReportServiceImpl implements ReportService {
                              PicturesRepository picturesRepository,
                              UserRepository userRepository,
                              UserServiceImpl repoService,
-                             PictureNameRepository pictureNameRepository) {
+                             PictureNameRepository pictureNameRepository,
+                             TelegramBot telegramBot) {
         this.reportsRepository = reportsRepository;
         this.picturesRepository = picturesRepository;
         this.userRepository = userRepository;
         this.repoService = repoService;
         this.pictureNameRepository = pictureNameRepository;
+        this.telegramBot = telegramBot;
     }
 
     /**
@@ -100,6 +121,16 @@ public class ReportServiceImpl implements ReportService {
         return report;
     }
 
+    @Override
+    public Collection<Report> getListOfReportsByUserName(String username) {
+        return reportsRepository.findAllByUserId(userRepository.findByName(username).get().getId());
+    }
+
+    @Override
+    public Collection<Report> getListOfReportsByUserId(Long userId) {
+        return reportsRepository.findAllByUserId(userId);
+    }
+
     /**
      * Метод, возвращающий расширение файла
      * @param fileName имя файла
@@ -118,24 +149,25 @@ public class ReportServiceImpl implements ReportService {
      * @return возвращает коллекцию загруженных файлов
      * @throws IOException может выбрасывать исключение
      */
+    @Transactional
     @Override
-    public Collection<ReportPicture> savePictures(Long reportId, List<MultipartFile> files) throws IOException {
+    public Collection<ReportPicture> savePictures(Long reportId,Long userId, List<MultipartFile> files) throws IOException {
         logger.info("==== Saving picture for report");
         Report report = reportsRepository.getById(reportId);
 
-        Long userId = report.getUser().getChatId();
         Collection<ReportPicture> pictures = new ArrayList<ReportPicture>();
 
         for (int i = 0; i < files.size(); i++) {
             MultipartFile file = files.get(i);
             ReportPicture picture = new ReportPicture();
-
-            Path filePath = Path.of(picturesDirectory, userId+ "_" + reportId + "_" + i + "." + getExtensions(Objects.requireNonNull(file.getOriginalFilename())));
             String checkFileName = picturesDirectory + "/" + userId+ "_" + reportId + "_" + i + "." + getExtensions(Objects.requireNonNull(file.getOriginalFilename()));
+            Path filePath = Path.of(picturesDirectory, userId+ "_" + reportId + "_" + i + "." + getExtensions(Objects.requireNonNull(file.getOriginalFilename())));
+            int j = 0;
+            do {
+                filePath = Path.of(picturesDirectory, userId+ "_" + reportId + "_" + i + j + "." + getExtensions(Objects.requireNonNull(file.getOriginalFilename())));
+                j++;
+            } while (new File(filePath.toString()).exists() || picturesRepository.findByFilePath(filePath.toString()).isPresent());
 
-            if (new File(checkFileName).exists()) {
-                filePath = Path.of(picturesDirectory, userId + "_" + reportId + "_" + i + 1 + "." + getExtensions(Objects.requireNonNull(file.getOriginalFilename())));
-            }
             Files.createDirectories(filePath.getParent());
             Files.deleteIfExists(filePath);
 
@@ -162,8 +194,9 @@ public class ReportServiceImpl implements ReportService {
             pictureNameRepository.save(pictureName);
         }
         List<PictureName> picturesNames = new ArrayList<>(pictureNameRepository.findAllByReportId(reportId));
-        report.setPictureNames(picturesNames);
-        report.setPicturesOfReport(pictures);
+//        report.setPictureNames(picturesNames);
+//        report.setPicturesOfReport(pictures);
+        logger.info("==== Picture saved successfully");
         return pictures;
     }
 
@@ -174,7 +207,7 @@ public class ReportServiceImpl implements ReportService {
      */
     @Override
     public Collection<Report> getReportsByParent(Long userId) {
-        return reportsRepository.findAllByUser(userId);
+        return reportsRepository.findAllByUserId(userId);
     }
 
     /**
@@ -216,7 +249,106 @@ public class ReportServiceImpl implements ReportService {
         return Optional.of(picturesRepository.findByFilePathEndingWith(filename)).orElseThrow();
     }
 
+    /**
+     * Сохраняет новый отчет
+     * @param report отчет
+     * @return новый сохраненный отчет
+     */
+    @Override
+    public Report saveReport(Report report) {
+        return reportsRepository.save(report);
+    }
 
+    /**
+     * Метод получает фотографию из Телеграм и сохраняет её в репозиторий
+     *
+     * Сначала метод получает список PhotoSize, затем выбирает из него оригинал фотографии, скачивает её,
+     * затем отправляет в метод prepareForSavingReportPictures() для образования MultiPartFile и пользуется методом
+     * savePictures() для сохранения фотографий отчета
+     *
+     * @see ReportServiceImpl#savePictures(Long, Long, List)
+     * @see ReportServiceImpl#getReportsByParent(Long)
+     * @see ReportServiceImpl#prepareForSavingReportPictures(String)
+     * @param userId Id пользователя
+     * @param message объект сообщения из Телеграм
+     * @throws IOException выбрасывает исключение IOException
+     */
+    @Override
+    public void getPictureFromMessage(Long userId, Message message) throws IOException {
+
+        User user = repoService.getUserByChatId(userId).orElse(new User(message.chat().id(),
+                message.chat().lastName() + message.chat().firstName()));
+
+        List<PhotoSize> photos = Arrays.asList(message.photo());
+
+        String fileId = Objects.requireNonNull(photos.stream().max(Comparator.comparing(PhotoSize::fileSize))
+                .orElse(null)).fileId();
+
+        GetFile request = new GetFile(fileId);
+        GetFileResponse getFileResponse = telegramBot.execute(request);
+
+        com.pengrad.telegrambot.model.File file = getFileResponse.file();
+        file.fileId();
+        file.filePath();
+        file.fileSize();
+
+        String fullPath = telegramBot.getFullFilePath(file);
+
+        String tempFileName = "/downloadedFromTelegramFile.jpg";
+        String fullFilePath = picturesDirectory + tempFileName;
+
+        try {
+            FileUtils.copyURLToFile(
+                    new URL(fullPath),
+                    new File(picturesDirectory + tempFileName),
+                    1000000,
+                    100000000);
+        } catch (Exception e) {
+            logger.error(String.valueOf(e));
+        }
+        savePictures(getLastReportId(userId), userId, prepareForSavingReportPictures(fullFilePath));
+
+    }
+
+    /**
+     * Метод получает путь до локального файла и преобразует его в MultipartFile, затем упаковывает в список.
+     *
+     * @param filePath путь файла, сохраненного в локальную папку
+     * @return список (из одного файла) MultipartFile
+     * @throws IOException выбрасывает исключение IOException
+     */
+    public List<MultipartFile> prepareForSavingReportPictures(String filePath) throws IOException {
+
+        List<MultipartFile> files = new ArrayList<>();
+        File file = new File(filePath);
+
+        FileItem fileItem = new DiskFileItem("file", "image/jpeg", false, filePath, 10000000, file );
+
+        try (InputStream in = new FileInputStream(file); OutputStream out = fileItem.getOutputStream()) {
+            in.transferTo(out);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid file: " + e, e);
+        }
+
+        CommonsMultipartFile multipartFile = new CommonsMultipartFile(fileItem);
+        files.add(multipartFile);
+
+        return files;
+    }
+
+    /**
+     * Метод получает id пользователя и выдает id последнего отчета из репозитория
+     * @param userId id пользователя
+     * @return возвращает id последнего отчета пользователя
+     */
+    private Long getLastReportId(Long userId) {
+        Long lastReportIndex = 0L;
+
+        Long userIdInRepository = repoService.getUserByChatId(userId).orElseThrow(() -> new UserNotFoundException("User not found")).getId();
+        Collection<Report> reports = reportsRepository.findAllByUserId(userIdInRepository);
+        lastReportIndex = reports.stream().max(Comparator.comparing(Report::getReportDate)).get().getId();
+        return lastReportIndex;
+    }
 
 }
 

@@ -11,4 +11,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findUserByChatId(Long chatId);
 
+    Optional<User> findByName(String name);
+
 }

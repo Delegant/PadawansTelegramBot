@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.constants.ButtonsText;
 import pro.sky.telegrambot.model.User;
 import pro.sky.telegrambot.service.MenuService;
+import pro.sky.telegrambot.service.ReportService;
+import pro.sky.telegrambot.service.impl.ReportServiceImpl;
 import pro.sky.telegrambot.service.MenuStackService;
 import pro.sky.telegrambot.service.impl.UserServiceImpl;
 
@@ -66,6 +68,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     private TelegramBot telegramBot;
 
+    private ReportService reportService;
+
     /**
      * конструктор класса
      *  @param telegramBot Телеграм бот
@@ -77,6 +81,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         this.telegramBot = telegramBot;
         this.menuService = menuService;
         this.userService = userService;
+        this.reportService = reportService;
         this.menuStackService = menuStackService;
     }
 
