@@ -17,7 +17,7 @@ public class PictureName {
     @JoinColumn(name = "filename")
     private String filename;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JsonIgnore
     @JoinColumn(name = "report_id")
     private Report report;

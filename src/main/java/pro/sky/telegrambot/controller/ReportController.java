@@ -49,11 +49,29 @@ public class ReportController {
             summary = "Сохранение нового отчета",
             description = "Сохраняет новый отчет, получая на вход два параметра: Id юзера и текст отчета"
     )
-    @PostMapping("/newReport/{userId}&{reportText}")
+    @PostMapping("/newReport/{userId}")
     public void saveNewReport(@PathVariable("userId") @Parameter(description = "Идентификатор пользователя") Long userId,
-                              @PathVariable("reportText") @Parameter(description = "Текст отчета") String reportText) {
+                              @RequestParam @Parameter(description = "Текст отчета") String reportText) {
 
         reportService.saveReport(userId, reportText);
+    }
+
+
+    @Operation(
+            summary = "Сохранение нового отчета и фотографий",
+            description = "Сохраняет одновременно и текст отчета и фотографии к нему."
+    )
+    @PostMapping(value = "/reportWithPicture/{userId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> saveNewReportWithPicture(@PathVariable("userId") @Parameter(description = "Идентификатор пользователя") Long userId,
+                                         @RequestParam @Parameter(description = "Текст отчета") String reportText,
+                                         @RequestParam @Parameter(description = "Список фотографий для отчета") List<MultipartFile> files) throws IOException {
+        Report report = reportService.saveReport(userId, reportText);
+
+        reportService.savePictures(report.getId(), userId, files);
+
+        return ResponseEntity.ok("New report with pictures has been saved successfully!");
+
+
     }
 
     @Operation(
@@ -74,9 +92,10 @@ public class ReportController {
     )
     @PostMapping(value = "/{reportId}/pictures", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> saveReportPictures(@PathVariable @Parameter(description = "Идентификатор отчета") Long reportId,
+                                                     @RequestParam @Parameter(description = "идентификатор пользователя") Long userId,
                                                      @RequestParam @Parameter(description = "Список фотографий для отчета") List<MultipartFile> files) throws IOException {
         try {
-            reportService.savePictures(reportId, files);
+            reportService.savePictures(reportId, userId, files);
         } catch (Exception e) {
             logger.error("!!!! Cannot save pictures because of exception " + e);
         }
@@ -149,4 +168,6 @@ public class ReportController {
             is.transferTo(os);
         }
     }
+
+
 }

@@ -30,7 +30,7 @@ public class ReportPicture {
 
     @Schema(description = "Идентификатор отчета к которому привязана фотография")
     @JsonIgnore
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "report_id")
     private Report report;
 
