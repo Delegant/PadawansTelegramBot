@@ -14,7 +14,7 @@ import java.util.Objects;
 @Entity(name = "reports")
 public class Report {
 
-    private enum Status {
+    public enum Status {
         MAIN,
         UPDATED,
     }
