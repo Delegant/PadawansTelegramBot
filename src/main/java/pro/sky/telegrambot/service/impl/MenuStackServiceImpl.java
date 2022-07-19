@@ -36,10 +36,28 @@ public class MenuStackServiceImpl implements MenuStackService {
         menuStackRepository.save(menuStack);
     }
 
+    /**
+     * Метод, удаляет строку положения пользователя,
+     * соответсвующую в текущему меню
+     *
+     * @param user пользователя для поиска из репозитория
+     */
     @Override
-    public void dropLastMenuStack(User user) {
+    public void dropMenuStack(User user) {
         MenuStack menuStack = getMenuStackByUser(user);
         menuStackRepository.delete(menuStack);
+    }
+
+    @Override
+    public MenuStack.ExpectedMessageType getCurrentExpectedMessageTypeByUser(User user) {
+        return getMenuStackByUser(user).getExpect();
+    }
+
+    @Override
+    public void setCurrentExpectedMessageTypeByUser(User user, MenuStack.ExpectedMessageType expect) {
+        MenuStack menuStack = getMenuStackByUser(user);
+        menuStack.setExpect(expect);
+        menuStackRepository.save(menuStack);
     }
 
     @Override
@@ -63,32 +81,62 @@ public class MenuStackServiceImpl implements MenuStackService {
         menuStackRepository.save(menuStack);
     }
 
+    /**
+     * Метод, возвращает строку с именем меню,
+     * в которое пользователь попал в прошлый update
+     *
+     * @param user пользователя для поиска из репозитория
+     * @return возвращает ключ для поиска в хранилище меню
+     */
     @Override
-    public String getLastMenuStateByUser(User user) {
-        return getLastMenuStackByUser(user).getMenuState();
+    public String getPreviousMenuStateByUser(User user) {
+        return getPreviousMenuStackByUser(user).getMenuState();
     }
 
+    /**
+     * Метод, возвращает строку с кэшем кнопки
+     * выбора типа животного, в прошлый update.
+     *
+     * @param user пользователя для поиска из репозитория
+     * @return возвращает результат функции Objects.hash()
+     * на тексте кнопки
+     */
     @Override
-    public String getLastTextPackKeyByUser(User user) {
-        return getLastMenuStackByUser(user).getTextPackKey();
+    public String getPreviousTextPackKeyByUser(User user) {
+        return getPreviousMenuStackByUser(user).getTextPackKey();
     }
 
+    /**
+     * Метод, возвращает строку с кэшем кнопки
+     * выбора типа животного, в текущий update.
+     *
+     * @param user пользователя для поиска из репозитория
+     * @return возвращает результат функции Objects.hash()
+     * на тексте кнопки
+     */
     @Override
     public String getTextPackKeyByUser(User user) {
         return getMenuStackByUser(user).getTextPackKey();
     }
 
+    /**
+     * Метод, возвращает строку с текстом меню,
+     * который пользователь получил в прошлый update
+     *
+     * @param user пользователя для поиска из репозитория
+     * @return возвращает ключ для поиска в хранилище текстов
+     */
     @Override
-    public String getLastTextKeyByUser(User user) {
-        return getLastMenuStackByUser(user).getTextKey();
+    public String getPreviousTextKeyByUser(User user) {
+        return getPreviousMenuStackByUser(user).getTextKey();
     }
 
     private MenuStack getMenuStackByUser(User user) {
-        return menuStackRepository.findTopByUserOrderByIdDesc(user).orElseGet(()->createMenuStack(user));
+        return menuStackRepository.findTopByUserOrderByIdDesc(user).orElseGet(() -> createMenuStack(user));
     }
 
-    private MenuStack getLastMenuStackByUser(User user) {
-        return menuStackRepository.findLastMenuStateByUser(user).orElseGet(()->createMenuStack(user));
+    private MenuStack getPreviousMenuStackByUser(User user) {
+        return menuStackRepository.findLastMenuStateByUser(user).orElseGet(() -> createMenuStack(user));
     }
 
 }

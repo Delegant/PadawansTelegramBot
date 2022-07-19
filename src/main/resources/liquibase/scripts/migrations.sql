@@ -144,3 +144,11 @@ CREATE TABLE menuStack
     text_key varchar(255) NOT NULL DEFAULT 'DEFAULT_MENU_TEXT',
     menu_state varchar(255) NOT NULL DEFAULT 'SPECIES_PET_SELECTION_MENU'
 );
+
+-- changeset anton:20
+
+ALTER TABLE menuStack
+    ADD COLUMN expect varchar(255) NOT NULL DEFAULT 'COMMAND';
+
+ALTER TABLE users
+    ADD COLUMN companion bigint;

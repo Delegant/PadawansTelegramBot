@@ -4,32 +4,37 @@ import java.util.*;
 
 public class ButtonsText {
 
-    private static final Map<String, ButtonsText> buttonsTextMap;
     public static String HIDDEN_BUTTON;
+    private static ButtonsText singletonBundleText;
+    private static final String hashPetDefaultTextKey = "-2057967076";
+    private final Map<String, ResourceBundle> bundleMap;
+    private final Map<String, List<String>> menuMap = new HashMap<>();
+    private ResourceBundle bundle;
+    private String currentTextKey;
 
-    static {
-        buttonsTextMap = new HashMap<>();
-        buttonsTextMap.put("-55733391", new ButtonsText("cat"));
-        buttonsTextMap.put("-2057967076", new ButtonsText(null));
+    {
+        bundleMap = new HashMap<>();
+        bundleMap.put("-55733391", ResourceBundle.getBundle("default", new Locale("cat")));
+        bundleMap.put("-2057967076", ResourceBundle.getBundle("default"));
     }
 
-    private final Map<String, List<String>> menuMap = new HashMap<>();
-    private final ResourceBundle bundle;
-
-    private ButtonsText(String key) {
-        if (key == null) {
-            this.bundle = ResourceBundle.getBundle("default");
-        } else {
-            this.bundle = ResourceBundle.getBundle("default", new Locale(key));
-        }
+    private ButtonsText() {
+        currentTextKey = hashPetDefaultTextKey;
+        bundle = bundleMap.get(currentTextKey);
         init();
     }
 
-    public static ButtonsText getButtonText(String key) {
-        if (buttonsTextMap.containsKey(key)){
-            return buttonsTextMap.get(key);
+    public static ButtonsText getButtonText() {
+        if (singletonBundleText == null) {
+            singletonBundleText = new ButtonsText();
         }
-        return buttonsTextMap.get("32359089");
+        return singletonBundleText;
+    }
+
+    public void changeCurrentTextKey(String newCurrentTextKey) {
+        this.currentTextKey = newCurrentTextKey;
+        bundle = bundleMap.get(currentTextKey);
+        init();
     }
 
     public String getString(String key) {
