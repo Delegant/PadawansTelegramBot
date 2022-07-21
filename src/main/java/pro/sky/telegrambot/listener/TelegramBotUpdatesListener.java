@@ -73,9 +73,10 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     /**
      * конструктор класса
-     *  @param telegramBot Телеграм бот
-     * @param menuService обработчик-меню
-     * @param userService сервис репозитория пользоваьелей
+     *
+     * @param telegramBot      Телеграм бот
+     * @param menuService      обработчик-меню
+     * @param userService      сервис репозитория пользоваьелей
      * @param menuStackService сервис репозитория положения юезера в меню
      */
     public TelegramBotUpdatesListener(TelegramBot telegramBot,
@@ -128,6 +129,13 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                         List<String> menuValue = buttonsText.get().getMenu(menuKey);
                         telegramBot.execute(menuService.editMenuLoader(update, textValue, menuValue));
                     };
+                    BiConsumer<String, String> doSendReportList = (textKey, menuKey) -> {
+                        logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
+                        List<String> buttons = menuService.generateListOfLastReports();
+                        String text = "Список последних отчетов: ";
+                        telegramBot.execute(menuService.menuLoader(update, text, buttons));
+                    };
+
                     Consumer<File> doSendPhoto = (filePath) -> {
                         logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
                         telegramBot.execute(menuService.sendPhotoLoader(update, filePath));
@@ -146,6 +154,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                         buttonsText.set(ButtonsText.getButtonText(update.callbackQuery().data()));
                         finalDoSendMessage.accept(textKey, menuKey);
                     };
+                    BiConsumer<String, String> doSetNewVolunteer = (textKey, menuKey) -> {
+                        menuStackService.saveMenuStackParam(currentUser, textKey, menuKey);
+                        buttonsText.set(ButtonsText.getButtonText(update.callbackQuery().data()));
+
+                    };
 
                     if (update.message() != null) {
                         whatIsMenu = (someButtonName) -> message.text().equals(buttonsText.get().getString(someButtonName));
@@ -159,9 +172,9 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     if (roleCurrentUser.equals(Role.USER) || roleCurrentUser.equals(Role.PARENT)) {
                         handleUserMessages(whatIsMenu, doSendMessage, doSendPhoto, goSendLocation, goBack, doChangeSetting);
                     } else if (roleCurrentUser.equals(Role.VOLUNTEER)) {
-                        handleVolunteerMessages(whatIsMenu, doSendMessage, doSendPhoto, goBack);
-//                } else if (roleCurrentUser.equals(Role.ADMIN)) {
-//
+                        handleVolunteerMessages(whatIsMenu, doSendMessage, doSendPhoto, goBack, doSendReportList);
+                    } else if (roleCurrentUser.equals(Role.ADMIN)) {
+                        handleAdminMessages(whatIsMenu, doSendMessage, doSendPhoto, goBack, doSetNewVolunteer, doSendReportList);
                     }
                 } else if (message.photo() != null) {
                     reportService.getPictureFromMessage(message.from().id(), message);
@@ -187,11 +200,10 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                                    Consumer<File> doSendPhoto,
                                    BiConsumer<Float, Float> doSendLocation,
                                    Runnable doGoBack,
-                                   BiConsumer<String,String> doChangeSetting)
-    {
+                                   BiConsumer<String, String> doChangeSetting) {
         if (whatIsMenu.apply("START_BUTTON")) {
             doSendMessage.accept("START_TEXT", "SPECIES_PET_SELECTION_MENU");
-        } else if(whatIsMenu.apply("BACK_BUTTON")) {
+        } else if (whatIsMenu.apply("BACK_BUTTON")) {
             doGoBack.run();
         } else if (whatIsMenu.apply("CAT_BUTTON")) {
             doChangeSetting.accept("GREETING_TEXT", "MAIN_MENU");
@@ -259,11 +271,14 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     public void handleVolunteerMessages(Function<String, Boolean> whatIsMenu,
                                         BiConsumer<String, String> doSendMessage,
                                         Consumer<File> goSendPhoto,
-                                        Runnable goBack) {
+                                        Runnable goBack,
+                                        BiConsumer<String, String> doSendReportList) {
         if (whatIsMenu.apply("ADD_PARENT_BUTTON")) {
             doSendMessage.accept("ADD_PARENT", "BACK_TO_VOLUNTEERS_MENU");
         } else if (whatIsMenu.apply("CHECK_REPORTS_BUTTON")) {
             doSendMessage.accept("CHECK_REPORTS", "BACK_TO_VOLUNTEERS_MENU");
+        } else if (whatIsMenu.apply("VOLUNTEER_MAIN_MENU_BUTTON")) {
+            doSendMessage.accept("VOLUNTEER_START_TEXT", "VOLUNTEER_MAIN_MENU");
         }
 
     }
@@ -271,10 +286,27 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Метод, обрабатывающий сообщения и нажатия кнопок от пользователя с ролью ADMIN
      *
-     * @param update обновление
+     * @param whatIsMenu    функция для попадания в нужную ветку условий
+     * @param doSendMessage биконсьюмер для отправки текста
+     * @param goSendPhoto   консьюмер для отправки фото
+     * @param goBack        для кнопки "назад"
      */
-    public void handleAdminMessages(Update update) {
+    public void handleAdminMessages(Function<String, Boolean> whatIsMenu,
+                                    BiConsumer<String, String> doSendMessage,
+                                    Consumer<File> goSendPhoto,
+                                    Runnable goBack,
+                                    BiConsumer<String, String> doSetNewVolunteer,
+                                    BiConsumer<String, String> doSendReportList) {
+        if (whatIsMenu.apply("START_BUTTON")) {
+            doSendMessage.accept("ADMIN_START_TEXT", "ADMIN_MAIN_MENU");
+        } else if (whatIsMenu.apply("ADD_PARENT_BUTTON")) {
+            doSendMessage.accept("ADD_PARENT", "BACK_TO_ADMIN_MENU");
+        } else if (whatIsMenu.apply("CHECK_REPORTS_BUTTON")) {
+            doSendMessage.accept("CHECK_REPORTS", "REPORTS_MENU");
+        } else if (whatIsMenu.apply("UNREAD_REPORTS")) {
+            doSendReportList.accept("UNREAD_REPORTS_TEXT", "BACK_TO_ADMIN_MENU");
 
+
+        }
     }
-
 }

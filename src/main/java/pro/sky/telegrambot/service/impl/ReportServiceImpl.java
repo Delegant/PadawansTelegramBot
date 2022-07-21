@@ -171,6 +171,8 @@ public class ReportServiceImpl implements ReportService {
     /**
      * Метод, сохраняющий список фотографий для отчета. Может принимать несколько файлов.
      * Фотографии сохраняются в Базу Данных и локально.
+     * Если фотография пришла перед созданием отчета, то создается новый отчет.
+     * Если после создания отчета прошло более 15 часов, то так же создается новый отчет с текстом "Empty".
      * Формат имен сохраняемых фотографий: telegramUserId_reportId_pictureNumber
      * @param reportId идентификатор отчета
      * @param files список файлов
@@ -179,39 +181,26 @@ public class ReportServiceImpl implements ReportService {
      */
     @Transactional
     @Override
-    public Collection<ReportPicture> savePictures(Long reportId,Long userId, List<MultipartFile> files) throws IOException {
+    public Collection<ReportPicture> savePictures(Long reportId, Long userId, List<MultipartFile> files) throws IOException {
         logger.info("==== Saving picture for report");
 
         Report report = reportDao.get(reportId).orElse(new Report());
 
-        LocalDateTime newReportCreationTime = report.getReportDate().plusHours(15);
+        Collection<ReportPicture> pictures = new ArrayList<>();
 
-        if (newReportCreationTime.isAfter(report.getReportDate())) {
-            report = new Report();
-            report.setReportText("Empty");
-            report.setReportDate();
-            report.setUser(userRepository.findUserByChatId(userId).get());
-            report.setDefaultStatus();
-            reportsRepository.save(report);
-
-        }
-
-        Collection<ReportPicture> pictures = new ArrayList<ReportPicture>();
-
+        //Здесь происходит сохранение файлов картинок в репозиторий и локально
         for (int i = 0; i < files.size(); i++) {
             MultipartFile file = files.get(i);
             ReportPicture picture = new ReportPicture();
-            String checkFileName = picturesDirectory + "/" + userId+ "_" + reportId + "_" + i + "." + getExtensions(Objects.requireNonNull(file.getOriginalFilename()));
-            Path filePath = Path.of(picturesDirectory, userId+ "_" + reportId + "_" + i + "." + getExtensions(Objects.requireNonNull(file.getOriginalFilename())));
+            Path filePath;
             int j = 0;
+
+            //Метод do\while подбирает имя файла, не конфликтующее с уже имеющимися в репозитории и локально
             do {
                 filePath = Path.of(picturesDirectory, userId+ "_" + reportId + "_" + i + j + "." + getExtensions(Objects.requireNonNull(file.getOriginalFilename())));
                 j++;
             } while (new File(filePath.toString()).exists() || picturesRepository.findByFilePath(filePath.toString()).isPresent());
 
-            if (new File(checkFileName).exists()) {
-                filePath = Path.of(picturesDirectory, userId + "_" + reportId + "_" + i + 1 + "." + getExtensions(Objects.requireNonNull(file.getOriginalFilename())));
-            }
             Files.createDirectories(filePath.getParent());
             Files.deleteIfExists(filePath);
 
@@ -237,7 +226,6 @@ public class ReportServiceImpl implements ReportService {
             pictureName.setReport(report);
             pictureNameRepository.save(pictureName);
         }
-        List<PictureName> picturesNames = new ArrayList<>(pictureNameRepository.findAllByReportId(reportId));
 
         logger.info("==== Picture saved successfully");
         return pictures;
@@ -378,22 +366,10 @@ public class ReportServiceImpl implements ReportService {
 
         return files;
     }
-    /**
-     * Метод получает id пользователя и выдает id последнего отчета из репозитория
-     * @param userId id пользователя
-     * @return возвращает id последнего отчета пользователя
-     */
-    private Long getLastReportIdOfUser(Long userId) {
-        Long lastReportIndex = 0L;
-
-        Long userIdInRepository = repoService.getUserByChatId(userId).orElseThrow(() -> new UserNotFoundException("User not found")).getId();
-        Collection<Report> reports = reportsRepository.findAllByUserId(userIdInRepository);
-        lastReportIndex = reports.stream().max(Comparator.comparing(Report::getReportDate)).get().getId();
-        return lastReportIndex;
-    }
 
     /**
      * Метод получает id пользователя и выдает id последнего отчета из репозитория
+     * Если последний отчет был создан более 15 часов назад, то создается новый отчет
      * @param userId id пользователя
      * @return возвращает id последнего отчета пользователя
      */
@@ -403,12 +379,24 @@ public class ReportServiceImpl implements ReportService {
         Long userIdInRepository = repoService.getUserByChatId(userId).orElseThrow(() -> new UserNotFoundException("User not found")).getId();
         Collection<Report> reports = reportsRepository.findAllByUserId(userIdInRepository);
         lastReportIndex = reports.stream().max(Comparator.comparing(Report::getReportDate)).get().getId();
+
+        Report report = reportDao.get(lastReportIndex).orElse(new Report());
+
+        LocalDateTime newReportCreationTime = report.getReportDate().plusHours(15);
+
+        // Здесь выполняется проверка, прошло ли более 15 часов с момента написания последнего отчета, если прошло, то выполняется
+        //создание нового отчета
+        if (newReportCreationTime.isAfter(report.getReportDate())) {
+            report = new Report();
+            report.setReportText("Empty");
+            report.setReportDate();
+            report.setUser(userRepository.findUserByChatId(userId).get());
+            report.setDefaultStatus();
+            reportsRepository.save(report);
+
+        }
+
         return lastReportIndex;
     }
 
 }
-
-
-
-
-

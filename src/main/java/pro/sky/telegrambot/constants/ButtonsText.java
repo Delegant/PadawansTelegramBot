@@ -1,11 +1,16 @@
 package pro.sky.telegrambot.constants;
 
+import org.springframework.stereotype.Service;
+import pro.sky.telegrambot.service.MenuService;
+
 import java.util.*;
 
 public class ButtonsText {
 
     private static final Map<String, ButtonsText> buttonsTextMap;
     public static String HIDDEN_BUTTON;
+
+
 
     static {
         buttonsTextMap = new HashMap<>();
@@ -14,7 +19,7 @@ public class ButtonsText {
     }
 
     private final Map<String, List<String>> menuMap = new HashMap<>();
-    private final ResourceBundle bundle;
+    private ResourceBundle bundle;
 
     private ButtonsText(String key) {
         if (key == null) {
@@ -115,8 +120,13 @@ public class ButtonsText {
                 ));
         menuMap.put(bundle.getString("ADMIN_MAIN_MENU"),
                 List.of(
-                        bundle.getString("BACK_BUTTON"),
-                        bundle.getString("BACK_TO_VOLUNTEERS_MENU")
+                        bundle.getString("ADD_PARENT"),
+                        bundle.getString("CHECK_REPORTS"),
+                        bundle.getString("VIEW_INCOMING_MESSAGES"),
+                        bundle.getString("TRIAL_PERIOD_FOR_ADMIN_MENU"),
+                        bundle.getString("CONTACT_PARENT"),
+                        bundle.getString("ADD_VOLUNTEER"),
+                        bundle.getString("ADD_ADMIN")
 
                 ));
         HIDDEN_BUTTON = bundle.getString("HIDDEN_BUTTON");

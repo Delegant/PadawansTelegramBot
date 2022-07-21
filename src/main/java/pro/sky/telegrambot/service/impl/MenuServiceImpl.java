@@ -8,12 +8,17 @@ import com.pengrad.telegrambot.request.EditMessageText;
 import com.pengrad.telegrambot.request.SendLocation;
 import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.request.SendPhoto;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import pro.sky.telegrambot.Dao.Impl.ReportDao;
+import pro.sky.telegrambot.model.Report;
 import pro.sky.telegrambot.service.MenuService;
 
 import static pro.sky.telegrambot.constants.ButtonsText.HIDDEN_BUTTON;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -24,6 +29,13 @@ import java.util.stream.Collectors;
  */
 @Service
 public class MenuServiceImpl implements MenuService {
+
+    @Autowired
+    private ReportDao reportDao;
+
+//    public MenuServiceImpl(ReportDao reportDao) {
+//        this.reportDao = reportDao;
+//    }
 
     /**
      * Метод, принимающий список кнопок и формирующий клавиатуру для вставки в сообщение.
@@ -138,6 +150,30 @@ public class MenuServiceImpl implements MenuService {
     public String getHashFromButton(String message) {
         int hash = Objects.hash(message);
         return Integer.toString(hash);
+    }
+
+    @Override
+    public List<String> generateListOfLastReports() {
+        List<String> reports = new ArrayList<>();
+        List<Long> idList = reportDao.getUnreadReports().stream().map(Report::getId).collect(Collectors.toList());
+        List<Report> lastReports = new ArrayList<>(reportDao.getUnreadReports());
+        HashMap<Long, String> namesMap = new HashMap<>();
+        if (!idList.isEmpty()) {
+            for (int i = 0; i < idList.size(); i++) {
+                int finalI = i;
+                Report foundReport = lastReports.stream()
+                        .filter(Report -> Report.getId().equals(idList.get(finalI)))
+                        .findFirst()
+                        .get();
+                namesMap.put(idList.get(i), foundReport.getUser().getName());
+            }
+
+            for (int i = 0; i < namesMap.size(); i++) {
+                reports.add(idList.get(i) + " " + namesMap.get(idList.get(i)));
+            }
+        }
+
+        return reports;
     }
 
 }

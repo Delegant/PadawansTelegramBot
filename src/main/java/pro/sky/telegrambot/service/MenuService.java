@@ -20,4 +20,6 @@ public interface MenuService {
 
     String getHashFromButton(String message);
 
+    List<String> generateListOfLastReports();
+
 }

@@ -9,10 +9,9 @@ import pro.sky.telegrambot.model.ReportPicture;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Query;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.sql.ResultSet;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.function.Consumer;
 
 @Component
@@ -55,6 +54,21 @@ public class ReportDao implements Dao<Report> {
     public void setPicturesOfReport(Report report, Collection<ReportPicture> pictures) {
         report.setPicturesOfReport(pictures);
         executeInsideTransaction(entityManager -> entityManager.merge(report));
+    }
+
+    public Collection<Report> getUnreadReports() {
+        LocalDateTime today = LocalDateTime.now();
+        LocalDateTime minusThree = LocalDateTime.now().minusDays(3);
+
+        Query query = entityManager.createQuery("Select r from reports  r");
+        Collection<Report> reports = new ArrayList<>();
+        List<Report> resultList= query.getResultList();
+        for (int i = 0; i < resultList.size(); i++) {
+            if (resultList.get(i).getReportDate().isAfter(minusThree)) {
+                reports.add(resultList.get(i));
+            }
+        }
+        return reports;
     }
 
     @Override
