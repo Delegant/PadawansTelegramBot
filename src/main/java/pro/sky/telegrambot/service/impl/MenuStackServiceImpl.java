@@ -1,5 +1,7 @@
 package pro.sky.telegrambot.service.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.model.MenuStack;
 import pro.sky.telegrambot.model.User;
@@ -10,6 +12,11 @@ import pro.sky.telegrambot.service.MenuStackService;
 public class MenuStackServiceImpl implements MenuStackService {
 
     private final MenuStackRepository menuStackRepository;
+    /**
+     * Логгер для класса
+     */
+    private final Logger logger = LoggerFactory.getLogger(MenuStackServiceImpl.class);
+
 
     public MenuStackServiceImpl(MenuStackRepository menuStackRepository) {
         this.menuStackRepository = menuStackRepository;
@@ -17,19 +24,31 @@ public class MenuStackServiceImpl implements MenuStackService {
 
     @Override
     public MenuStack createMenuStack(User user) {
+        logger.info("====Processing create MenuStack with user: {}", user);
         MenuStack menuStack = new MenuStack(user);
         return menuStackRepository.save(menuStack);
     }
 
+    /**
+     * Метод, для создания нового положения в меню
+     * с учетом уже выбранного текстового пакета и
+     * с учетом ожидаемого типа сообщений
+     * @param user пользователя для поиска из репозитория
+     * @param textPackKey языковой пакет пользователя
+     * @param expected ожидаемый тип сообщений
+     */
     @Override
-    public MenuStack createMenuStack(User user, String textPackKey) {
+    public MenuStack createMenuStack(User user, String textPackKey, MenuStack.MessageType expected) {
+        logger.info("====Processing create MenuStack with textPackKey: {} and user: {}", user, textPackKey);
         MenuStack menuStack = new MenuStack(user);
         menuStack.setTextPackKey(textPackKey);
+        menuStack.setExpect(expected);
         return menuStackRepository.save(menuStack);
     }
 
     @Override
     public void saveMenuStackParam(User user, String textKey, String menuStateKey) {
+        logger.info("====Processing create MenuStack with menuStateKey: {} and textKey: {}", menuStateKey, textKey);
         MenuStack menuStack = getMenuStackByUser(user);
         menuStack.setMenuState(menuStateKey);
         menuStack.setTextKey(textKey);
@@ -49,12 +68,13 @@ public class MenuStackServiceImpl implements MenuStackService {
     }
 
     @Override
-    public MenuStack.ExpectedMessageType getCurrentExpectedMessageTypeByUser(User user) {
+    public MenuStack.MessageType getCurrentExpectedMessageTypeByUser(User user) {
         return getMenuStackByUser(user).getExpect();
     }
 
     @Override
-    public void setCurrentExpectedMessageTypeByUser(User user, MenuStack.ExpectedMessageType expect) {
+    public void setCurrentExpectedMessageTypeByUser(User user, MenuStack.MessageType expect) {
+        logger.info("====Processing create MenuStack with MessageType: {}", expect);
         MenuStack menuStack = getMenuStackByUser(user);
         menuStack.setExpect(expect);
         menuStackRepository.save(menuStack);

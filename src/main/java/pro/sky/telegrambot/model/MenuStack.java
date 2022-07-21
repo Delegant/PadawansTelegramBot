@@ -25,7 +25,7 @@ public class MenuStack {
     @Schema(description = "Тип данных которые мы ожидаем получить от пользователя")
     @Column(name = "expect")
     @Enumerated(EnumType.STRING)
-    private MenuStack.ExpectedMessageType expect;
+    private MessageType expect;
 
     public MenuStack() {
     }
@@ -35,7 +35,7 @@ public class MenuStack {
         this.textPackKey = "-2057967076";
         this.textKey = "DEFAULT_MENU_TEXT";
         this.user = user;
-        this.expect = ExpectedMessageType.COMMAND_OR_TEXT;
+        this.expect = MessageType.COMMAND;
     }
 
     public MenuStack(User user, String textKey, String menuState) {
@@ -49,11 +49,11 @@ public class MenuStack {
         this.textPackKey = textPackKey;
     }
 
-    public ExpectedMessageType getExpect() {
+    public MessageType getExpect() {
         return expect;
     }
 
-    public void setExpect(ExpectedMessageType expect) {
+    public void setExpect(MessageType expect) {
         this.expect = expect;
     }
 
@@ -114,11 +114,18 @@ public class MenuStack {
         return Objects.hash(getId());
     }
 
-    public enum ExpectedMessageType {
+    public enum MessageType {
         COMMAND,
+        COMMAND_TEXT,
+        COMMAND_CALL_BACK,
+        REPORT_TEXT,
+        REPORT_PIC,
+        DIALOG_COMMAND,
+        DIALOG_TEXT,
+        DIALOG_PIC,
         DIALOG,
+        REPORT,
         COMMAND_OR_TEXT,
-        ONLY_TEXT,
-        PIC,
+        DIALOG_REQUEST,
     }
 }

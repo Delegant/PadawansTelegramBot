@@ -129,6 +129,23 @@ public class MenuServiceImpl implements MenuService {
     }
 
     /**
+     * Перегруженный метод, формирующий новое сообщение из входящих параметров:
+     * @param chatId - id чата, куда будет отправлено сообщение
+     * @param text - текст отправляемого сообщения
+     * @param listButtons - лист кнопок для меню
+     * @return - возвращает новое сформированное сообщение
+     */
+    public SendMessage sendTextLoader(Long chatId, String text,List<String> listButtons) {
+        try{
+            SendMessage sendMessage = new SendMessage(chatId, text);
+            sendMessage.replyMarkup(keyboardFactory(listButtons));
+            return sendMessage;
+        } catch (RuntimeException e) {
+            throw new RuntimeException("The list of buttons is invalid");
+        }
+    }
+
+    /**
      * Перегруженный метод, формирующий обновление старого сообщения из входящих параметров:
      * @param update - Из поля update берется id чата, куда будет отправлено сообщение и какое сообщение обновлять
      *               (в данном случае update применяется вместо message, поскольку при нажатии inline кнопки

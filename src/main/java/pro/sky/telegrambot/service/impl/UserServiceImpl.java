@@ -9,6 +9,8 @@ import pro.sky.telegrambot.model.User;
 import pro.sky.telegrambot.repository.UserRepository;
 import pro.sky.telegrambot.service.UserService;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -56,6 +58,11 @@ public class UserServiceImpl implements pro.sky.telegrambot.service.UserService 
             String lastName = message.chat().lastName();
             String firstName = message.chat().firstName();
             return getUserByChatId(chatId).orElseGet(() -> createUser(chatId, lastName + " " + firstName));
+    }
+
+    @Override
+    public List<User> usersWithEqualRole(User.Role role) {
+        return userRepository.findAllByRole(role);
     }
 
 }

@@ -21,14 +21,14 @@ public interface MenuStackService {
 
     MenuStack createMenuStack(User user);
 
-    MenuStack createMenuStack(User user, String textPackKey);
+    MenuStack createMenuStack(User user, String textPackKey, MenuStack.MessageType expected);
 
     void saveMenuStackParam(User user, String text, String menuStateKey);
 
     void dropMenuStack(User user);
 
-    MenuStack.ExpectedMessageType getCurrentExpectedMessageTypeByUser(User user);
+    MenuStack.MessageType getCurrentExpectedMessageTypeByUser(User user);
 
-    void setCurrentExpectedMessageTypeByUser(User user, MenuStack.ExpectedMessageType expect);
+    void setCurrentExpectedMessageTypeByUser(User user, MenuStack.MessageType expect);
 
 }

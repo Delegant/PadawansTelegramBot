@@ -4,9 +4,9 @@ import java.util.*;
 
 public class ButtonsText {
 
+    private static final String hashPetDefaultTextKey = "-2057967076";
     public static String HIDDEN_BUTTON;
     private static ButtonsText singletonBundleText;
-    private static final String hashPetDefaultTextKey = "-2057967076";
     private final Map<String, ResourceBundle> bundleMap;
     private final Map<String, List<String>> menuMap = new HashMap<>();
     private ResourceBundle bundle;
@@ -24,10 +24,11 @@ public class ButtonsText {
         init();
     }
 
-    public static ButtonsText getButtonText() {
+    public static ButtonsText getButtonText(String textPackKey) {
         if (singletonBundleText == null) {
             singletonBundleText = new ButtonsText();
         }
+        singletonBundleText.changeCurrentTextKey(textPackKey);
         return singletonBundleText;
     }
 
@@ -123,6 +124,14 @@ public class ButtonsText {
                         bundle.getString("BACK_BUTTON"),
                         bundle.getString("BACK_TO_VOLUNTEERS_MENU")
 
+                ));
+        menuMap.put(bundle.getString("CALL_VOLUNTEER_MENU"),
+                List.of(bundle.getString("CALL_VOLUNTEER_BUTTON"),
+                        bundle.getString("BACK_TO_MAIN_MENU_BUTTON")
+                ));
+        menuMap.put(bundle.getString("TO_SUPPORT_MENU"),
+                List.of(bundle.getString("ACCEPT_DIALOG"),
+                        bundle.getString("DENY_DIALOG")
                 ));
         HIDDEN_BUTTON = bundle.getString("HIDDEN_BUTTON");
     }
