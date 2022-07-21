@@ -359,17 +359,37 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         } else if (whatIsMenu.apply("CHECK_REPORTS_BUTTON")) {
             doSendMessage.accept("CHECK_REPORTS", "BACK_TO_VOLUNTEERS_MENU");
         } else if (whatIsMenu.apply("ACCEPT_DIALOG")) {
+        } else if (whatIsMenu.apply("VOLUNTEER_MAIN_MENU_BUTTON")) {
+            doSendMessage.accept("VOLUNTEER_START_TEXT", "VOLUNTEER_MAIN_MENU");
+        }
 
         }
-    }
+
 
     /**
      * Метод, обрабатывающий сообщения и нажатия кнопок от пользователя с ролью ADMIN
      *
-     * @param update обновление
+     * @param whatIsMenu    функция для попадания в нужную ветку условий
+     * @param doSendMessage биконсьюмер для отправки текста
+     * @param goSendPhoto   консьюмер для отправки фото
+     * @param goBack        для кнопки "назад"
      */
-    public void handleAdminMessages(Update update) {
+    public void handleAdminMessages(Function<String, Boolean> whatIsMenu,
+                                    BiConsumer<String, String> doSendMessage,
+                                    Consumer<File> goSendPhoto,
+                                    Runnable goBack,
+                                    BiConsumer<String, String> doSetNewVolunteer,
+                                    BiConsumer<String, String> doSendReportList) {
+        if (whatIsMenu.apply("START_BUTTON")) {
+            doSendMessage.accept("ADMIN_START_TEXT", "ADMIN_MAIN_MENU");
+        } else if (whatIsMenu.apply("ADD_PARENT_BUTTON")) {
+            doSendMessage.accept("ADD_PARENT", "BACK_TO_ADMIN_MENU");
+        } else if (whatIsMenu.apply("CHECK_REPORTS_BUTTON")) {
+            doSendMessage.accept("CHECK_REPORTS", "REPORTS_MENU");
+        } else if (whatIsMenu.apply("UNREAD_REPORTS")) {
+            doSendReportList.accept("UNREAD_REPORTS_TEXT", "BACK_TO_ADMIN_MENU");
 
+
+        }
     }
-
 }

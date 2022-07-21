@@ -121,8 +121,13 @@ public class ButtonsText {
                 ));
         menuMap.put(bundle.getString("ADMIN_MAIN_MENU"),
                 List.of(
-                        bundle.getString("BACK_BUTTON"),
-                        bundle.getString("BACK_TO_VOLUNTEERS_MENU")
+                        bundle.getString("ADD_PARENT"),
+                        bundle.getString("CHECK_REPORTS"),
+                        bundle.getString("VIEW_INCOMING_MESSAGES"),
+                        bundle.getString("TRIAL_PERIOD_FOR_ADMIN_MENU"),
+                        bundle.getString("CONTACT_PARENT"),
+                        bundle.getString("ADD_VOLUNTEER"),
+                        bundle.getString("ADD_ADMIN")
 
                 ));
         menuMap.put(bundle.getString("CALL_VOLUNTEER_MENU"),
