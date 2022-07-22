@@ -262,7 +262,7 @@ public class AdministrativeServiceImpl implements AdministrativeService {
 
     public List<Long> getVolunteers() {
 
-        List<User> volunteers =  userRepository.findAllByRole("VOLUNTEER");
+        List<User> volunteers =  userRepository.findAllByRole(User.Role.VOLUNTEER);
 
         return volunteers.stream().map(User::getChatId).collect(Collectors.toList());
     }

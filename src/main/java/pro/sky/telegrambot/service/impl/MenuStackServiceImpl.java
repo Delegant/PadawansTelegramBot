@@ -39,7 +39,7 @@ public class MenuStackServiceImpl implements MenuStackService {
      */
     @Override
     public MenuStack createMenuStack(User user, String textPackKey, MenuStack.MessageType expected) {
-        logger.info("====Processing create MenuStack with textPackKey: {} and user: {}", user, textPackKey);
+        logger.info("====Processing create MenuStack with textPackKey: {} and user: {}", textPackKey, user);
         MenuStack menuStack = new MenuStack(user);
         menuStack.setTextPackKey(textPackKey);
         menuStack.setExpect(expected);

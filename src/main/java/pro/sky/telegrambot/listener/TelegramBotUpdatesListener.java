@@ -162,7 +162,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     }
                 }
             } catch (Exception e) {
-                logger.warn("==== Exception: ", e);
+                logger.warn("====Exception: ", e);
             }
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
@@ -182,18 +182,18 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             return update.callbackQuery().data().equals(hashSomeButton);
         };
         doSendMessage = (textKey, menuKey) -> {
-            logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
+            logger.info("====Processing update with callback: {}", update.callbackQuery().data());
             menuStackService.saveMenuStackParam(currentUser, textKey, menuKey);
             String textValue = buttonsText.getString(textKey);
             List<String> menuValue = buttonsText.getMenu(menuKey);
             telegramBot.execute(menuService.editMenuLoader(update, textValue, menuValue));
         };
         doSendPhoto = (filePath) -> {
-            logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
+            logger.info("====Processing update with callback: {}", update.callbackQuery().data());
             telegramBot.execute(menuService.sendPhotoLoader(update, filePath));
         };
         goSendLocation = (latitude, longitude) -> {
-            logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
+            logger.info("====Processing update with callback: {}", update.callbackQuery().data());
             telegramBot.execute(menuService.sendLocationLoader(update, latitude, longitude));
         };
     }
@@ -208,7 +208,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     private void functionalInitForTextCommand(Message message, ButtonsText buttonsText) {
         whatIsMenu = (someButtonName) -> message.text().equals(buttonsText.getString(someButtonName));
         doSendMessage = (textKey, menuKey) -> {
-            logger.info("==== Processing update with message: {}", message.text());
+            logger.info("====Processing update with message: {}", message.text());
             List<String> menuValue = buttonsText.getMenu(menuKey);
             String textValue = buttonsText.getString(textKey);
             telegramBot.execute(menuService.menuLoader(message, textValue, menuValue));
@@ -226,24 +226,32 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * Ожидаем команду с кнопки (COMMAND_CALL_BACK), получаем текст - это TEXT.
      */
     private MessageType getCurrentMessageType(MessageType messageType, Update update, Message message) {
-        if (messageType == COMMAND && update.message() != null) {
-            return COMMAND_TEXT;
-        } else if (messageType == COMMAND && update.callbackQuery().message() != null) {
-            return COMMAND_CALL_BACK;
-        } else if (messageType == REPORT && update.message() != null) {
-            return REPORT_TEXT;
-        } else if (messageType == REPORT && message.photo() != null) {
-            return REPORT_PIC;
-        } else if (messageType == DIALOG && update.message() != null && update.message().text().startsWith("/")) {
-            return DIALOG_COMMAND;
-        } else if (messageType == DIALOG_REQUEST && update.message() != null) {
-            return DIALOG_REQUEST;
-        } else if (messageType == DIALOG && update.message() != null) {
-            return DIALOG_TEXT;
-        } else if (messageType == DIALOG && message.photo() != null) {
-            return DIALOG_PIC;
+        try {
+
+            logger.info("====Parsing message type: {}", messageType.toString());
+            if (messageType == COMMAND && update.message() != null) {
+                return COMMAND_TEXT;
+            } else if (messageType == COMMAND && update.callbackQuery().message() != null) {
+                return COMMAND_CALL_BACK;
+            } else if (messageType == REPORT && update.message() != null) {
+                return REPORT_TEXT;
+            } else if (messageType == REPORT && message.photo() != null) {
+                return REPORT_PIC;
+            } else if (messageType == DIALOG && update.message() != null && update.message().text().startsWith("/")) {
+                return DIALOG_COMMAND;
+            } else if (messageType == DIALOG_REQUEST && update.message() != null) {
+                return DIALOG_REQUEST;
+            } else if (messageType == DIALOG && update.message() != null) {
+                return DIALOG_TEXT;
+            } else if (messageType == DIALOG && message.photo() != null) {
+                return DIALOG_PIC;
+            }
+            throw new UnknownUpdateException("With update: " + update.toString());
         }
-        throw new UnknownUpdateException("With update: " + update.toString());
+        catch (Exception e){
+            logger.warn(e.toString());
+            return COMMAND_TEXT;
+        }
     }
 
     /**
@@ -309,18 +317,18 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         } else if (whatIsMenu.apply("DENY_LIST_BUTTON")) {
             doSendMessage.accept("DENY_LIST", "BACK_TO_MAIN_MENU");
         } else if (whatIsMenu.apply("CALL_VOLUNTEER_BUTTON")) {
-            menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, DIALOG);
+//            menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, DIALOG);
             Collection<User> allVolunteer = userService.usersWithEqualRole(VOLUNTEER);
             allVolunteer.forEach((volunteer) -> {
                         telegramBot.execute(menuService.sendTextLoader(volunteer.getChatId(),
                                 buttonsText.getString("VOLUNTEER_REQUEST_TEXT"),
-                                buttonsText.getMenu("DENY_DIALOG")));
+                                buttonsText.getMenu("TO_SUPPORT_MENU")));
                     }
             );
 //          тут точка входа в диалог
 //          должна быть коллективная рассылка запроса
 //            menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, DIALOG_REQUEST);
-//            doSendMessage.accept("CALL_VOLUNTEER_TEXT", "BACK_TO_MAIN_MENU");
+            doSendMessage.accept("CALL_VOLUNTEER_TEXT", "BACK_TO_MAIN_MENU");
         } else if (whatIsMenu.apply("BACK_TO_MAIN_MENU_BUTTON")) {
             menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND_CALL_BACK);
             doSendMessage.accept("DEFAULT_MENU_TEXT", "MAIN_MENU");
