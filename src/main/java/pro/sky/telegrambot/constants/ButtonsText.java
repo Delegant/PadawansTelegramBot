@@ -104,6 +104,10 @@ public class ButtonsText {
                         bundle.getString("TRIAL_PERIOD_FOR_VOLUNTEERS_MENU"),
                         bundle.getString("CONTACT_PARENT")
                 ));
+        menuMap.put(bundle.getString("BACK_TO_VOLUNTEERS_MENU"),
+                List.of(
+                        bundle.getString("VOLUNTEER_MAIN_MENU_BUTTON")
+                ));
         menuMap.put(bundle.getString("TRIAL_PERIOD_MENU"),
                 List.of(
                         bundle.getString("APPLY_TRIAL_PERIOD"),
@@ -129,6 +133,21 @@ public class ButtonsText {
                         bundle.getString("ADD_VOLUNTEER"),
                         bundle.getString("ADD_ADMIN")
 
+                ));
+        menuMap.put(bundle.getString("REPORTS_MENU_ADMIN"),
+                List.of(
+                        bundle.getString("FIND_REPORT_BY_NAME"),
+                        bundle.getString("FIND_REPORT_BY_USERID"),
+                        bundle.getString("GET_REPORT_BY_ID"),
+                        bundle.getString("UNREAD_REPORTS"),
+                        bundle.getString("BACK_TO_ADMIN_MENU")
+                ));
+        menuMap.put(bundle.getString("TRIAL_PERIOD_MENU_ADMIN"),
+                List.of(
+                        bundle.getString("APPLY_TRIAL_PERIOD"),
+                        bundle.getString("PROLONG_TRIAL_PERIOD"),
+                        bundle.getString("DECLINE_TRIAL_PERIOD"),
+                        bundle.getString("BACK_TO_ADMIN_MENU")
                 ));
         menuMap.put(bundle.getString("CALL_VOLUNTEER_MENU"),
                 List.of(bundle.getString("CALL_VOLUNTEER_BUTTON"),

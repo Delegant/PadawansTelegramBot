@@ -17,9 +17,9 @@ public class MenuStack {
     @Schema(description = "текстовый пакет пользователя")
     @Column(columnDefinition = "varchar(255) default 'DOG'")
     private String textPackKey;
-    @Schema(description = "отправленый текст")
+    @Schema(description = "отправленный текст")
     private String textKey;
-    @Schema(description = "отправленое меню пользователя")
+    @Schema(description = "отправленное меню пользователя")
     @Column(nullable = false, columnDefinition = "varchar(255) default 'SPECIES_PET_SELECTION_MENU'")
     private String menuState;
     @Schema(description = "Тип данных которые мы ожидаем получить от пользователя")
@@ -125,7 +125,14 @@ public class MenuStack {
         DIALOG_PIC,
         DIALOG,
         REPORT,
+
         COMMAND_OR_TEXT,
         DIALOG_REQUEST,
+
+        TELEGRAM_USER_ID,
+
+        USER_NAME,
+
+        ADDING_VOLUNTEER,
     }
 }
