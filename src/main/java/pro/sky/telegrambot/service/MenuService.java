@@ -24,4 +24,7 @@ public interface MenuService {
 
     List<String> generateListOfLastReports();
 
+    List<String> generateListOfUsers(String name);
+    SendMessage sendUserNames(Long chatId, String text, String name);
+
 }

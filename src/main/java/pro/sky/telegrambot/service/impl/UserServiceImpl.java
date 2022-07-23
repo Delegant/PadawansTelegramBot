@@ -3,15 +3,16 @@ package pro.sky.telegrambot.service.impl;
 import com.pengrad.telegrambot.model.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import pro.sky.telegrambot.Dao.Impl.UserDao;
+import pro.sky.telegrambot.exceptions.UserNotFoundException;
 import pro.sky.telegrambot.listener.TelegramBotUpdatesListener;
 import pro.sky.telegrambot.model.User;
 import pro.sky.telegrambot.repository.UserRepository;
 import pro.sky.telegrambot.service.UserService;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class UserServiceImpl implements pro.sky.telegrambot.service.UserService {
@@ -19,8 +20,12 @@ public class UserServiceImpl implements pro.sky.telegrambot.service.UserService 
     private final UserRepository userRepository;
     private final Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
 
-    public UserServiceImpl(UserRepository userRepository) {
+    private final UserDao userDao;
+
+    public UserServiceImpl(UserRepository userRepository,
+                           UserDao userDao) {
         this.userRepository = userRepository;
+        this.userDao = userDao;
     }
 
     public User createUser(Long chatId, String name) {
@@ -65,4 +70,23 @@ public class UserServiceImpl implements pro.sky.telegrambot.service.UserService 
         return userRepository.findAllByRole(role);
     }
 
+    @Override
+    public List<User> getUsersByName(String name) {
+
+        return userDao.getUsersByName(name);
+    }
+
+    @Override
+    public User getUserByHashCodeName(String data) {
+        Map<Integer, User> hashCodes = new HashMap<>();
+        List<User> users = userDao.getAll();
+        Optional<User> targetUser = Optional.empty();
+        for (User user : users) {
+            hashCodes.put(user.getName().hashCode(), user);
+            if (hashCodes.containsKey(Integer.parseInt(data))) {
+                targetUser = Optional.of(hashCodes.get(Integer.parseInt(data)));
+            }
+        }
+        return targetUser.orElseThrow(() -> new UserNotFoundException("!!!! There is no user found with such hashCode from name"));
+    }
 }

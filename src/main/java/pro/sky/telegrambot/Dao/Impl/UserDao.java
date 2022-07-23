@@ -1,5 +1,6 @@
 package pro.sky.telegrambot.Dao.Impl;
 
+import org.springframework.stereotype.Component;
 import pro.sky.telegrambot.Dao.Dao;
 import pro.sky.telegrambot.model.User;
 
@@ -10,13 +11,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
+@Component
 public class UserDao implements Dao<User> {
 
-    private EntityManager entityManager;
-
-    public UserDao() {
-    }
+    private final EntityManager entityManager;
 
     public UserDao(EntityManager entityManager) {
         this.entityManager = entityManager;
@@ -32,6 +32,14 @@ public class UserDao implements Dao<User> {
         Query query = entityManager.createQuery("SELECT e FROM users e");
 
         return query.getResultList();
+    }
+
+    public List<User> getUsersByName(String name) {
+
+        return getAll()
+                .stream()
+                .filter(user -> user.getName().equals(name))
+                .collect(Collectors.toList());
     }
 
     @Override

@@ -18,4 +18,8 @@ public interface UserService {
 
     List<User> usersWithEqualRole(User.Role role);
 
+    List<User> getUsersByName(String name);
+
+    User getUserByHashCodeName(String data);
+
 }

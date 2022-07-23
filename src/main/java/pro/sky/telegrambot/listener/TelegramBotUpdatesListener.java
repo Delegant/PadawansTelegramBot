@@ -4,12 +4,15 @@ import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
+import com.pengrad.telegrambot.request.SendMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.constants.ButtonsText;
 import pro.sky.telegrambot.exceptions.UnknownUpdateException;
+import pro.sky.telegrambot.model.MenuStack;
 import pro.sky.telegrambot.model.User;
+import pro.sky.telegrambot.service.AdministrativeService;
 import pro.sky.telegrambot.service.MenuService;
 import pro.sky.telegrambot.service.MenuStackService;
 import pro.sky.telegrambot.service.ReportService;
@@ -67,6 +70,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     private final TelegramBot telegramBot;
     private final ReportService reportService;
+
+    private final AdministrativeService administrativeService;
     /**
      * директория с файлом - схемой проезда к приюту
      */
@@ -75,6 +80,12 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     BiConsumer<String, String> doSendMessage;
     Consumer<File> doSendPhoto;
     BiConsumer<Float, Float> goSendLocation;
+    BiConsumer<String, String> doSendReportList;
+
+    BiConsumer<String, String> doSendUsersList;
+    Consumer<File> goSendPhoto;
+     Runnable goBack;
+     BiConsumer<String, String> doSetNewVolunteer;
 
     /**
      * конструктор класса
@@ -88,12 +99,14 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                                       MenuService menuService,
                                       UserServiceImpl userService,
                                       MenuStackService menuStackService,
-                                      ReportService reportService) {
+                                      ReportService reportService,
+                                      AdministrativeService administrativeService) {
         this.telegramBot = telegramBot;
         this.menuService = menuService;
         this.userService = userService;
         this.reportService = reportService;
         this.menuStackService = menuStackService;
+        this.administrativeService = administrativeService;
     }
 
     /**
@@ -132,9 +145,10 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     if (roleCurrentUser == USER || roleCurrentUser == PARENT) {
                         handleUserMessages(whatIsMenu, doSendMessage, doSendPhoto, goSendLocation, currentUser, update, buttonsText);
                     } else if (roleCurrentUser == VOLUNTEER) {
-                        handleVolunteerMessages(whatIsMenu, doSendMessage);
+                        handleVolunteerMessages(whatIsMenu, doSendMessage, doSendUsersList, currentUser, update);
                     } else if (roleCurrentUser == ADMIN) {
-                        //добавить меню админа
+                        handleAdminMessages(whatIsMenu, doSendMessage, goSendPhoto, goBack, doSetNewVolunteer, doSendUsersList, currentUser, update);
+
                     }
                 } else if (realTypeCurrentMessage == REPORT_PIC) {
                     if (roleCurrentUser == PARENT) {
@@ -142,12 +156,12 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     }
                 } else if (realTypeCurrentMessage == REPORT_TEXT) {
                     if (roleCurrentUser == PARENT) {
-                        //добавить метод записи текста
+                        //todo добавить метод записи текста
                     }
                 } else if (realTypeCurrentMessage == DIALOG_TEXT) {
                     telegramBot.execute(menuService.sendTextLoader(currentUser.getCompanion(), message.text()));
                     if (roleCurrentUser == VOLUNTEER) {
-                        //добавить меню завершения дилога
+                        //todo добавить меню завершения диалога
                     }
                 } else if (realTypeCurrentMessage == DIALOG_REQUEST) {
                     if (roleCurrentUser == USER || roleCurrentUser == PARENT) {
@@ -158,8 +172,14 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                         );
                         //отправка волонтерам меню с подтверждением
                     } else if (roleCurrentUser == VOLUNTEER) {
-                        //добавить меню завершения диaлога
+                        //todo добавить меню завершения диaлога
                     }
+                } else if (expectedTypeCurrentMessage.equals(USER_NAME)) {
+                    functionalInitForCallBack(update, buttonsText, currentUser);
+                    handleVolunteerMessages(whatIsMenu, doSendMessage, doSendUsersList, currentUser, update);
+                } else if (expectedTypeCurrentMessage.equals(ADDING_VOLUNTEER)) {
+                    functionalInitForCallBack(update, buttonsText, currentUser);
+                    handleVolunteerMessages(whatIsMenu, doSendMessage, doSendUsersList, currentUser, update);
                 }
             } catch (Exception e) {
                 logger.warn("====Exception: ", e);
@@ -173,7 +193,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * Применяются интерфейсы как действия по отношению к ключам в методе для пользователя:
      * {@link #handleUserMessages(Function, BiConsumer, Consumer, BiConsumer, User, Update, ButtonsText)}
      * и в методе для волонтера
-     * {@link #handleVolunteerMessages(Function, BiConsumer)}
+     * {@link #handleVolunteerMessages(Function, BiConsumer, BiConsumer, User, Update)}
      */
     private void functionalInitForCallBack(Update update, ButtonsText buttonsText, User currentUser) {
         whatIsMenu = (someButtonNameKey) -> {
@@ -196,14 +216,24 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             logger.info("====Processing update with callback: {}", update.callbackQuery().data());
             telegramBot.execute(menuService.sendLocationLoader(update, latitude, longitude));
         };
+        doSendReportList = (textKey, menuKey) -> {
+            logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
+            List<String> buttons = menuService.generateListOfLastReports();
+            String text = "Список последних отчетов: ";
+            telegramBot.execute(menuService.menuLoader(update, text, buttons));
+        };
+        doSendUsersList = (textKey, menuKey) -> {
+            logger.info("==== Getting list of users with name like {}", update.message().text());
+            List<String> listOfUsers = menuService.generateListOfUsers(update.message().text());
+            telegramBot.execute(menuService.menuLoader(update.message(), "Выберите пользователя для назначения усыновителем", listOfUsers));
+        };
     }
 
     /**
      * Метод инициализирует функциональные интерфейсы в ситуации для update с текстовой командой.
      * Применяются интерфейсы как действия по отношению к ключам в методе для пользователя:
      * {@link #handleUserMessages(Function, BiConsumer, Consumer, BiConsumer, User, Update, ButtonsText)}
-     * и в методе для волонтера
-     * {@link #handleVolunteerMessages(Function, BiConsumer)}
+     * и в методе для волонтера {@link #handleVolunteerMessages(Function, BiConsumer, BiConsumer, User, Update)}
      */
     private void functionalInitForTextCommand(Message message, ButtonsText buttonsText) {
         whatIsMenu = (someButtonName) -> message.text().equals(buttonsText.getString(someButtonName));
@@ -224,6 +254,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * Ожидаем текстовую команду (COMMAND), получаем не текст - это UnknownUpdateException.
      * Ожидаем команду с кнопки (COMMAND_CALL_BACK), получаем текст начинающийся с "/" - это COMMAND_TEXT.
      * Ожидаем команду с кнопки (COMMAND_CALL_BACK), получаем текст - это TEXT.
+     * @throws UnknownUpdateException при получении "не текста"
      */
     private MessageType getCurrentMessageType(MessageType messageType, Update update, Message message) {
         try {
@@ -346,6 +377,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     }
 
+
     /**
      * Метод, обрабатывающий сообщения и нажатия кнопок от пользователя с ролью VOLUNTEER
      *
@@ -353,18 +385,45 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * @param doSendMessage биконсьюмер для отправки текста
      */
     public void handleVolunteerMessages(Function<String, Boolean> whatIsMenu,
-                                        BiConsumer<String, String> doSendMessage) {
-        if (whatIsMenu.apply("ADD_PARENT_BUTTON")) {
-            doSendMessage.accept("ADD_PARENT", "BACK_TO_VOLUNTEERS_MENU");
-        } else if (whatIsMenu.apply("CHECK_REPORTS_BUTTON")) {
-            doSendMessage.accept("CHECK_REPORTS", "BACK_TO_VOLUNTEERS_MENU");
-        } else if (whatIsMenu.apply("ACCEPT_DIALOG")) {
-        } else if (whatIsMenu.apply("VOLUNTEER_MAIN_MENU_BUTTON")) {
-            doSendMessage.accept("VOLUNTEER_START_TEXT", "VOLUNTEER_MAIN_MENU");
+                                        BiConsumer<String, String> doSendMessage,
+                                        BiConsumer<String, String> doSendUsersList,
+                                        User currentUser, Update update) {
+
+        if (update.message() != null) {
+            if (update.message().text().equals("START_BUTTON")) {
+                doSendMessage.accept("VOLUNTEER_START_TEXT", "VOLUNTEER_MAIN_MENU");
+            }
+                else if (menuStackService.getCurrentExpectedMessageTypeByUser(currentUser).equals(USER_NAME)) {
+                doSendUsersList.accept("CHOOSE_USER_TO_MAKE_VOLUNTEER", "BACK_TO_VOLUNTEERS_MENU");
+                menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, ADDING_VOLUNTEER);
+            }
+        else if (update.callbackQuery() != null) {
+             if (whatIsMenu.apply("ADD_PARENT_BUTTON_VOLUNTEER")) {
+                doSendMessage.accept("ADD_PARENT_TEXT", "BACK_TO_VOLUNTEERS_MENU");
+                menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, USER_NAME);
+            }
+            else if (whatIsMenu.apply("CHECK_REPORTS_BUTTON")) {
+                doSendMessage.accept("CHECK_REPORTS", "BACK_TO_VOLUNTEERS_MENU");
+            }
+            else if (whatIsMenu.apply("ACCEPT_DIALOG")) {
+                //todo
+            }
+            else if (whatIsMenu.apply("VOLUNTEER_MAIN_MENU_BUTTON")) {
+                doSendMessage.accept("VOLUNTEER_START_TEXT", "VOLUNTEER_MAIN_MENU");
+            } else if (menuStackService.getCurrentExpectedMessageTypeByUser(currentUser).equals(ADDING_VOLUNTEER)) {
+                User newParent = userService.getUserByHashCodeName(update.callbackQuery().data());
+                administrativeService.setParent(currentUser.getChatId(), newParent.getChatId());
+                telegramBot.execute(new SendMessage(newParent.getChatId(), "Поздравляем, вы взяли питомца. Ваш испытательный период начался!"));
+                doSendMessage.accept("Пользователь " + newParent.getName() + " успешно назначен усыновителем", "VOLUNTEER_MAIN_MENU");
+                menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
+
+             }
         }
 
-        }
+    }
 
+
+    }
 
     /**
      * Метод, обрабатывающий сообщения и нажатия кнопок от пользователя с ролью ADMIN
@@ -379,7 +438,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                                     Consumer<File> goSendPhoto,
                                     Runnable goBack,
                                     BiConsumer<String, String> doSetNewVolunteer,
-                                    BiConsumer<String, String> doSendReportList) {
+                                    BiConsumer<String, String> doSendReportList,
+                                    User currentUser, Update update) {
         if (whatIsMenu.apply("START_BUTTON")) {
             doSendMessage.accept("ADMIN_START_TEXT", "ADMIN_MAIN_MENU");
         } else if (whatIsMenu.apply("ADD_PARENT_BUTTON")) {
@@ -388,8 +448,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             doSendMessage.accept("CHECK_REPORTS", "REPORTS_MENU");
         } else if (whatIsMenu.apply("UNREAD_REPORTS")) {
             doSendReportList.accept("UNREAD_REPORTS_TEXT", "BACK_TO_ADMIN_MENU");
-
-
         }
     }
 }

@@ -12,7 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.Dao.Impl.ReportDao;
 import pro.sky.telegrambot.model.Report;
+import pro.sky.telegrambot.model.User;
 import pro.sky.telegrambot.service.MenuService;
+import pro.sky.telegrambot.service.UserService;
 
 import static pro.sky.telegrambot.constants.ButtonsText.HIDDEN_BUTTON;
 
@@ -32,6 +34,9 @@ public class MenuServiceImpl implements MenuService {
 
     @Autowired
     private ReportDao reportDao;
+
+    @Autowired
+    private UserService userService;
 
 //    public MenuServiceImpl(ReportDao reportDao) {
 //        this.reportDao = reportDao;
@@ -196,7 +201,10 @@ public class MenuServiceImpl implements MenuService {
     @Override
     public List<String> generateListOfLastReports() {
         List<String> reports = new ArrayList<>();
-        List<Long> idList = reportDao.getUnreadReports().stream().map(Report::getId).collect(Collectors.toList());
+        List<Long> idList = reportDao.getUnreadReports()
+                .stream()
+                .map(Report::getId)
+                .collect(Collectors.toList());
         List<Report> lastReports = new ArrayList<>(reportDao.getUnreadReports());
         HashMap<Long, String> namesMap = new HashMap<>();
         if (!idList.isEmpty()) {
@@ -213,8 +221,30 @@ public class MenuServiceImpl implements MenuService {
                 reports.add(idList.get(i) + " " + namesMap.get(idList.get(i)));
             }
         }
-
+        reports.add("Назад");
         return reports;
+    }
+
+    @Override
+    public List<String> generateListOfUsers(String name) {
+        return userService.getUsersByName(name)
+                .stream()
+                .map(User::getName)
+                .collect(Collectors.toList());
+
+    }
+
+    @Override
+    public SendMessage sendUserNames(Long chatId, String text, String name) {
+        List<String> names = generateListOfUsers(name);
+        names.add("Назад");
+        try{
+            SendMessage sendMessage = new SendMessage(chatId, text);
+            sendMessage.replyMarkup(keyboardFactory(names));
+            return sendMessage;
+        } catch (RuntimeException e) {
+            throw new RuntimeException("The list of buttons is invalid");
+        }
     }
 
 }
