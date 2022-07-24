@@ -13,7 +13,9 @@ import java.util.List;
 public interface MenuService {
 
     SendMessage menuLoader (Message message, String text, List<String> listButtons);
+    SendMessage menuLoaderForObjects (Message message, String text, List<List<String>> listButtons);
     SendMessage menuLoader (Update update, String text, List<String> listButtons);
+    SendMessage menuLoaderForObjects (Update update, String text, List<List<String>> listButtons);
     SendMessage sendTextLoader(Long chatId, String text);
     SendMessage sendTextLoader(Long chatId, String text, List<String> listButtons);
     EditMessageText editMenuLoader(Update update, String text, List<String> listButtons);
@@ -24,7 +26,7 @@ public interface MenuService {
 
     List<String> generateListOfLastReports();
 
-    List<String> generateListOfUsers(String name);
+    List<List<String>> generateListOfUsers(String name);
     SendMessage sendUserNames(Long chatId, String text, String name);
 
 }

@@ -177,7 +177,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 } else if (expectedTypeCurrentMessage.equals(USER_NAME)) {
                     functionalInitForCallBack(update, buttonsText, currentUser);
                     handleVolunteerMessages(whatIsMenu, doSendMessage, doSendUsersList, currentUser, update);
-                } else if (expectedTypeCurrentMessage.equals(ADDING_VOLUNTEER)) {
+                } else if (expectedTypeCurrentMessage.equals(ADDING_PARENT)) {
                     functionalInitForCallBack(update, buttonsText, currentUser);
                     handleVolunteerMessages(whatIsMenu, doSendMessage, doSendUsersList, currentUser, update);
                 }
@@ -199,6 +199,9 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         whatIsMenu = (someButtonNameKey) -> {
             String someButtonNameValue = buttonsText.getString(someButtonNameKey);
             String hashSomeButton = menuService.getHashFromButton(someButtonNameValue);
+            if (update.callbackQuery() == null) {
+                return false;
+            }
             return update.callbackQuery().data().equals(hashSomeButton);
         };
         doSendMessage = (textKey, menuKey) -> {
@@ -224,8 +227,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         };
         doSendUsersList = (textKey, menuKey) -> {
             logger.info("==== Getting list of users with name like {}", update.message().text());
-            List<String> listOfUsers = menuService.generateListOfUsers(update.message().text());
-            telegramBot.execute(menuService.menuLoader(update.message(), "Выберите пользователя для назначения усыновителем", listOfUsers));
+            List<List<String>> listOfUsers = menuService.generateListOfUsers(update.message().text());
+            telegramBot.execute(menuService.menuLoaderForObjects(update.message(), "Выберите пользователя для назначения усыновителем", listOfUsers));
         };
     }
 
@@ -390,14 +393,13 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                                         User currentUser, Update update) {
 
         if (update.message() != null) {
-            if (update.message().text().equals("START_BUTTON")) {
+            if (whatIsMenu.apply("START_BUTTON")) {
                 doSendMessage.accept("VOLUNTEER_START_TEXT", "VOLUNTEER_MAIN_MENU");
+            } else if (menuStackService.getCurrentExpectedMessageTypeByUser(currentUser).equals(USER_NAME)) {
+                doSendUsersList.accept("CHOOSE_USER_TO_MAKE_PARENT", "BACK_TO_VOLUNTEERS_MENU");
+                menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, ADDING_PARENT);
             }
-                else if (menuStackService.getCurrentExpectedMessageTypeByUser(currentUser).equals(USER_NAME)) {
-                doSendUsersList.accept("CHOOSE_USER_TO_MAKE_VOLUNTEER", "BACK_TO_VOLUNTEERS_MENU");
-                menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, ADDING_VOLUNTEER);
-            }
-        else if (update.callbackQuery() != null) {
+        } else if (update.callbackQuery() != null) {
              if (whatIsMenu.apply("ADD_PARENT_BUTTON_VOLUNTEER")) {
                 doSendMessage.accept("ADD_PARENT_TEXT", "BACK_TO_VOLUNTEERS_MENU");
                 menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, USER_NAME);
@@ -423,7 +425,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     }
 
 
-    }
+
 
     /**
      * Метод, обрабатывающий сообщения и нажатия кнопок от пользователя с ролью ADMIN
