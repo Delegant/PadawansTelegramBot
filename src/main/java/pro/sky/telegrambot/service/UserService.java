@@ -16,12 +16,18 @@ public interface UserService {
 
     Optional<User> getUserByChatId(Long chatId);
 
-    User getUserByMessage(Message message);
+    User getOrCreatUserByMessage(Message message);
+
+    User getOrCreatUserByChatIdAndName(Long chatId, String lastName, String firstName);
 
     List<User> usersWithEqualRole(User.Role role);
 
     List<User> getUsersByName(String name);
 
     User getUserByHashCodeName(String data);
+
+    void setCompanion(User volunteer, User user);
+
+    void delCompanion(User volunteer, User user);
 
 }

@@ -55,7 +55,7 @@ public class ButtonsText {
                 List.of(
                         bundle.getString("BACK_BUTTON"),
                         bundle.getString("BACK_TO_MAIN_MENU_BUTTON")));
-        menuMap.put("BACK_TO_VOLUNTEERS_MENU",
+        menuMap.put(bundle.getString("BACK_TO_VOLUNTEERS_MENU"),
                 List.of(
                         bundle.getString("BACK_BUTTON"),
                         bundle.getString("BACK_TO_VOLUNTEERS_MENU")
@@ -153,10 +153,17 @@ public class ButtonsText {
                 List.of(bundle.getString("CALL_VOLUNTEER_BUTTON"),
                         bundle.getString("BACK_TO_MAIN_MENU_BUTTON")
                 ));
-        menuMap.put(bundle.getString("TO_SUPPORT_MENU"),
-                List.of(bundle.getString("ACCEPT_DIALOG"),
-                        bundle.getString("DENY_DIALOG")
+        menuMap.put(bundle.getString("TO_SUPPORT_ACCEPT_MENU"),
+                List.of(bundle.getString("ACCEPT_DIALOG")
+                ));
+        menuMap.put(bundle.getString("TO_SUPPORT_DENY_MENU"),
+                List.of(bundle.getString("DENY_DIALOG")
+                ));
+        menuMap.put(bundle.getString("BACK_TO_ONLY_MAIN_MENU"),
+                List.of(
+                        bundle.getString("BACK_TO_MAIN_MENU_BUTTON")
                 ));
         HIDDEN_BUTTON = bundle.getString("HIDDEN_BUTTON");
+
     }
 }

@@ -18,7 +18,10 @@ public interface MenuService {
     SendMessage menuLoaderForObjects (Update update, String text, List<List<String>> listButtons);
     SendMessage sendTextLoader(Long chatId, String text);
     SendMessage sendTextLoader(Long chatId, String text, List<String> listButtons);
+    SendMessage sendTextLoader(Long chatId, String text, List<String> listButtons, List<String> callbacks);
     EditMessageText editMenuLoader(Update update, String text, List<String> listButtons);
+    EditMessageText editMenuLoader(Update update, String text, List<String> listButtons, List<String> callBacks);
+    EditMessageText editMenuLoader(Update update, String text);
     SendPhoto sendPhotoLoader (Update update, File address);
     SendLocation sendLocationLoader(Update update, Float latitude, Float longitude);
 

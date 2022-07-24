@@ -113,7 +113,9 @@ public class MenuStack {
     public int hashCode() {
         return Objects.hash(getId());
     }
-
+    /**
+     * Enam для отражения ожидаемого типа следующего update
+     */
     public enum MessageType {
         COMMAND,
         COMMAND_TEXT,

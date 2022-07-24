@@ -15,7 +15,7 @@ import pro.sky.telegrambot.service.UserService;
 import java.util.*;
 
 @Service
-public class UserServiceImpl implements pro.sky.telegrambot.service.UserService {
+public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
@@ -63,11 +63,23 @@ public class UserServiceImpl implements pro.sky.telegrambot.service.UserService 
      * @see User
      */
     @Override
-    public User getUserByMessage(Message message) {
+    public User getOrCreatUserByMessage(Message message) {
             Long chatId = message.chat().id();
             String lastName = message.chat().lastName();
             String firstName = message.chat().firstName();
             return getUserByChatId(chatId).orElseGet(() -> createUser(chatId, lastName + " " + firstName));
+    }
+
+    /**
+     * Метод, проверяющий наличие пользователя в базе и возвращающий пользователя
+     * для дальнейшей работы. Если пользователя в базе нет - создает и сохраняет нового - USER
+     *
+     * @return USER - не может быть null
+     * @see User
+     */
+    @Override
+    public User getOrCreatUserByChatIdAndName(Long chatId, String lastName, String firstName) {
+        return getUserByChatId(chatId).orElseGet(() -> createUser(chatId, lastName + " " + firstName));
     }
 
     /**
@@ -119,5 +131,28 @@ public class UserServiceImpl implements pro.sky.telegrambot.service.UserService 
             }
         }
         return targetUser.orElseThrow(() -> new UserNotFoundException("!!!! There is no user found with such hashCode from name"));
+    }
+
+    /**
+     * Проставляем номера чат ID для юзера и волонтера, что бы зеркалить общение
+     * @param volunteer - объект User, где отражаеться волонтер, который ответил на призыв
+     * @param user - объект User запросивший помощь
+     */
+    @Override
+    public void setCompanion(User volunteer, User user) {
+        volunteer.setCompanion(user.getChatId());
+        user.setCompanion(volunteer.getChatId());
+        userRepository.saveAll(List.of(volunteer, user));
+    }
+    /**
+     * Проставляем номера чат ID для юзера и волонтера, что бы зеркалить общение
+     * @param volunteer - объект User, где отражаеться волонтер, который ответил на призыв
+     * @param user - объект User запросивший помощь
+     */
+    @Override
+    public void delCompanion(User volunteer, User user) {
+        volunteer.setCompanion(null);
+        user.setCompanion(null);
+        userRepository.saveAll(List.of(volunteer, user));
     }
 }
