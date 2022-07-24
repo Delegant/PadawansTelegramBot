@@ -404,7 +404,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                                         BiConsumer<String, String> doSendMessage,
                                         BiConsumer<String, String> doSendUsersList,
                                         User currentUser, Update update) {
-        ButtonsText buttonsText = ButtonsText.getButtonText("VOLUNTEER_MAIN_MENU");
 
         if (update.message() != null) {
             if (whatIsMenu.apply("START_BUTTON")) {
@@ -432,10 +431,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 administrativeService.setParent(currentUser.getChatId(), newParent.getChatId());
                 telegramBot.execute(new SendMessage(newParent.getChatId(), "Поздравляем, вы взяли питомца. Ваш испытательный период начался!"));
                 menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
-                 whatIsMenu.apply("VOLUNTEER_MAIN_MENU");
-                doSendMessage.accept("Пользователь " + newParent.getName() + " успешно назначен усыновителем", "VOLUNTEER_MAIN_MENU");
-//                telegramBot.execute(menuService.editMenuLoader(update, "Пользователь " + newParent.getName() + " успешно назначен усыновителем", "VOLUNTEER_MAIN_MENU"));
-
+                doSendMessage.accept("AFTER_ADDING_PARENT", "VOLUNTEER_MAIN_MENU");
              }
         }
 

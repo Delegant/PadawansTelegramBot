@@ -8,6 +8,7 @@ import com.pengrad.telegrambot.request.EditMessageText;
 import com.pengrad.telegrambot.request.SendLocation;
 import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.request.SendPhoto;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.Dao.Impl.ReportDao;
@@ -35,9 +36,11 @@ public class MenuServiceImpl implements MenuService {
     @Autowired
     private UserService userService;
 
-//    public MenuServiceImpl(ReportDao reportDao) {
-//        this.reportDao = reportDao;
-//    }
+    public InlineKeyboardMarkup getMainKeyboard() {
+        InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
+        keyboardMarkup.addRow(new InlineKeyboardButton("Вернуться в главное меню").callbackData(getHashFromButton("/start")));
+        return keyboardMarkup;
+    }
 
     /**
      * Метод, принимающий список кнопок и формирующий клавиатуру для вставки в сообщение.
