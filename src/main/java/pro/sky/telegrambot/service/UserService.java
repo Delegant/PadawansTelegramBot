@@ -10,6 +10,8 @@ public interface UserService {
 
     User createUser(Long chatId, String name);
 
+    User updateUser(User user);
+
     Optional<User> markRole(Long chatId, User.Role role);
 
     Optional<User> getUserByChatId(Long chatId);

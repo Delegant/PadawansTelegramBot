@@ -283,16 +283,32 @@ public class MenuServiceImpl implements MenuService {
         return new SendPhoto(update.callbackQuery().message().chat().id(), address);
     }
 
+    /**
+     * Метод для отправки локации - расположения приюта
+     * @param update апдейт из Телеграм
+     * @param latitude широта
+     * @param longitude долгота
+     * @return новое сообщение с локацией
+     */
     @Override
     public SendLocation sendLocationLoader(Update update, Float latitude, Float longitude) {
         return new SendLocation(update.callbackQuery().message().chat().id(), latitude, longitude);
     }
 
+    /**
+     * Метод, генерирующий хэш из строки
+     * @param message строка
+     * @return хэш в виде строки
+     */
     public String getHashFromButton(String message) {
         int hash = Objects.hash(message);
         return Integer.toString(hash);
     }
 
+    /**
+     * Метод генерирует список последних отчетов за 3 дня
+     * @return список из названий кнопок, состоящий из id отчета и имени юзера
+     */
     @Override
     public List<String> generateListOfLastReports() {
         List<String> reports = new ArrayList<>();
@@ -320,6 +336,11 @@ public class MenuServiceImpl implements MenuService {
         return reports;
     }
 
+    /**
+     * Метод генерирует список списков, в каждом из которых лежит название кнопки из имени юзера и хэш из id юзера
+     * @param name имя, по которому осуществляется поиск
+     * @return Список списков
+     */
     @Override
     public List<List<String>> generateListOfUsers(String name) {
         List<User> users = userService.getUsersByName(name);
@@ -327,7 +348,7 @@ public class MenuServiceImpl implements MenuService {
         for (User user : users) {
             List<String> button = new ArrayList<>();
             button.add(user.getName());
-            button.add(user.getId().toString());
+            button.add(user.getChatId().toString());
             namesForKeyboard.add(button);
         }
         List<String> backButton = List.of("Назад", getHashFromButton("Назад"));
@@ -336,6 +357,13 @@ public class MenuServiceImpl implements MenuService {
 
     }
 
+    /**
+     * Метод отправляет сообщение с клавиатурой, состоящей из имен пользователей, найденных в базе
+     * @param chatId id пользователя
+     * @param text сообщение
+     * @param name имя, по которому осуществляется поиск
+     * @return новое сообщение
+     */
     @Override
     public SendMessage sendUserNames(Long chatId, String text, String name) {
         List<List<String>> names = generateListOfUsers(name);

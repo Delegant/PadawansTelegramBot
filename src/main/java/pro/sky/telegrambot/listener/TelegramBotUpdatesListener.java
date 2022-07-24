@@ -161,6 +161,9 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 } else if (realTypeCurrentMessage == DIALOG_TEXT) {
                     telegramBot.execute(menuService.sendTextLoader(currentUser.getCompanion(), message.text()));
                     if (roleCurrentUser == VOLUNTEER) {
+                        if (realTypeCurrentMessage == ADDING_PARENT) {
+
+                        }
                         //todo добавить меню завершения диалога
                     }
                 } else if (realTypeCurrentMessage == DIALOG_REQUEST) {
@@ -260,8 +263,13 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      * @throws UnknownUpdateException при получении "не текста"
      */
     private MessageType getCurrentMessageType(MessageType messageType, Update update, Message message) {
+        User currentUser = null;
+        if (update.message() != null) {
+            currentUser = userService.getUser(update.message().chat().id());
+        } else if (update.callbackQuery() != null) {
+            currentUser = userService.getUser(update.callbackQuery().message().chat().id());
+        }
         try {
-
             logger.info("====Parsing message type: {}", messageType.toString());
             if (messageType == COMMAND && update.message() != null) {
                 return COMMAND_TEXT;
@@ -279,11 +287,16 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 return DIALOG_TEXT;
             } else if (messageType == DIALOG && message.photo() != null) {
                 return DIALOG_PIC;
+            } else if (messageType == REPORT_REQUEST && update.callbackQuery() != null) {
+                return REPORT_LIST;
+            } else if (messageType == ADDING_PARENT && update.message() != null) {
+                return ADDING_PARENT;
             }
             throw new UnknownUpdateException("With update: " + update.toString());
         }
         catch (Exception e){
             logger.warn(e.toString());
+            menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
             return COMMAND_TEXT;
         }
     }
@@ -391,6 +404,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                                         BiConsumer<String, String> doSendMessage,
                                         BiConsumer<String, String> doSendUsersList,
                                         User currentUser, Update update) {
+        ButtonsText buttonsText = ButtonsText.getButtonText("VOLUNTEER_MAIN_MENU");
 
         if (update.message() != null) {
             if (whatIsMenu.apply("START_BUTTON")) {
@@ -406,18 +420,21 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             }
             else if (whatIsMenu.apply("CHECK_REPORTS_BUTTON")) {
                 doSendMessage.accept("CHECK_REPORTS", "BACK_TO_VOLUNTEERS_MENU");
+                 menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, USER_NAME);
             }
             else if (whatIsMenu.apply("ACCEPT_DIALOG")) {
                 //todo
             }
             else if (whatIsMenu.apply("VOLUNTEER_MAIN_MENU_BUTTON")) {
                 doSendMessage.accept("VOLUNTEER_START_TEXT", "VOLUNTEER_MAIN_MENU");
-            } else if (menuStackService.getCurrentExpectedMessageTypeByUser(currentUser).equals(ADDING_VOLUNTEER)) {
-                User newParent = userService.getUserByHashCodeName(update.callbackQuery().data());
+            } else if (menuStackService.getCurrentExpectedMessageTypeByUser(currentUser).equals(ADDING_PARENT)) {
+                User newParent = userService.getUser(Long.valueOf(update.callbackQuery().data()));
                 administrativeService.setParent(currentUser.getChatId(), newParent.getChatId());
                 telegramBot.execute(new SendMessage(newParent.getChatId(), "Поздравляем, вы взяли питомца. Ваш испытательный период начался!"));
-                doSendMessage.accept("Пользователь " + newParent.getName() + " успешно назначен усыновителем", "VOLUNTEER_MAIN_MENU");
                 menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
+                 whatIsMenu.apply("VOLUNTEER_MAIN_MENU");
+                doSendMessage.accept("Пользователь " + newParent.getName() + " успешно назначен усыновителем", "VOLUNTEER_MAIN_MENU");
+//                telegramBot.execute(menuService.editMenuLoader(update, "Пользователь " + newParent.getName() + " успешно назначен усыновителем", "VOLUNTEER_MAIN_MENU"));
 
              }
         }
