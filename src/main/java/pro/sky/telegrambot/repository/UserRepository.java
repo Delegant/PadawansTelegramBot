@@ -15,8 +15,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findUserByChatId(Long chatId);
 
     Optional<User> findByName(String name);
-
-    //    @Query(value = "SELECT users.chatId from users WHERE role = 'VOLUNTEER'")
     List<User> findAllByRole(User.Role role);
+
+    List<User> findAllByNameContainsIgnoreCase(String name);
 
 }

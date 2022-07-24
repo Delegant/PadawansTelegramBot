@@ -126,6 +126,10 @@ public class MenuStack {
         DIALOG,
         REPORT,
 
+        REPORT_REQUEST,
+
+        REPORT_LIST,
+
         COMMAND_OR_TEXT,
         DIALOG_REQUEST,
 

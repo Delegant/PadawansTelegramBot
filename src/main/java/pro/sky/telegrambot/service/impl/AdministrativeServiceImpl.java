@@ -105,6 +105,7 @@ public class AdministrativeServiceImpl implements AdministrativeService {
         User newParent = userService.getUserByChatId(userId).orElseThrow(() -> new UserNotFoundException("!!!! There is no user with such ID"));
         if (checkVolunteer(volunteerId)) {
             newParent.setRole(User.Role.PARENT);
+            userService.updateUser(newParent);
             logger.info("Role of user: {} has been changed to PARENT", newParent );
             startTrialPeriod(volunteerId, userId);
         }

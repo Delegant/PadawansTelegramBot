@@ -34,6 +34,11 @@ public class UserServiceImpl implements pro.sky.telegrambot.service.UserService 
         return userRepository.save(user);
     }
 
+    @Override
+    public User updateUser(User user) {
+        return userRepository.save(user);
+    }
+
     public Optional<User> markRole(Long chatId, User.Role role) {
         Optional<User> optionalUser = getUserByChatId(chatId);
         if (optionalUser.isPresent()) {
@@ -65,17 +70,43 @@ public class UserServiceImpl implements pro.sky.telegrambot.service.UserService 
             return getUserByChatId(chatId).orElseGet(() -> createUser(chatId, lastName + " " + firstName));
     }
 
+    /**
+     * Метод возвращает пользователя
+     * @param chatId id пользователя
+     * @return юзер
+     * @throws UserNotFoundException если юзер не найден
+     */
+    public User getUser(Long chatId) {
+        return getUserByChatId(chatId)
+                .orElseThrow(() -> new UserNotFoundException("!!!! User with such id not found!"));
+    }
+
+    /**
+     * Возвращает список пользователей, у которых роль совпадает с заданной
+     * @param role роль
+     * @return список юзеров
+     */
     @Override
     public List<User> usersWithEqualRole(User.Role role) {
         return userRepository.findAllByRole(role);
     }
 
+    /**
+     * Метод возвращает из репозитория список юзеров у которых имеются совпадения с заданным именем
+     * @param name имя по которому осуществляется поиск
+     * @return список юзеров
+     */
     @Override
     public List<User> getUsersByName(String name) {
-
-        return userDao.getUsersByName(name);
+        return userRepository.findAllByNameContainsIgnoreCase(name);
     }
 
+    /**
+     * Возвращает юзера, у которого совпадает хэшкод имени с полученным от Телеграм
+     * @param data входящие данные
+     * @return Пользователя
+     */
+    @Deprecated
     @Override
     public User getUserByHashCodeName(String data) {
         Map<Integer, User> hashCodes = new HashMap<>();
