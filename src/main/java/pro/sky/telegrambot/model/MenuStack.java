@@ -134,5 +134,9 @@ public class MenuStack {
         USER_NAME,
 
         ADDING_VOLUNTEER,
+
+        ADDING_PARENT,
+
+        ADDING_ADMIN,
     }
 }
