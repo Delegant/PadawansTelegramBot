@@ -338,8 +338,18 @@ public class ReportServiceImpl implements ReportService {
         } catch (Exception e) {
             logger.error(String.valueOf(e));
         }
-        savePictures(getLastReportId(userId), userId, prepareForSavingReportPictures(fullFilePath));
+        if (message.caption() != null) {
+            Report report = new Report();
+            report.setReportText(message.caption());
+            report.setReportDate();
+            report.setUser(userRepository.findUserByChatId(userId).get());
+            report.setDefaultStatus();
+            reportsRepository.save(report);
 
+            savePictures(report.getId(), userId, prepareForSavingReportPictures(fullFilePath));
+        } else {
+            savePictures(getLastReportId(userId), userId, prepareForSavingReportPictures(fullFilePath));
+        }
     }
 
     /**
