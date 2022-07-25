@@ -105,6 +105,7 @@ public class AdministrativeServiceImpl implements AdministrativeService {
         User newParent = userService.getUserByChatId(userId).orElseThrow(() -> new UserNotFoundException("!!!! There is no user with such ID"));
         if (checkVolunteer(volunteerId)) {
             newParent.setRole(User.Role.PARENT);
+            userService.updateUser(newParent);
             logger.info("Role of user: {} has been changed to PARENT", newParent );
             startTrialPeriod(volunteerId, userId);
         }
@@ -262,7 +263,7 @@ public class AdministrativeServiceImpl implements AdministrativeService {
 
     public List<Long> getVolunteers() {
 
-        List<User> volunteers =  userRepository.findAllByRole("VOLUNTEER");
+        List<User> volunteers =  userRepository.findAllByRole(User.Role.VOLUNTEER);
 
         return volunteers.stream().map(User::getChatId).collect(Collectors.toList());
     }

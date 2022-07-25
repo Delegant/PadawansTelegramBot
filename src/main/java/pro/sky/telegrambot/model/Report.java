@@ -14,6 +14,9 @@ import java.util.Objects;
 
 @Schema(description = "Отчет пользователя")
 @Entity(name = "reports")
+@NamedQueries({
+        @NamedQuery(name = "Report.findByReportDateIsBetween", query = "select r from reports r where r.reportDate between :reportDate and :reportDateEnd")
+})
 public class Report {
 
     public enum Status {

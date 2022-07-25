@@ -3,13 +3,16 @@ package pro.sky.telegrambot.service.impl;
 import com.pengrad.telegrambot.model.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import pro.sky.telegrambot.Dao.Impl.UserDao;
+import pro.sky.telegrambot.exceptions.UserNotFoundException;
 import pro.sky.telegrambot.listener.TelegramBotUpdatesListener;
 import pro.sky.telegrambot.model.User;
 import pro.sky.telegrambot.repository.UserRepository;
 import pro.sky.telegrambot.service.UserService;
 
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class UserServiceImpl implements pro.sky.telegrambot.service.UserService {
@@ -17,13 +20,22 @@ public class UserServiceImpl implements pro.sky.telegrambot.service.UserService 
     private final UserRepository userRepository;
     private final Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
 
-    public UserServiceImpl(UserRepository userRepository) {
+    private final UserDao userDao;
+
+    public UserServiceImpl(UserRepository userRepository,
+                           UserDao userDao) {
         this.userRepository = userRepository;
+        this.userDao = userDao;
     }
 
     public User createUser(Long chatId, String name) {
         logger.info("==== Processing create user: {}, {}", chatId, name);
         User user = new User(chatId, name);
+        return userRepository.save(user);
+    }
+
+    @Override
+    public User updateUser(User user) {
         return userRepository.save(user);
     }
 
@@ -58,4 +70,54 @@ public class UserServiceImpl implements pro.sky.telegrambot.service.UserService 
             return getUserByChatId(chatId).orElseGet(() -> createUser(chatId, lastName + " " + firstName));
     }
 
+    /**
+     * Метод возвращает пользователя
+     * @param chatId id пользователя
+     * @return юзер
+     * @throws UserNotFoundException если юзер не найден
+     */
+    public User getUser(Long chatId) {
+        return getUserByChatId(chatId)
+                .orElseThrow(() -> new UserNotFoundException("!!!! User with such id not found!"));
+    }
+
+    /**
+     * Возвращает список пользователей, у которых роль совпадает с заданной
+     * @param role роль
+     * @return список юзеров
+     */
+    @Override
+    public List<User> usersWithEqualRole(User.Role role) {
+        return userRepository.findAllByRole(role);
+    }
+
+    /**
+     * Метод возвращает из репозитория список юзеров у которых имеются совпадения с заданным именем
+     * @param name имя по которому осуществляется поиск
+     * @return список юзеров
+     */
+    @Override
+    public List<User> getUsersByName(String name) {
+        return userRepository.findAllByNameContainsIgnoreCase(name);
+    }
+
+    /**
+     * Возвращает юзера, у которого совпадает хэшкод имени с полученным от Телеграм
+     * @param data входящие данные
+     * @return Пользователя
+     */
+    @Deprecated
+    @Override
+    public User getUserByHashCodeName(String data) {
+        Map<Integer, User> hashCodes = new HashMap<>();
+        List<User> users = userDao.getAll();
+        Optional<User> targetUser = Optional.empty();
+        for (User user : users) {
+            hashCodes.put(user.getName().hashCode(), user);
+            if (hashCodes.containsKey(Integer.parseInt(data))) {
+                targetUser = Optional.of(hashCodes.get(Integer.parseInt(data)));
+            }
+        }
+        return targetUser.orElseThrow(() -> new UserNotFoundException("!!!! There is no user found with such hashCode from name"));
+    }
 }

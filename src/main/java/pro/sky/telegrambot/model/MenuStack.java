@@ -8,25 +8,24 @@ import java.util.Objects;
 @Entity(name = "menustack")
 public class MenuStack {
 
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
-
     @Schema(description = "текстовый пакет пользователя")
     @Column(columnDefinition = "varchar(255) default 'DOG'")
     private String textPackKey;
-
-    @Schema(description = "отправленый текст")
+    @Schema(description = "отправленный текст")
     private String textKey;
-
-    @Schema(description = "отправленое меню пользователя")
+    @Schema(description = "отправленное меню пользователя")
     @Column(nullable = false, columnDefinition = "varchar(255) default 'SPECIES_PET_SELECTION_MENU'")
     private String menuState;
+    @Schema(description = "Тип данных которые мы ожидаем получить от пользователя")
+    @Column(name = "expect")
+    @Enumerated(EnumType.STRING)
+    private MessageType expect;
 
     public MenuStack() {
     }
@@ -36,6 +35,7 @@ public class MenuStack {
         this.textPackKey = "-2057967076";
         this.textKey = "DEFAULT_MENU_TEXT";
         this.user = user;
+        this.expect = MessageType.COMMAND;
     }
 
     public MenuStack(User user, String textKey, String menuState) {
@@ -47,6 +47,14 @@ public class MenuStack {
     public MenuStack(User user, String textPackKey, String textKey, String menuState) {
         this(user, textKey, menuState);
         this.textPackKey = textPackKey;
+    }
+
+    public MessageType getExpect() {
+        return expect;
+    }
+
+    public void setExpect(MessageType expect) {
+        this.expect = expect;
     }
 
     public Long getId() {
@@ -104,5 +112,35 @@ public class MenuStack {
     @Override
     public int hashCode() {
         return Objects.hash(getId());
+    }
+
+    public enum MessageType {
+        COMMAND,
+        COMMAND_TEXT,
+        COMMAND_CALL_BACK,
+        REPORT_TEXT,
+        REPORT_PIC,
+        DIALOG_COMMAND,
+        DIALOG_TEXT,
+        DIALOG_PIC,
+        DIALOG,
+        REPORT,
+
+        REPORT_REQUEST,
+
+        REPORT_LIST,
+
+        COMMAND_OR_TEXT,
+        DIALOG_REQUEST,
+
+        TELEGRAM_USER_ID,
+
+        USER_NAME,
+
+        ADDING_VOLUNTEER,
+
+        ADDING_PARENT,
+
+        ADDING_ADMIN,
     }
 }

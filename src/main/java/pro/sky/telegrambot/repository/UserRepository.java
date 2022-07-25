@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import pro.sky.telegrambot.model.User;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,8 +15,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findUserByChatId(Long chatId);
 
     Optional<User> findByName(String name);
+    List<User> findAllByRole(User.Role role);
 
-//    @Query(value = "SELECT users.chatId from users WHERE role = 'VOLUNTEER'")
-    List<User> findAllByRole(String role);
+    List<User> findAllByNameContainsIgnoreCase(String name);
 
 }

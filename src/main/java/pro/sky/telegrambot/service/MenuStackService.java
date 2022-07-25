@@ -3,17 +3,15 @@ package pro.sky.telegrambot.service;
 import pro.sky.telegrambot.model.MenuStack;
 import pro.sky.telegrambot.model.User;
 
-import java.util.Optional;
-
 public interface MenuStackService {
 
-    String getLastMenuStateByUser(User user);
+    String getPreviousMenuStateByUser(User user);
 
-    String  getLastTextPackKeyByUser(User user);
+    String getPreviousTextPackKeyByUser(User user);
 
-    String  getTextPackKeyByUser(User user);
+    String getTextPackKeyByUser(User user);
 
-    String  getLastTextKeyByUser(User user);
+    String getPreviousTextKeyByUser(User user);
 
     void setMenuState(User user, String menuState);
 
@@ -23,10 +21,14 @@ public interface MenuStackService {
 
     MenuStack createMenuStack(User user);
 
-    MenuStack createMenuStack(User user, String textPackKey);
+    MenuStack createMenuStack(User user, String textPackKey, MenuStack.MessageType expected);
 
     void saveMenuStackParam(User user, String text, String menuStateKey);
 
-    void dropLastMenuStack(User user);
+    void dropMenuStack(User user);
+
+    MenuStack.MessageType getCurrentExpectedMessageTypeByUser(User user);
+
+    void setCurrentExpectedMessageTypeByUser(User user, MenuStack.MessageType expect);
 
 }

@@ -48,6 +48,9 @@ public class User {
     @OneToMany(mappedBy = "user")
     private Set<MenuStack> menuStackSet;
 
+    @Schema(description = "у пользователя ID волонтера, у волонтера ID пользователя с который идет диалог")
+    private Long companion;
+
     public User() {
     }
 
@@ -94,6 +97,14 @@ public class User {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public void setCompanion(Long companion) {
+        this.companion = companion;
+    }
+
+    public Long getCompanion() {
+        return this.companion;
     }
 
     @Override

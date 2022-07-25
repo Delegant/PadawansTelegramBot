@@ -4,32 +4,38 @@ import java.util.*;
 
 public class ButtonsText {
 
-    private static final Map<String, ButtonsText> buttonsTextMap;
+    private static final String hashPetDefaultTextKey = "-2057967076";
     public static String HIDDEN_BUTTON;
+    private static ButtonsText singletonBundleText;
+    private final Map<String, ResourceBundle> bundleMap;
+    private final Map<String, List<String>> menuMap = new HashMap<>();
+    private ResourceBundle bundle;
+    private String currentTextKey;
 
-    static {
-        buttonsTextMap = new HashMap<>();
-        buttonsTextMap.put("-55733391", new ButtonsText("cat"));
-        buttonsTextMap.put("-2057967076", new ButtonsText(null));
+    {
+        bundleMap = new HashMap<>();
+        bundleMap.put("-55733391", ResourceBundle.getBundle("default", new Locale("cat")));
+        bundleMap.put("-2057967076", ResourceBundle.getBundle("default"));
     }
 
-    private final Map<String, List<String>> menuMap = new HashMap<>();
-    private final ResourceBundle bundle;
-
-    private ButtonsText(String key) {
-        if (key == null) {
-            this.bundle = ResourceBundle.getBundle("default");
-        } else {
-            this.bundle = ResourceBundle.getBundle("default", new Locale(key));
-        }
+    private ButtonsText() {
+        currentTextKey = hashPetDefaultTextKey;
+        bundle = bundleMap.get(currentTextKey);
         init();
     }
 
-    public static ButtonsText getButtonText(String key) {
-        if (buttonsTextMap.containsKey(key)){
-            return buttonsTextMap.get(key);
+    public static ButtonsText getButtonText(String textPackKey) {
+        if (singletonBundleText == null) {
+            singletonBundleText = new ButtonsText();
         }
-        return buttonsTextMap.get("32359089");
+        singletonBundleText.changeCurrentTextKey(textPackKey);
+        return singletonBundleText;
+    }
+
+    public void changeCurrentTextKey(String newCurrentTextKey) {
+        this.currentTextKey = newCurrentTextKey;
+        bundle = bundleMap.get(currentTextKey);
+        init();
     }
 
     public String getString(String key) {
@@ -98,6 +104,10 @@ public class ButtonsText {
                         bundle.getString("TRIAL_PERIOD_FOR_VOLUNTEERS_MENU"),
                         bundle.getString("CONTACT_PARENT")
                 ));
+        menuMap.put(bundle.getString("BACK_TO_VOLUNTEERS_MENU"),
+                List.of(
+                        bundle.getString("VOLUNTEER_MAIN_MENU_BUTTON")
+                ));
         menuMap.put(bundle.getString("TRIAL_PERIOD_MENU"),
                 List.of(
                         bundle.getString("APPLY_TRIAL_PERIOD"),
@@ -115,9 +125,37 @@ public class ButtonsText {
                 ));
         menuMap.put(bundle.getString("ADMIN_MAIN_MENU"),
                 List.of(
-                        bundle.getString("BACK_BUTTON"),
-                        bundle.getString("BACK_TO_VOLUNTEERS_MENU")
+                        bundle.getString("ADD_PARENT"),
+                        bundle.getString("CHECK_REPORTS"),
+                        bundle.getString("VIEW_INCOMING_MESSAGES"),
+                        bundle.getString("TRIAL_PERIOD_FOR_ADMIN_MENU"),
+                        bundle.getString("CONTACT_PARENT"),
+                        bundle.getString("ADD_VOLUNTEER"),
+                        bundle.getString("ADD_ADMIN")
 
+                ));
+        menuMap.put(bundle.getString("REPORTS_MENU_ADMIN"),
+                List.of(
+                        bundle.getString("FIND_REPORT_BY_NAME"),
+                        bundle.getString("FIND_REPORT_BY_USERID"),
+                        bundle.getString("GET_REPORT_BY_ID"),
+                        bundle.getString("UNREAD_REPORTS"),
+                        bundle.getString("BACK_TO_ADMIN_MENU")
+                ));
+        menuMap.put(bundle.getString("TRIAL_PERIOD_MENU_ADMIN"),
+                List.of(
+                        bundle.getString("APPLY_TRIAL_PERIOD"),
+                        bundle.getString("PROLONG_TRIAL_PERIOD"),
+                        bundle.getString("DECLINE_TRIAL_PERIOD"),
+                        bundle.getString("BACK_TO_ADMIN_MENU")
+                ));
+        menuMap.put(bundle.getString("CALL_VOLUNTEER_MENU"),
+                List.of(bundle.getString("CALL_VOLUNTEER_BUTTON"),
+                        bundle.getString("BACK_TO_MAIN_MENU_BUTTON")
+                ));
+        menuMap.put(bundle.getString("TO_SUPPORT_MENU"),
+                List.of(bundle.getString("ACCEPT_DIALOG"),
+                        bundle.getString("DENY_DIALOG")
                 ));
         HIDDEN_BUTTON = bundle.getString("HIDDEN_BUTTON");
     }
