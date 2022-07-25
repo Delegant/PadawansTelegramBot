@@ -38,5 +38,9 @@ public interface ReportService {
 
     void getPictureFromMessage(Long userId, Message message) throws IOException;
 
+    String checkNewReportByUser(Long chatId);
+
+    String updateReport(Long reportId, String updatedText);
+
 
 }

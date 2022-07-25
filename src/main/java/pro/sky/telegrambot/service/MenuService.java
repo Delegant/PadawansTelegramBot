@@ -21,6 +21,8 @@ public interface MenuService {
     InlineKeyboardMarkup getMainKeyboard();
     SendMessage sendTextLoader(Long chatId, String text);
     SendMessage sendTextLoader(Long chatId, String text, List<String> listButtons);
+    SendMessage replyKeyboardLoader(List<String> list, String text, Message message);
+    SendMessage replyKeyboardLoader(List<String> list, String text, Update update);
     EditMessageText editMenuLoader(Update update, String text, List<String> listButtons);
     SendPhoto sendPhotoLoader (Update update, File address);
     SendLocation sendLocationLoader(Update update, Float latitude, Float longitude);

@@ -20,6 +20,7 @@ import pro.sky.telegrambot.Dao.Impl.PictureNameDao;
 import pro.sky.telegrambot.Dao.Impl.ReportDao;
 import pro.sky.telegrambot.Dao.Impl.ReportPictureDao;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
+import pro.sky.telegrambot.exceptions.ReportNotFoundException;
 import pro.sky.telegrambot.exceptions.UserIsNotAllowedToSendReportException;
 import pro.sky.telegrambot.exceptions.UserNotFoundException;
 import pro.sky.telegrambot.model.PictureName;
@@ -386,7 +387,7 @@ public class ReportServiceImpl implements ReportService {
 
         // Здесь выполняется проверка, прошло ли более 15 часов с момента написания последнего отчета, если прошло, то выполняется
         //создание нового отчета
-        if (newReportCreationTime.isAfter(report.getReportDate())) {
+        if (LocalDateTime.now().isAfter(newReportCreationTime)) {
             report = new Report();
             report.setReportText("Empty");
             report.setReportDate();
@@ -397,6 +398,50 @@ public class ReportServiceImpl implements ReportService {
         }
 
         return lastReportIndex;
+    }
+
+    /**
+     * Метод возвращает сообщение о необходимости добавить текст отчеча или фото отчета или подтверждение об успешном создании отчета
+     * @param chatId id юзера
+     * @return сообщение
+     */
+    @Override
+    public String checkNewReportByUser(Long chatId) {
+        Report report = reportDao.get(getLastReportId(chatId)).get();
+        String result = "";
+        if (report.getReportText().equals("Empty")) {
+            result = "Напишите текст отчета";
+        } else if (reportPictureDao.getReportPicturesByReport(report).size() == 0) {
+            result = "Пришлите фотографию питомца";
+        } else {
+            result = "Спасибо, Ваш отчет принят.";
+        }
+        return result;
+    }
+
+    /**
+     * Метод обновляет отчет -> добавляет новый текст, меняет статус отчета и добавляет время обновления отчета,
+     * сохраняет отчет и возвращает текст обновленного отчета.
+     * @param reportId id отчета
+     * @param updatedText новый текст для отчета
+     * @return итоговый текст отчета
+     * @throws ReportNotFoundException если отчет не найден
+     */
+    @Override
+    public String updateReport(Long reportId, String updatedText) {
+        Report report = reportDao.get(reportId).orElseThrow(() -> new ReportNotFoundException("Отчет с таким id не найден!"));
+        String reportText = "";
+        if (report.getReportText().equals("Empty")) {
+            reportText = updatedText;
+        } else {
+            reportText = report.getReportText() + " " + updatedText;
+        }
+
+        report.setReportText(reportText);
+        report.setStatus(Report.Status.UPDATED);
+        report.setReportUpdateDate();
+        reportsRepository.save(report);
+        return reportText;
     }
 
 }

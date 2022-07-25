@@ -42,6 +42,18 @@ public class MenuServiceImpl implements MenuService {
         return keyboardMarkup;
     }
 
+    private ReplyKeyboardMarkup keyboardMaker(List<String> list) {
+        KeyboardButton[] buttons = new KeyboardButton[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            KeyboardButton name = new KeyboardButton(list.get(i));
+            buttons[i] = name;
+        }
+
+        return new ReplyKeyboardMarkup(buttons);
+    }
+
+
+
     /**
      * Метод, принимающий список кнопок и формирующий клавиатуру для вставки в сообщение.
      * @param list - входящий список кнопок (текстов для кнопок)
@@ -154,8 +166,41 @@ public class MenuServiceImpl implements MenuService {
             throw new RuntimeException("The list of buttons is invalid");
         }
     }
-    
-    
+
+    public SendMessage replyKeyboardLoader(List<String> list, String text, Message message) {
+        if (message == null || text == null || list == null) {
+            throw new NullPointerException("!!!! One or more parameter is null");
+        }
+        SendMessage msg = new SendMessage(message.chat().id(), text);
+        try {
+            Keyboard keyboard = keyboardMaker(list);
+
+            msg.replyMarkup(keyboard);
+//            return new SendMessage(message.chat().id(), text)
+//                    .replyMarkup(keyboard);
+        } catch (RuntimeException e) {
+            throw new RuntimeException("The list of buttons is invalid");
+        }
+        return msg;
+    }
+
+    @Override
+    public SendMessage replyKeyboardLoader(List<String> list, String text, Update update) {
+        if (update == null || text == null || list == null) {
+            throw new NullPointerException("!!!! One or more parameter is null");
+        }
+        SendMessage msg = new SendMessage(update.message().chat().id(), text);
+        try {
+            Keyboard keyboard = keyboardMaker(list);
+            msg.replyMarkup(keyboard);
+//            return new SendMessage(update.callbackQuery().message().chat().id(), text)
+//                    .replyMarkup(keyboard);
+        } catch (RuntimeException e) {
+            throw new RuntimeException("The list of buttons is invalid");
+        }
+        return msg;
+    }
+
     /**
      * Перегруженный метод, формирующий новое сообщение из входящих параметров:
      * @param update - Из поля update берется id чата, куда будет отправлено сообщение

@@ -5,6 +5,9 @@ import java.util.*;
 public class ButtonsText {
 
     private static final String hashPetDefaultTextKey = "-2057967076";
+    private static String SEND_REPORT_IS_CREATED;
+    private static String ASK_TO_SEND_PIC;
+    private static String ASK_TO_SEND_TEXT;
     public static String HIDDEN_BUTTON;
     private static ButtonsText singletonBundleText;
     private final Map<String, ResourceBundle> bundleMap;
@@ -96,6 +99,16 @@ public class ButtonsText {
                         bundle.getString("BACK_BUTTON"),
                         bundle.getString("BACK_TO_MAIN_MENU_BUTTON")
                 ));
+        menuMap.put(bundle.getString("IN_REPORT_SEND_TEXT_MENU"),
+                List.of(
+                        bundle.getString("FINISH_SENDING_REPORT"),
+                        bundle.getString("BACK_TO_MAIN_MENU_BUTTON")
+                ));
+        menuMap.put(bundle.getString("IN_REPORT_SEND_PIC_MENU"),
+                List.of(
+                        bundle.getString("FINISH_SENDING_REPORT"),
+                        bundle.getString("BACK_TO_MAIN_MENU_BUTTON")
+                ));
         menuMap.put(bundle.getString("VOLUNTEER_MAIN_MENU"),
                 List.of(
                         bundle.getString("ADD_PARENT"),
@@ -157,6 +170,11 @@ public class ButtonsText {
                 List.of(bundle.getString("ACCEPT_DIALOG"),
                         bundle.getString("DENY_DIALOG")
                 ));
+
+        ASK_TO_SEND_TEXT = bundle.getString("ASK_TO_SEND_TEXT");
+        ASK_TO_SEND_PIC = bundle.getString("ASK_TO_SEND_PIC");
+        SEND_REPORT_IS_CREATED = bundle.getString("SEND_REPORT_IS_CREATED");
+
         HIDDEN_BUTTON = bundle.getString("HIDDEN_BUTTON");
     }
 }

@@ -65,6 +65,6 @@ public class ReportPictureDao implements Dao<ReportPicture> {
 
     public Collection<ReportPicture> getReportPicturesByReport(Report report) {
         Collection<ReportPicture> pictures = getAll();
-        return pictures.stream().filter(picture -> picture.getReport().equals(report)).collect(Collectors.toList());
+        return pictures.stream().filter(picture -> picture.getReport().getId().equals(report.getId())).collect(Collectors.toList());
     }
 }
