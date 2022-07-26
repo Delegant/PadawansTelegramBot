@@ -418,6 +418,14 @@ public class MenuServiceImpl implements MenuService {
         return new SendPhoto(update.callbackQuery().message().chat().id(), address);
     }
 
+    @Override
+    public SendPhoto sendLocationPhotoLoader(Update update, File address, String text, List<String> buttons) {
+        SendPhoto sendPhoto = new SendPhoto(update.callbackQuery().message().chat().id(), address);
+        sendPhoto.caption(text);
+        sendPhoto.replyMarkup(keyboardFactory(buttons));
+        return sendPhoto;
+    }
+
     public SendPhoto sendPhotoLoader(Long chatId, File address) {
         return new SendPhoto(chatId, address);
     }

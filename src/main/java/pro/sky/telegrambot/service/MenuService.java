@@ -28,7 +28,9 @@ public interface MenuService {
     @Deprecated
     SendMessage replyKeyboardLoader(List<String> list, String text, Update update);
     EditMessageText editMenuLoader(Update update, String text, List<String> listButtons);
+    SendPhoto sendLocationPhotoLoader (Update update, File address, String text, List<String> buttons);
     SendPhoto sendPhotoLoader (Update update, File address);
+    SendPhoto sendPhotoLoader (Long chatId, File address);
     void multiplePhotoSend(Long chatId, Long reportId);
     SendMessage sendTextWithMarkedCallBack(Long chatId, String text, Long reportId);
     SendLocation sendLocationLoader(Update update, Float latitude, Float longitude);

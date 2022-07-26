@@ -44,19 +44,19 @@ import static pro.sky.telegrambot.model.User.Role.*;
 public class TelegramBotUpdatesListener implements UpdatesListener {
 
     /**
-     * Инжекстированный сервис-класс, отвечающий за обработку и создание клавиатур
+     * Инжектированный сервис-класс, отвечающий за обработку и создание клавиатур
      *
      * @see MenuService
      */
     private final MenuService menuService;
     /**
-     * Сервис репозитория, отвечащий за сохранение пользователей в БД
+     * Сервис репозитория, отвечающий за сохранение пользователей в БД
      *
      * @see UserServiceImpl
      */
     private final UserServiceImpl userService;
     /**
-     * Инжекстированный сервис-класс, отвечающий за отслеживанием положения
+     * Инжектированный сервис-класс, отвечающий за отслеживанием положения
      * пользователей в БД
      *
      * @see MenuService
@@ -81,7 +81,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     java.io.File address = new File("src/main/resources/MapPhoto/address.png");
     Function<String, Boolean> whatIsMenu;
     BiConsumer<String, String> doSendMessage;
-    Consumer<File> doSendPhoto;
+    TriConsumer<File, String, String> doSendPhoto;
     BiConsumer<Float, Float> goSendLocation;
     BiConsumer<String, String> doSendReportList;
     BiConsumer<String, String> doSendUsersList;
@@ -269,7 +269,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Метод инициализирует функциональные интерфейсы в ситуации для update с текстом callBack.
      * Применяются интерфейсы как действия по отношению к ключам в методе для пользователя:
-     * {@link #handleUserMessages(Function, BiConsumer, Consumer, BiConsumer, User, Update, ButtonsText)}
+     * {@link #handleUserMessages(Function, BiConsumer, TriConsumer, BiConsumer, User, Update, ButtonsText)}
      * и в методе для волонтера
      * {@link #handleVolunteerMessages(Function, BiConsumer, BiConsumer, BiConsumer, BiConsumer, User, Update)}
      */
@@ -289,17 +289,18 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             List<String> menuValue = buttonsText.getMenu(menuKey);
             telegramBot.execute(menuService.editMenuLoader(update, textValue, menuValue));
         };
-        doSendPhoto = (filePath) -> {
+        doSendPhoto = (filePath, textKey, buttonsValue) -> {
             logger.info("====Processing update with callback: {}", update.callbackQuery().data());
-            telegramBot.execute(menuService.sendPhotoLoader(update, filePath));
+            List<String> buttons = buttonsText.getMenu(buttonsValue);
+            String textValue = buttonsText.getString(textKey);
+            telegramBot.execute(menuService.sendLocationPhotoLoader(update, filePath, textValue, buttons));
         };
         goSendLocation = (latitude, longitude) -> {
-            //todo поправить, чтобы корректно отправлялась локация
-            logger.info("====Processing update with callback: {}", update.callbackQuery().data());
+            logger.info("==== Sending location: {}", update.callbackQuery().data());
             telegramBot.execute(menuService.sendLocationLoader(update, latitude, longitude));
         };
         doSendReportList = (textKey, menuKey) -> {
-            logger.info("==== Processing update with callback: {}", update.callbackQuery().data());
+            logger.info("==== Sending list of Reports: {}", update.callbackQuery().data());
             List<List<String>> buttons = menuService.generateListOfLastReports();
             String text = "Список последних отчетов: ";
             telegramBot.execute(menuService.menuLoaderForObjects(update, text, buttons));
@@ -336,7 +337,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Метод инициализирует функциональные интерфейсы в ситуации для update с текстовой командой.
      * Применяются интерфейсы как действия по отношению к ключам в методе для пользователя:
-     * {@link #handleUserMessages(Function, BiConsumer, Consumer, BiConsumer, User, Update, ButtonsText)}
+     * {@link #handleUserMessages(Function, BiConsumer, TriConsumer, BiConsumer, User, Update, ButtonsText)}
      * и в методе для волонтера {@link #handleVolunteerMessages(Function, BiConsumer, BiConsumer, BiConsumer, BiConsumer, User, Update)}
      */
     private void functionalInitForTextCommand(Message message, ButtonsText buttonsText) {
@@ -416,7 +417,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     public void handleUserMessages(Function<String, Boolean> whatIsMenu,
                                    BiConsumer<String, String> doSendMessage,
-                                   Consumer<File> doSendPhoto,
+                                   TriConsumer<File, String, String> doSendPhoto,
                                    BiConsumer<Float, Float> doSendLocation,
                                    User currentUser, Update update, ButtonsText buttonsText) throws IOException {
         if (whatIsMenu.apply("START_BUTTON")) {
@@ -437,8 +438,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             doSendMessage.accept("ABOUT_US", "BACK_TO_MAIN_MENU");
         } else if (whatIsMenu.apply("CONTACTS_BUTTON")) {
             doSendLocation.accept(51.165973F, 71.403983F);
-            doSendPhoto.accept(address);
-            doSendMessage.accept("SHELTER_CONTACTS", "BACK_TO_MAIN_MENU");
+            doSendPhoto.accept(address, "SHELTER_CONTACTS", "BACK_TO_MAIN_MENU");
         } else if (whatIsMenu.apply("SAFETY_REGULATIONS_BUTTON")) {
             doSendMessage.accept("SAFETY_REGULATIONS", "BACK_TO_MAIN_MENU");
         } else if (whatIsMenu.apply("SHARE_CONTACT_BUTTON")) {
@@ -494,10 +494,13 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
      */
     public void handleParentMessages(Function<String, Boolean> whatIsMenu,
                                      BiConsumer<String, String> doSendMessage,
-                                     Consumer<File> doSendPhoto,
+                                     TriConsumer<File, String, String> doSendPhoto,
                                      BiConsumer<Float, Float> doSendLocation,
                                      User currentUser, Update update,
                                      ButtonsText buttonsText) throws IOException {
+        //todo Дописать логику реакций на кнопки под полученной локацией
+
+        //todo Дописать логику реакций на кнопки под уведомлением о необходимости дополнить отчет
         if (whatIsMenu.apply("START_BUTTON")) {
             doSendMessage.accept("START_TEXT", "SPECIES_PET_SELECTION_MENU");
         } else if (whatIsMenu.apply("BACK_BUTTON")) {
@@ -516,8 +519,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             doSendMessage.accept("ABOUT_US", "BACK_TO_MAIN_MENU");
         } else if (whatIsMenu.apply("CONTACTS_BUTTON")) {
             doSendLocation.accept(51.165973F, 71.403983F);
-            doSendPhoto.accept(address);
-            doSendMessage.accept("SHELTER_CONTACTS", "BACK_TO_MAIN_MENU");
+            doSendPhoto.accept(address, "SHELTER_CONTACTS", "BACK_TO_MAIN_MENU");
         } else if (whatIsMenu.apply("SAFETY_REGULATIONS_BUTTON")) {
             doSendMessage.accept("SAFETY_REGULATIONS", "BACK_TO_MAIN_MENU");
         } else if (whatIsMenu.apply("SHARE_CONTACT_BUTTON")) {
