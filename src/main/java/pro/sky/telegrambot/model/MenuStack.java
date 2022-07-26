@@ -127,6 +127,8 @@ public class MenuStack {
         REPORT,
         REPORT_REQUEST,
         REPORT_LIST,
+        READING_REPORT,
+        REPORT_ACTION,
         COMMAND_OR_TEXT,
         DIALOG_REQUEST,
         TELEGRAM_USER_ID,

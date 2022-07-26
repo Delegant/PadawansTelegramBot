@@ -30,11 +30,15 @@ public interface MenuService {
     EditMessageText editMenuLoader(Update update, String text, List<String> listButtons);
     SendPhoto sendPhotoLoader (Update update, File address);
     void multiplePhotoSend(Long chatId, Long reportId);
+    SendMessage sendTextWithMarkedCallBack(Long chatId, String text, Long reportId);
     SendLocation sendLocationLoader(Update update, Float latitude, Float longitude);
     String getHashFromButton(String message);
     List<List<String>> generateListOfLastReports();
 
     List<List<String>> generateListOfUsers(String name);
     SendMessage sendUserNames(Long chatId, String text, String name);
+
+    SendMessage sendReportNotificationMessage(Long chatId, Long reportId, String text);
+
 
 }

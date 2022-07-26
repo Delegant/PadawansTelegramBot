@@ -141,7 +141,7 @@ public class ButtonsText {
                         bundle.getString("ASK_TO_SEND_PHOTO"),
                         bundle.getString("ASK_TO_UPDATE_TEXT"),
                         bundle.getString("SET_AS_READ"),
-                        bundle.getString("BACK_TO_VOLUNTEERS_MENU"),
+                        bundle.getString("BACK_TO_REPORT_LIST"),
                         bundle.getString("VOLUNTEER_MAIN_MENU_BUTTON")
                 ));
         menuMap.put(bundle.getString("ADMIN_MAIN_MENU"),

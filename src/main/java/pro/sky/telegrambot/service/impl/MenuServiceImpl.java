@@ -73,6 +73,7 @@ public class MenuServiceImpl implements MenuService {
 
 
 
+
     /**
      * Метод, принимающий список кнопок и формирующий клавиатуру для вставки в сообщение.
      * @param list - входящий список кнопок (текстов для кнопок)
@@ -324,6 +325,67 @@ public class MenuServiceImpl implements MenuService {
         }
     }
 
+    @Override
+    public SendMessage sendReportNotificationMessage(Long chatId, Long reportId, String text) {
+        try{
+            SendMessage sendMessage = new SendMessage(chatId, text);
+            sendMessage.replyMarkup(keyboardForReportNotificationMessage(reportId));
+            return sendMessage;
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Error on creating message for notification");
+        }
+
+    }
+
+    public SendMessage sendTextWithMarkedCallBack(Long chatId, String text, Long reportId) {
+        try{
+            SendMessage sendMessage = new SendMessage(chatId, text);
+            sendMessage.replyMarkup(keyboardForReportAction(reportId));
+            return sendMessage;
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Error on creating message");
+        }
+    }
+
+    private InlineKeyboardMarkup keyboardForReportNotificationMessage(Long reportId) {
+
+        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+        inlineKeyboardMarkup.addRow(
+                new InlineKeyboardButton("Дополнить текст отчета")
+                        .callbackData("txt_" + reportId));
+        inlineKeyboardMarkup.addRow(
+                new InlineKeyboardButton("Прислать фотографию для отчета")
+                        .callbackData("pic_" + reportId));
+        inlineKeyboardMarkup.addRow(
+                new InlineKeyboardButton("Вернуться в главное меню")
+                        .callbackData(getHashFromButton("Вернуться в главное меню")));
+
+        return inlineKeyboardMarkup;
+    }
+
+    private InlineKeyboardMarkup keyboardForReportAction(Long reportId) {
+
+        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+        inlineKeyboardMarkup.addRow(
+                        new InlineKeyboardButton("Попросить дополнить текст отчета")
+                                .callbackData("txt_" + reportId));
+        inlineKeyboardMarkup.addRow(
+                new InlineKeyboardButton("Попросить прислать фотографию питомца")
+                        .callbackData("pic_" + reportId));
+        inlineKeyboardMarkup.addRow(
+                new InlineKeyboardButton("Отметить как прочитанное")
+                        .callbackData("oke_" + reportId));
+        inlineKeyboardMarkup.addRow(
+                new InlineKeyboardButton("Назад к списку отчетов")
+                        .callbackData(getHashFromButton("Назад к списку отчетов")));
+        inlineKeyboardMarkup.addRow(
+                new InlineKeyboardButton("Вернуться в меню волонтера")
+                        .callbackData(getHashFromButton("Вернуться в меню волонтера")));
+
+        return inlineKeyboardMarkup;
+    }
+
+
     /**
      * Перегруженный метод, формирующий обновление старого сообщения из входящих параметров:
      * @param update - Из поля update берется id чата, куда будет отправлено сообщение и какое сообщение обновлять
@@ -355,6 +417,7 @@ public class MenuServiceImpl implements MenuService {
     public SendPhoto sendPhotoLoader(Update update, File address) {
         return new SendPhoto(update.callbackQuery().message().chat().id(), address);
     }
+
     public SendPhoto sendPhotoLoader(Long chatId, File address) {
         return new SendPhoto(chatId, address);
     }
