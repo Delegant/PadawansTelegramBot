@@ -35,6 +35,17 @@ public class ReportDao implements Dao<Report> {
         return query.getResultList();
     }
 
+    public int getNumberOfPicturesByReport(Report report) {
+        List<PictureName> names = entityManager.createQuery("SELECT p from picturenames p").getResultList();
+        int number = 0;
+        for (PictureName name : names) {
+            if (name.getReport().equals(report)) {
+                number++;
+            }
+        }
+        return number;
+    }
+
     @Override
     public void save(Report report) {
         executeInsideTransaction(entityManager -> entityManager.persist(report));

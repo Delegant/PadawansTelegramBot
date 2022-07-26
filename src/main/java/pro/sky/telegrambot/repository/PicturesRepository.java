@@ -13,7 +13,9 @@ public interface PicturesRepository extends JpaRepository<ReportPicture, Long> {
 
     Collection<ReportPicture> findAllByReport(Report report);
 
-    void findByFilePathContains(String filename);
+    Collection<ReportPicture> findAllByReportId(Long reportId);
+
+    ReportPicture findByFilePathContains(String filename);
 
     ReportPicture findByFilePathEndingWith(String filename);
 

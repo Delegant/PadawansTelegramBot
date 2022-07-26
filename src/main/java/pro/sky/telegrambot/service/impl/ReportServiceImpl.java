@@ -151,6 +151,17 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
+    public Report getReportById(Long reportId) {
+        return reportDao.get(reportId)
+                .orElseThrow(() -> new ReportNotFoundException("!!!! Report not found with id = " + reportId));
+    }
+
+    @Override
+    public Boolean ifHasPhoto(Report report) {
+        return picturesRepository.findAllByReportId(report.getId()).size() != 0;
+    }
+
+    @Override
     public Collection<Report> getListOfReportsByUserName(String username) {
         return reportsRepository.findAllByUserId(userRepository.findByName(username).get().getId());
     }
@@ -271,6 +282,11 @@ public class ReportServiceImpl implements ReportService {
         return pictureNames.stream().map(PictureName::getFilename).collect(Collectors.toList());
     }
 
+    @Override
+    public List<PictureName> getPictureNames(Report report) {
+        return new ArrayList<>(pictureNameRepository.findAllByReportId(report.getId()));
+    }
+
     /**
      * Метод, возвращающий фотографию по названию файла
      * @param filename имя файла
@@ -278,7 +294,7 @@ public class ReportServiceImpl implements ReportService {
      */
     @Override
     public ReportPicture getPictureFromStorageByFilename(String filename) {
-        return Optional.of(picturesRepository.findByFilePathEndingWith(filename)).orElseThrow();
+        return Optional.of(picturesRepository.findByFilePathContains(filename)).orElseThrow();
     }
 
     /**
@@ -454,4 +470,37 @@ public class ReportServiceImpl implements ReportService {
         return reportText;
     }
 
+    @Override
+    public Collection<Report> getUnreadReports() {
+        Collection<Report> reports = reportsRepository.findAll();
+        if (checkReports()) {
+            reports.removeIf(report -> report.getReadStatus() != Report.ReadStatus.UNREAD);
+        }
+        LocalDateTime today = LocalDateTime.now();
+        LocalDateTime minusThree = LocalDateTime.now().minusDays(3);
+        reports.removeIf(report -> report.getReportDate().isBefore(minusThree));
+        return reports;
+    }
+
+    private boolean checkReports() {
+       Collection<Report> reports = reportsRepository.findAll();
+        int unreadReportsCount = 0;
+        for (Report report : reports) {
+            if (report.getReadStatus() == Report.ReadStatus.UNREAD) {
+                unreadReportsCount++;
+            }
+            if (report.getReadStatus() == null) {
+                report.setReadStatus(Report.ReadStatus.UNREAD);
+                reportsRepository.save(report);
+                unreadReportsCount++;
+            }
+        }
+        return unreadReportsCount > 0;
+    }
+
+    @Override
+    public int getNumberOfPicturesByReport(Report report) {
+
+        return getReportPicturesNames(report.getId()).size();
+    }
 }

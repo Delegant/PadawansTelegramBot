@@ -136,6 +136,14 @@ public class ButtonsText {
                         bundle.getString("UNREAD_REPORTS"),
                         bundle.getString("BACK_TO_VOLUNTEERS_MENU")
                 ));
+        menuMap.put(bundle.getString("INSIDE_REPORT_MENU"),
+                List.of(
+                        bundle.getString("ASK_TO_SEND_PHOTO"),
+                        bundle.getString("ASK_TO_UPDATE_TEXT"),
+                        bundle.getString("SET_AS_READ"),
+                        bundle.getString("BACK_TO_VOLUNTEERS_MENU"),
+                        bundle.getString("VOLUNTEER_MAIN_MENU_BUTTON")
+                ));
         menuMap.put(bundle.getString("ADMIN_MAIN_MENU"),
                 List.of(
                         bundle.getString("ADD_PARENT"),

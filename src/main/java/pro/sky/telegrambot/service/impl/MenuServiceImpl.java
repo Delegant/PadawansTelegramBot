@@ -1,5 +1,6 @@
 package pro.sky.telegrambot.service.impl;
 
+import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.request.*;
@@ -9,12 +10,19 @@ import com.pengrad.telegrambot.request.SendLocation;
 import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.request.SendPhoto;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.Dao.Impl.ReportDao;
+import pro.sky.telegrambot.listener.TelegramBotUpdatesListener;
+import pro.sky.telegrambot.model.PictureName;
 import pro.sky.telegrambot.model.Report;
+import pro.sky.telegrambot.model.ReportPicture;
 import pro.sky.telegrambot.model.User;
+import pro.sky.telegrambot.repository.PicturesRepository;
 import pro.sky.telegrambot.service.MenuService;
+import pro.sky.telegrambot.service.ReportService;
 import pro.sky.telegrambot.service.UserService;
 
 import static pro.sky.telegrambot.constants.ButtonsText.HIDDEN_BUTTON;
@@ -30,11 +38,21 @@ import java.util.stream.Collectors;
 @Service
 public class MenuServiceImpl implements MenuService {
 
+    private final Logger logger = LoggerFactory.getLogger(MenuServiceImpl.class);
     @Autowired
     private ReportDao reportDao;
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private ReportService reportService;
+
+    @Autowired
+    private TelegramBot telegramBot;
+
+    @Autowired
+    private PicturesRepository picturesRepository;
 
     public InlineKeyboardMarkup getMainKeyboard() {
         InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
@@ -42,6 +60,7 @@ public class MenuServiceImpl implements MenuService {
         return keyboardMarkup;
     }
 
+    @Deprecated
     private ReplyKeyboardMarkup keyboardMaker(List<String> list) {
         KeyboardButton[] buttons = new KeyboardButton[list.size()];
         for (int i = 0; i < list.size(); i++) {
@@ -125,7 +144,7 @@ public class MenuServiceImpl implements MenuService {
                         new InlineKeyboardButton(list.get(i).get(0))
                                 .callbackData(list.get(i).get(1)),
                         new InlineKeyboardButton(list.get(i + 1).get(0))
-                                .callbackData(list.get(i + 1).get(0)));
+                                .callbackData(list.get(i + 1).get(1)));
             }
         }
         if (list.size() > 10 && list.size() % 2 != 0) {
@@ -167,6 +186,7 @@ public class MenuServiceImpl implements MenuService {
         }
     }
 
+    @Deprecated
     public SendMessage replyKeyboardLoader(List<String> list, String text, Message message) {
         if (message == null || text == null || list == null) {
             throw new NullPointerException("!!!! One or more parameter is null");
@@ -184,6 +204,7 @@ public class MenuServiceImpl implements MenuService {
         return msg;
     }
 
+    @Deprecated
     @Override
     public SendMessage replyKeyboardLoader(List<String> list, String text, Update update) {
         if (update == null || text == null || list == null) {
@@ -237,6 +258,8 @@ public class MenuServiceImpl implements MenuService {
         if (message == null || text == null || buttonsWithCallbacks == null) {
             throw new NullPointerException("!!!! One or more parameter is null");
         }
+        List<String> backButton = List.of("Назад", getHashFromButton("Назад"));
+        buttonsWithCallbacks.add(backButton);
         try {
             Keyboard keyboard = keyboardFactoryForObjects(buttonsWithCallbacks);
             return new SendMessage(message.chat().id(), text)
@@ -259,6 +282,8 @@ public class MenuServiceImpl implements MenuService {
         if (update == null || text == null || buttonsWithCallbacks == null) {
             throw new NullPointerException("!!!! One or more parameter is null");
         }
+        List<String> backButton = List.of("Назад", getHashFromButton("Назад"));
+        buttonsWithCallbacks.add(backButton);
         try{
             Keyboard keyboard = keyboardFactoryForObjects(buttonsWithCallbacks);
             return new SendMessage(update.callbackQuery().message().chat().id(), text)
@@ -330,6 +355,26 @@ public class MenuServiceImpl implements MenuService {
     public SendPhoto sendPhotoLoader(Update update, File address) {
         return new SendPhoto(update.callbackQuery().message().chat().id(), address);
     }
+    public SendPhoto sendPhotoLoader(Long chatId, File address) {
+        return new SendPhoto(chatId, address);
+    }
+
+    @Override
+    public void multiplePhotoSend(Long chatId, Long reportId) {
+        List<ReportPicture> pictures = new ArrayList<>(reportService.getReportPicturesByReportId(reportId));
+
+        try {
+            if (pictures.size() != 0) {
+                for (ReportPicture pic : pictures) {
+                    File file = new File(pic.getFilePath());
+                    telegramBot.execute(sendPhotoLoader(chatId, file));
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Some exception catched " + e.toString());
+            throw new RuntimeException(e);
+        }
+    }
 
     /**
      * Метод для отправки локации - расположения приюта
@@ -355,33 +400,24 @@ public class MenuServiceImpl implements MenuService {
 
     /**
      * Метод генерирует список последних отчетов за 3 дня
-     * @return список из названий кнопок, состоящий из id отчета и имени юзера
+     * @return список из названий кнопок, состоящий из id отчета и имени юзера и второй элемент - id отчета, который используется как колбек.
      */
     @Override
-    public List<String> generateListOfLastReports() {
-        List<String> reports = new ArrayList<>();
-        List<Long> idList = reportDao.getUnreadReports()
-                .stream()
-                .map(Report::getId)
-                .collect(Collectors.toList());
-        List<Report> lastReports = new ArrayList<>(reportDao.getUnreadReports());
-        HashMap<Long, String> namesMap = new HashMap<>();
-        if (!idList.isEmpty()) {
-            for (int i = 0; i < idList.size(); i++) {
-                int finalI = i;
-                Report foundReport = lastReports.stream()
-                        .filter(Report -> Report.getId().equals(idList.get(finalI)))
-                        .findFirst()
-                        .get();
-                namesMap.put(idList.get(i), foundReport.getUser().getName());
-            }
+    public List<List<String>> generateListOfLastReports() {
 
-            for (int i = 0; i < namesMap.size(); i++) {
-                reports.add(idList.get(i) + " " + namesMap.get(idList.get(i)));
+        List<List<String>> reportButtons = new ArrayList<>();
+        List<Report> reportsList = new ArrayList<>(reportService.getUnreadReports());
+
+        if (!reportsList.isEmpty()) {
+            for (Report report : reportsList) {
+                List<String> button = new ArrayList<>();
+                button.add(0, report.getId() + " " + report.getUser().getName() + " Кол-во фото: " + reportService.getNumberOfPicturesByReport(report));
+                button.add(1, report.getId().toString());
+                reportButtons.add(button);
             }
         }
-        reports.add("Назад");
-        return reports;
+
+        return reportButtons;
     }
 
     /**
@@ -399,8 +435,7 @@ public class MenuServiceImpl implements MenuService {
             button.add(user.getChatId().toString());
             namesForKeyboard.add(button);
         }
-        List<String> backButton = List.of("Назад", getHashFromButton("Назад"));
-        namesForKeyboard.add(backButton);
+
         return namesForKeyboard;
 
     }
