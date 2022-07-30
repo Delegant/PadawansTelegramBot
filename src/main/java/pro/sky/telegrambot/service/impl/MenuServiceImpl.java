@@ -156,7 +156,6 @@ public class MenuServiceImpl implements MenuService {
         return inlineKeyboardMarkup;
     }
 
-
     /**
      * Метод, формирующий новое сообщение из входящих параметров:
      *
