@@ -616,8 +616,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             doSendMessage.accept("START_TEXT", "SPECIES_PET_SELECTION_MENU");
         } else if (whatIsMenu.apply("BACK_BUTTON")) {
             menuStackService.dropMenuStack(currentUser);
-            doSendMessage.accept(menuStackService.getPreviousTextKeyByUser(currentUser),
-                    menuStackService.getPreviousMenuStateByUser(currentUser));
+            doSendMessage.accept(menuStackService.getLastTextPackKeyByUser(currentUser),
+                    menuStackService.getLastMenuStateByUser(currentUser));
         } else if (whatIsMenu.apply("CAT_BUTTON") || whatIsMenu.apply("DOG_BUTTON")) {
             menuStackService.setTextPackKey(currentUser, update.callbackQuery().data());
             buttonsText.changeCurrentTextKey(update.callbackQuery().data());

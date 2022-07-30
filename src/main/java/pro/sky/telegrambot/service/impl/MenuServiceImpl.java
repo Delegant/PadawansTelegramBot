@@ -170,7 +170,6 @@ public class MenuServiceImpl implements MenuService {
     }
 
 
-
     /**
      * Метод, принимающий список кнопок и формирующий клавиатуру для вставки в сообщение.
      *
@@ -190,52 +189,6 @@ public class MenuServiceImpl implements MenuService {
                 .map(InlineKeyboardButton::new)
                 .forEach(button -> button.callbackData(iterator.hasNext() ? iterator.next() : getHashFromButton(button.text())));
 
-        return inlineKeyboardMarkup;
-    }
-
-    /**
-     * Метод, принимающий список кнопок и формирующий клавиатуру для вставки в сообщение.
-     *
-     * @param list - входящий список кнопок (текстов для кнопок)
-     * @return - возвращает inline-клавиатуру
-     * @see MenuServiceImpl#menuLoaderForObjects(Message, String, List)
-     * @see MenuServiceImpl#menuLoaderForObjects(Update, String, List)
-     */
-    private InlineKeyboardMarkup keyboardFactoryForObjects(List<List<String>> list) {
-        if (list == null) {
-            throw new NullPointerException("Inline menu list is null");
-        }
-        list.removeIf(elem -> elem.get(0).equals(HIDDEN_BUTTON));
-
-        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-        if (list.size() <= 10) {
-            for (List<String> strings : list) {
-                inlineKeyboardMarkup.addRow(
-                        new InlineKeyboardButton(strings.get(0))
-                                .callbackData(strings.get(1)));
-            }
-        }
-        if (list.size() > 10 && list.size() % 2 == 0) {
-            for (int i = 0; i < list.size(); i = i + 2) {
-                inlineKeyboardMarkup.addRow(
-                        new InlineKeyboardButton(list.get(i).get(0))
-                                .callbackData(list.get(i).get(1)),
-                        new InlineKeyboardButton(list.get(i + 1).get(0))
-                                .callbackData(list.get(i + 1).get(0)));
-            }
-        }
-        if (list.size() > 10 && list.size() % 2 != 0) {
-            for (int i = 0; i < list.size() - 1; i = i + 2) {
-                inlineKeyboardMarkup.addRow(
-                        new InlineKeyboardButton(list.get(i).get(0))
-                                .callbackData(list.get(i).get(1)),
-                        new InlineKeyboardButton(list.get(i + 1).get(0))
-                                .callbackData(list.get(i + 1).get(1)));
-            }
-            inlineKeyboardMarkup.addRow(
-                    new InlineKeyboardButton(list.get(list.size() - 1).get(0))
-                            .callbackData(list.get(list.size() - 1).get(1)));
-        }
         return inlineKeyboardMarkup;
     }
 
@@ -369,53 +322,6 @@ public class MenuServiceImpl implements MenuService {
     }
 
     /**
-     *  Метод отправляет список пользователей или очетов с колбеком в виде id
-     *  Это нужно для правильной обработки колбеков в дальнейшем
-     * @param message сообщение из Телеграм
-     * @param text текст сообщения
-     * @param buttonsWithCallbacks список списков с названиями кнопок и колбеками
-     * @return новое сообщение
-     */
-    public SendMessage menuLoaderForObjects(Message message, String text, List<List<String>> buttonsWithCallbacks) {
-        if (message == null || text == null || buttonsWithCallbacks == null) {
-            throw new NullPointerException("!!!! One or more parameter is null");
-        }
-        List<String> backButton = List.of("Назад", getHashFromButton("Назад"));
-        buttonsWithCallbacks.add(backButton);
-        try {
-            Keyboard keyboard = keyboardFactoryForObjects(buttonsWithCallbacks);
-            return new SendMessage(message.chat().id(), text)
-                    .replyMarkup(keyboard);
-        } catch (RuntimeException e) {
-            throw new RuntimeException("The list of buttons is invalid");
-        }
-
-    }
-
-    /**
-     *  Метод отправляет список пользователей или очетов с колбеком в виде id
-     *  Это нужно для правильной обработки колбеков в дальнейшем
-     * @param update апдейт из Телеграм
-     * @param text текст сообщения
-     * @param buttonsWithCallbacks список списков с названиями кнопок и колбеками
-     * @return новое сообщение
-     */
-    public SendMessage menuLoaderForObjects(Update update, String text, List<List<String>> buttonsWithCallbacks) {
-        if (update == null || text == null || buttonsWithCallbacks == null) {
-            throw new NullPointerException("!!!! One or more parameter is null");
-        }
-        List<String> backButton = List.of("Назад", getHashFromButton("Назад"));
-        buttonsWithCallbacks.add(backButton);
-        try{
-            Keyboard keyboard = keyboardFactoryForObjects(buttonsWithCallbacks);
-            return new SendMessage(update.callbackQuery().message().chat().id(), text)
-                    .replyMarkup(keyboard);
-        } catch (RuntimeException e) {
-            throw new RuntimeException("The list of buttons is invalid");
-        }
-    }
-
-    /**
      * Перегруженный метод, формирующий новое сообщение из входящих параметров:
      * @param chatId - id чата, куда будет отправлено сообщение
      * @param text - текст отправляемого сообщения
@@ -506,7 +412,6 @@ public class MenuServiceImpl implements MenuService {
         return inlineKeyboardMarkup;
     }
 
-
     public SendMessage sendTextLoader(Long chatId, String text, List<String> listButtons, List<String> callBacks) {
         try {
             SendMessage sendMessage = new SendMessage(chatId, text);
@@ -578,13 +483,6 @@ public class MenuServiceImpl implements MenuService {
         }
     }
 
-    /**
-     * Метод для отправки локации - расположения приюта
-     * @param update апдейт из Телеграм
-     * @param latitude широта
-     * @param longitude долгота
-     * @return новое сообщение с локацией
-     */
     /**
      * Метод для отправки локации - расположения приюта
      *

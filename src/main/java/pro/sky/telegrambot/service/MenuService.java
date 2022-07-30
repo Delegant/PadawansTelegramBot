@@ -39,15 +39,10 @@ public interface MenuService {
     List<List<String>> generateListOfAllUserReports(Long chatId);
     List<List<String>> generateListOfUpdateRequestedUserReports(Long chatId);
 
-    List<List<String>> generateListOfUsers(String name);
     SendMessage sendUserNames(Long chatId, String text, String name);
 
     SendMessage sendReportNotificationMessage(Long chatId, Long reportId, String text);
-
-
-    List<String> generateListOfLastReports();
-
     List<List<String>> generateListOfUsers(String name);
-    SendMessage sendUserNames(Long chatId, String text, String name);
 
+    SendMessage sendTextLoader(Long volunteer_chatId, String volunteer_request_text, List<String> to_support_menu, List<String> user_chatId);
 }
