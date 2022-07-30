@@ -94,6 +94,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     BiConsumer<String, String> doSendReport;
     BiConsumer<String, String> doSendNotification;
     TriConsumer<Long, Long, String> doSendUserNotification;
+    BiConsumer<Long, String> doSendParentReport;
 
 
 
@@ -413,6 +414,17 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 }
                 menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, MY_REPORTS);
             }
+        };
+        doSendParentReport = (reportId, menuKey) -> {
+            logger.info("==== Sending report to parent with id: {}", update.callbackQuery().data());
+            Report report = reportService.getReportById(reportId);
+            String text = report.getReportText();
+            List<String> menuValue = buttonsText.getMenu(menuKey);
+            if (reportService.ifHasPhoto(report)) {
+                menuService.multiplePhotoSend(currentUser.getChatId(), report.getId());
+            }
+            telegramBot.execute(menuService.sendTextWithMarkedCallBack(currentUser.getChatId(), text, report.getId()));
+            menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, REPORT_ACTION);
         };
     }
 
