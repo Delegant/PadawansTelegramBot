@@ -125,22 +125,19 @@ public class MenuStack {
         DIALOG_PIC,
         DIALOG,
         REPORT,
-
         REPORT_REQUEST,
-
         REPORT_LIST,
-
+        READING_REPORT,
+        REPORT_ACTION,
         COMMAND_OR_TEXT,
         DIALOG_REQUEST,
-
         TELEGRAM_USER_ID,
-
         USER_NAME,
-
         ADDING_VOLUNTEER,
-
         ADDING_PARENT,
-
         ADDING_ADMIN,
+        RECEIVED_REPORT_NOTIFICATION,
+        UPDATING_REPORT,
+        MY_REPORTS,
     }
 }

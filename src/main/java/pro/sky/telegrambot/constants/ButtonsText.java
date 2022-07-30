@@ -5,6 +5,9 @@ import java.util.*;
 public class ButtonsText {
 
     private static final String hashPetDefaultTextKey = "-2057967076";
+    private static String SEND_REPORT_IS_CREATED;
+    private static String ASK_TO_SEND_PIC;
+    private static String ASK_TO_SEND_TEXT;
     public static String HIDDEN_BUTTON;
     private static ButtonsText singletonBundleText;
     private final Map<String, ResourceBundle> bundleMap;
@@ -65,6 +68,8 @@ public class ButtonsText {
                         bundle.getString("INFO_BUTTON"),
                         bundle.getString("HOW_TO_GET_PET_BUTTON"),
                         bundle.getString("SEND_REPORT_BUTTON"),
+                        bundle.getString("MY_REPORTS"),
+                        bundle.getString("MY_TRIAL_PERIOD"),
                         bundle.getString("CALL_VOLUNTEER_BUTTON"),
                         bundle.getString("CHANGE_PET_BUTTON")
                 ));
@@ -96,6 +101,16 @@ public class ButtonsText {
                         bundle.getString("BACK_BUTTON"),
                         bundle.getString("BACK_TO_MAIN_MENU_BUTTON")
                 ));
+        menuMap.put(bundle.getString("IN_REPORT_SEND_TEXT_MENU"),
+                List.of(
+                        bundle.getString("FINISH_SENDING_REPORT"),
+                        bundle.getString("BACK_TO_MAIN_MENU_BUTTON")
+                ));
+        menuMap.put(bundle.getString("IN_REPORT_SEND_PIC_MENU"),
+                List.of(
+                        bundle.getString("FINISH_SENDING_REPORT"),
+                        bundle.getString("BACK_TO_MAIN_MENU_BUTTON")
+                ));
         menuMap.put(bundle.getString("VOLUNTEER_MAIN_MENU"),
                 List.of(
                         bundle.getString("ADD_PARENT"),
@@ -122,6 +137,28 @@ public class ButtonsText {
                         bundle.getString("GET_REPORT_BY_ID"),
                         bundle.getString("UNREAD_REPORTS"),
                         bundle.getString("BACK_TO_VOLUNTEERS_MENU")
+                ));
+        menuMap.put(bundle.getString("INSIDE_REPORT_MENU"),
+                List.of(
+                        bundle.getString("ASK_TO_SEND_PHOTO"),
+                        bundle.getString("ASK_TO_UPDATE_TEXT"),
+                        bundle.getString("SET_AS_READ"),
+                        bundle.getString("BACK_TO_REPORT_LIST"),
+                        bundle.getString("VOLUNTEER_MAIN_MENU_BUTTON")
+                ));
+        menuMap.put(bundle.getString("MY_REPORTS_MENU"),
+                List.of(
+                        bundle.getString("ALL_REPORTS"),
+                        bundle.getString("UPDATE_REQUESTED")
+                )
+        );
+        menuMap.put(bundle.getString("INSIDE_PARENT_REPORT_MENU"),
+                List.of(
+                        bundle.getString("UPDATE_TEXT_FOR_REPORT"),
+                        bundle.getString("UPDATE_PICTURE_FOR_REPORT"),
+                        bundle.getString("DO_IT_LATER"),
+                        bundle.getString("MY_REPORTS"),
+                        bundle.getString("BACK_TO_MAIN_MENU_BUTTON")
                 ));
         menuMap.put(bundle.getString("ADMIN_MAIN_MENU"),
                 List.of(
@@ -157,6 +194,11 @@ public class ButtonsText {
                 List.of(bundle.getString("ACCEPT_DIALOG"),
                         bundle.getString("DENY_DIALOG")
                 ));
+
+        ASK_TO_SEND_TEXT = bundle.getString("ASK_TO_SEND_TEXT");
+        ASK_TO_SEND_PIC = bundle.getString("ASK_TO_SEND_PIC");
+        SEND_REPORT_IS_CREATED = bundle.getString("SEND_REPORT_IS_CREATED");
+
         HIDDEN_BUTTON = bundle.getString("HIDDEN_BUTTON");
     }
 }

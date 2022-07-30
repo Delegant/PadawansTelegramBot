@@ -9,4 +9,6 @@ public interface TrialPeriodService {
     void prolongTrialPeriod(Long userId, int addedDays, Long volunteerId);
 
     void declineTrialPeriod(Long userId, Long volunteerId);
+
+    String getTrialPeriodInformation(Long userId);
 }

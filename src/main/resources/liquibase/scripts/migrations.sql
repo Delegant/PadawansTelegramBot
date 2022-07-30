@@ -152,3 +152,8 @@ ALTER TABLE menuStack
 
 ALTER TABLE users
     ADD COLUMN companion bigint;
+
+-- changeset algmironov:21
+
+ALTER TABLE reports
+    ADD COLUMN read_status varchar(255) NOT NULL DEFAULT 'UNREAD';

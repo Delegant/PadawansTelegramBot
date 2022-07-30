@@ -24,6 +24,12 @@ public class Report {
         UPDATED,
     }
 
+    public enum ReadStatus {
+        UNREAD,
+        READ,
+        TO_BE_UPDATED,
+    }
+
     @Schema(description = "Идентификатор отчета")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,6 +53,10 @@ public class Report {
     @Enumerated(EnumType.STRING)
     private Status status = Status.MAIN;
 
+    @Schema(description = "Статус проверки отчета: не проверен/проверен/требует доработки")
+    @Enumerated(EnumType.STRING)
+    private ReadStatus readStatus = ReadStatus.UNREAD;
+
     @Schema(description = "Фотографии для отчета")
     @JsonIgnore
     @OneToMany(mappedBy = "report")
@@ -65,6 +75,7 @@ public class Report {
         this.reportText = reportText;
         this.reportDate = LocalDateTime.now();
         this.status = Status.MAIN;
+        this.readStatus = ReadStatus.UNREAD;
     }
 
     public Report(Long id, String reportText, Status status) {
@@ -76,6 +87,14 @@ public class Report {
 
     public List<PictureName> getPictureNames() {
         return pictureNames;
+    }
+
+    public ReadStatus getReadStatus() {
+        return readStatus;
+    }
+
+    public void setReadStatus(ReadStatus readStatus) {
+        this.readStatus = readStatus;
     }
 
     @Transactional
@@ -105,6 +124,9 @@ public class Report {
 
     public void setReportDate() {
         this.reportDate = LocalDateTime.now();
+    }
+    public void setReportDate(LocalDateTime date) {
+        this.reportDate = date;
     }
 
     public LocalDateTime getReportUpdateDate() {
