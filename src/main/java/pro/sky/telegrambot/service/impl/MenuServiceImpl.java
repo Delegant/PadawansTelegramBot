@@ -28,6 +28,8 @@ import pro.sky.telegrambot.service.UserService;
 import static pro.sky.telegrambot.constants.ButtonsText.HIDDEN_BUTTON;
 
 import java.io.File;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -488,6 +490,47 @@ public class MenuServiceImpl implements MenuService {
             }
         }
 
+        return reportButtons;
+    }
+    @Override
+    public List<List<String>> generateListOfAllUserReports(Long chatId) {
+        List<List<String>> reportButtons = new ArrayList<>();
+        List<Report> reportsList = new ArrayList<>(reportService.getUnreadReports());
+        User user = userService.getUserByChatId(chatId).orElseThrow();
+
+        if (!reportsList.isEmpty()) {
+            reportsList.removeIf(report -> !report.getUser().equals(user));
+            for (Report report : reportsList) {
+                List<String> button = new ArrayList<>();
+                button.add(0, report.getId() + " " + report.getReportDate() + " " + report.getReadStatus());
+                button.add(1, report.getId().toString());
+                reportButtons.add(button);
+            }
+        }
+        return reportButtons;
+    }
+
+    @Override
+    public List<List<String>> generateListOfUpdateRequestedUserReports(Long chatId) {
+        List<List<String>> reportButtons = new ArrayList<>();
+        List<Report> reportsList = new ArrayList<>(reportService.getUnreadReports());
+        User user = userService.getUserByChatId(chatId).orElseThrow();
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
+        DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
+
+        if (!reportsList.isEmpty()) {
+            reportsList.removeIf(report -> !report.getUser().equals(user));
+            reportsList.removeIf(report -> !report.getReadStatus().equals(Report.ReadStatus.TO_BE_UPDATED));
+            for (Report report : reportsList) {
+                LocalDate date = LocalDate.parse(report.getReportDate().toString().substring(0, 10), formatter);
+                String formattedDate = date.format(formatter1);
+                List<String> button = new ArrayList<>();
+                button.add(0, report.getId() + " " + formattedDate);
+                button.add(1, report.getId().toString());
+                reportButtons.add(button);
+            }
+        }
         return reportButtons;
     }
 

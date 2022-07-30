@@ -68,6 +68,8 @@ public class ButtonsText {
                         bundle.getString("INFO_BUTTON"),
                         bundle.getString("HOW_TO_GET_PET_BUTTON"),
                         bundle.getString("SEND_REPORT_BUTTON"),
+                        bundle.getString("MY_REPORTS"),
+                        bundle.getString("MY_TRIAL_PERIOD"),
                         bundle.getString("CALL_VOLUNTEER_BUTTON"),
                         bundle.getString("CHANGE_PET_BUTTON")
                 ));
@@ -143,6 +145,20 @@ public class ButtonsText {
                         bundle.getString("SET_AS_READ"),
                         bundle.getString("BACK_TO_REPORT_LIST"),
                         bundle.getString("VOLUNTEER_MAIN_MENU_BUTTON")
+                ));
+        menuMap.put(bundle.getString("MY_REPORTS_MENU"),
+                List.of(
+                        bundle.getString("ALL_REPORTS"),
+                        bundle.getString("UPDATE_REQUESTED")
+                )
+        );
+        menuMap.put(bundle.getString("INSIDE_PARENT_REPORT_MENU"),
+                List.of(
+                        bundle.getString("UPDATE_TEXT_FOR_REPORT"),
+                        bundle.getString("UPDATE_PICTURE_FOR_REPORT"),
+                        bundle.getString("DO_IT_LATER"),
+                        bundle.getString("MY_REPORTS"),
+                        bundle.getString("BACK_TO_MAIN_MENU_BUTTON")
                 ));
         menuMap.put(bundle.getString("ADMIN_MAIN_MENU"),
                 List.of(

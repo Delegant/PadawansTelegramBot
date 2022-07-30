@@ -19,6 +19,8 @@ public interface ReportService {
 
     Report saveReport(Long userId, String reportText);
 
+    Report saveReportFromBot(Long userId, String reportText);
+
     Report getReportById(Long reportId);
 
     Report saveReport(Report report);
@@ -47,11 +49,15 @@ public interface ReportService {
 
     String checkNewReportByUser(Long chatId);
 
-    String updateReport(Long reportId, String updatedText);
+    String updateReportText(Long reportId, String updatedText);
+
+    String updateReport(Long userId, String text);
 
     Collection<Report> getUnreadReports();
 
     int getNumberOfPicturesByReport(Report report);
+
+    Report createUpdatedReport(Report report);
 
 
 }

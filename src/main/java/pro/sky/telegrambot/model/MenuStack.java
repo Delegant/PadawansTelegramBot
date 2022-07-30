@@ -136,5 +136,8 @@ public class MenuStack {
         ADDING_VOLUNTEER,
         ADDING_PARENT,
         ADDING_ADMIN,
+        RECEIVED_REPORT_NOTIFICATION,
+        UPDATING_REPORT,
+        MY_REPORTS,
     }
 }

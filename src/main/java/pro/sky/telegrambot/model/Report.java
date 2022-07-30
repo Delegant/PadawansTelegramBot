@@ -125,6 +125,9 @@ public class Report {
     public void setReportDate() {
         this.reportDate = LocalDateTime.now();
     }
+    public void setReportDate(LocalDateTime date) {
+        this.reportDate = date;
+    }
 
     public LocalDateTime getReportUpdateDate() {
         return reportUpdateDate;

@@ -10,9 +10,13 @@ import pro.sky.telegrambot.repository.TrialPeriodRepository;
 import pro.sky.telegrambot.service.TrialPeriodService;
 import pro.sky.telegrambot.service.UserService;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Formatter;
 
 @Service
 public class TrialPeriodServiceImpl implements TrialPeriodService {
@@ -69,5 +73,31 @@ public class TrialPeriodServiceImpl implements TrialPeriodService {
         period.setEndDate(LocalDateTime.now());
         trialPeriodRepository.save(period);
         logger.info("Trial period was cancelled");
+    }
+
+    @Override
+    public String getTrialPeriodInformation(Long userId) {
+        TrialPeriod trialPeriod = trialPeriodRepository.findByUserChatId(userId);
+        String status = "";
+        String result = "";
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
+        DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
+        LocalDate startDate = LocalDate.parse(LocalDateTime.now().toString().substring(0, 10), formatter);
+        LocalDate endDate = LocalDate.parse(trialPeriod.getEndDate().toString().substring(0, 10), formatter);
+        Period leftDays = Period.between(startDate, endDate);
+        String formattedDate = endDate.format(formatter1);
+
+        if (trialPeriod.getStatus() == TrialPeriod.TrialPeriodStatus.STARTED) {
+            result = "Ваш испытательный период закончится " + formattedDate + "\n Осталось " + leftDays.getDays() + " дней.";
+        } else if (trialPeriod.getStatus() == TrialPeriod.TrialPeriodStatus.DENIED) {
+            result = "Ваш испытательный период был отменен!";
+        } else if (trialPeriod.getStatus() == TrialPeriod.TrialPeriodStatus.PROLONGED) {
+            result = "Ваш испытательный период продлен на " + trialPeriod.getAdditionalDays() + " дней и закончится " + endDate + "\n Осталось " + leftDays + " дней.";
+        } else if (trialPeriod.getStatus() == TrialPeriod.TrialPeriodStatus.ENDED) {
+            result = "Ваш испытательный период успешно завершился " + endDate;
+        }
+
+        return result;
     }
 }

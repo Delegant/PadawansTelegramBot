@@ -10,4 +10,6 @@ import pro.sky.telegrambot.model.User;
 @Repository
 public interface TrialPeriodRepository extends JpaRepository<TrialPeriod, Long> {
     public TrialPeriod findByUser(User user);
+
+    TrialPeriod findByUserChatId(Long userId);
 }

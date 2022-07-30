@@ -138,6 +138,7 @@ public class ReportServiceImpl implements ReportService {
      */
     @Override
     public Report saveReport(Long userId, String reportText) {
+
         Report report = new Report();
         User user = repoService.getUserByChatId(userId).
                 orElseThrow(() -> new UserIsNotAllowedToSendReportException("User Is not a Parent and cannot send reports!"));
@@ -147,6 +148,17 @@ public class ReportServiceImpl implements ReportService {
         reportsRepository.save(report);
 
         logger.info("==== New Report Saved from user {} with message {}", user, reportText);
+        return report;
+    }
+
+    @Override
+    public Report saveReportFromBot(Long userId, String reportText) {
+        updateReport(userId, reportText);
+        Report report = null;
+        if (reportDao.get(getLastReportId(userId)).isPresent()) {
+
+            report = reportDao.get(getLastReportId(userId)).get();
+        }
         return report;
     }
 
@@ -195,8 +207,10 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public Collection<ReportPicture> savePictures(Long reportId, Long userId, List<MultipartFile> files) throws IOException {
         logger.info("==== Saving picture for report");
-
-        Report report = reportDao.get(reportId).orElse(new Report());
+        Report report = null;
+        if (reportDao.get(getLastReportId(userId)).isPresent()) {
+            report = reportDao.get(getLastReportId(userId)).get();
+        }
 
         Collection<ReportPicture> pictures = new ArrayList<>();
 
@@ -324,9 +338,6 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public void getPictureFromMessage(Long userId, Message message) throws IOException {
 
-        User user = repoService.getUserByChatId(userId).orElse(new User(message.chat().id(),
-                message.chat().lastName() + message.chat().firstName()));
-
         List<PhotoSize> photos = Arrays.asList(message.photo());
 
         String fileId = Objects.requireNonNull(photos.stream().max(Comparator.comparing(PhotoSize::fileSize))
@@ -355,11 +366,8 @@ public class ReportServiceImpl implements ReportService {
             logger.error(String.valueOf(e));
         }
         if (message.caption() != null) {
-            Report report = new Report();
+            Report report = createDefaultReport(userId);
             report.setReportText(message.caption());
-            report.setReportDate();
-            report.setUser(userRepository.findUserByChatId(userId).get());
-            report.setDefaultStatus();
             reportsRepository.save(report);
 
             savePictures(report.getId(), userId, prepareForSavingReportPictures(fullFilePath));
@@ -403,24 +411,29 @@ public class ReportServiceImpl implements ReportService {
     private Long getLastReportId(Long userId) {
         Long lastReportIndex = 0L;
 
+        Report report = null;
         Long userIdInRepository = repoService.getUserByChatId(userId).orElseThrow(() -> new UserNotFoundException("User not found")).getId();
         Collection<Report> reports = reportsRepository.findAllByUserId(userIdInRepository);
-        lastReportIndex = reports.stream().max(Comparator.comparing(Report::getReportDate)).get().getId();
+        if (reports != null) {
+            lastReportIndex = reports.stream()
+                    .max(Comparator.comparing(Report::getReportDate))
+                    .get().getId();
+            if (reportsRepository.existsById(lastReportIndex)) {
+                report = reportDao.get(lastReportIndex).get();
+            }
+        } else {
+            report = createDefaultReport(userId);
+            lastReportIndex = report.getId();
+        }
 
-        Report report = reportDao.get(lastReportIndex).orElse(new Report());
-
+        assert report != null;
         LocalDateTime newReportCreationTime = report.getReportDate().plusHours(15);
 
         // Здесь выполняется проверка, прошло ли более 15 часов с момента написания последнего отчета, если прошло, то выполняется
         //создание нового отчета
         if (LocalDateTime.now().isAfter(newReportCreationTime)) {
-            report = new Report();
-            report.setReportText("Empty");
-            report.setReportDate();
-            report.setUser(userRepository.findUserByChatId(userId).get());
-            report.setDefaultStatus();
-            reportsRepository.save(report);
-
+            report = createDefaultReport(userId);
+            lastReportIndex = report.getId();
         }
 
         return lastReportIndex;
@@ -433,16 +446,28 @@ public class ReportServiceImpl implements ReportService {
      */
     @Override
     public String checkNewReportByUser(Long chatId) {
-        Report report = reportDao.get(getLastReportId(chatId)).get();
         String result = "";
-        if (report.getReportText().equals("Empty")) {
+        if (reportDao.get(getLastReportId(chatId)).isPresent()) {
+            Report report = reportDao.get(getLastReportId(chatId)).get();
+        if (report.getReportText().startsWith("Empty")) {
             result = "Напишите текст отчета";
         } else if (reportPictureDao.getReportPicturesByReport(report).size() == 0) {
             result = "Пришлите фотографию питомца";
         } else {
             result = "Спасибо, Ваш отчет принят.";
         }
+        }
         return result;
+    }
+
+    private Report createDefaultReport(Long chatId) {
+        Report report = new Report();
+        report.setReportText("Empty");
+        report.setReportDate();
+        report.setUser(userRepository.findUserByChatId(chatId).get());
+        report.setReadStatus(Report.ReadStatus.UNREAD);
+        report.setDefaultStatus();
+        return reportsRepository.saveAndFlush(report);
     }
 
     /**
@@ -454,39 +479,52 @@ public class ReportServiceImpl implements ReportService {
      * @throws ReportNotFoundException если отчет не найден
      */
     @Override
-    public String updateReport(Long reportId, String updatedText) {
+    public String updateReportText(Long reportId, String updatedText) {
         Report report = reportDao.get(reportId).orElseThrow(() -> new ReportNotFoundException("Отчет с таким id не найден!"));
         String reportText = "";
         if (report.getReportText().equals("Empty")) {
             reportText = updatedText;
         } else {
-            reportText = report.getReportText() + " " + updatedText;
+            reportText = report.getReportText() + "\n " + updatedText;
         }
 
         report.setReportText(reportText);
         report.setStatus(Report.Status.UPDATED);
         report.setReportUpdateDate();
         reportsRepository.save(report);
+        reportsRepository.flush();
         return reportText;
     }
 
     @Override
+    public String updateReport(Long userId, String text) throws ReportNotFoundException {
+        Long reportId = getLastReportId(userId);
+
+        return updateReportText(reportId, text);
+    }
+
+    /**
+     * Метод возвращает коллекцию непрочитанных отчетов и отчетов, отправленных на доработку
+     * @return список отчетов
+     */
+    @Override
     public Collection<Report> getUnreadReports() {
         Collection<Report> reports = reportsRepository.findAll();
         if (checkReports()) {
-            reports.removeIf(report -> report.getReadStatus() != Report.ReadStatus.UNREAD);
+            reports.removeIf(report -> report.getReadStatus() == Report.ReadStatus.READ);
         }
-        LocalDateTime today = LocalDateTime.now();
-        LocalDateTime minusThree = LocalDateTime.now().minusDays(3);
-        reports.removeIf(report -> report.getReportDate().isBefore(minusThree));
         return reports;
     }
 
+    /**
+     * Метод проверяет все отчеты на наличие непрочитанных/отправленных на доработку
+     * @return возвращает true, если есть хотя бы один непрочитанный или отправленный на доработку отчет.
+     */
     private boolean checkReports() {
        Collection<Report> reports = reportsRepository.findAll();
         int unreadReportsCount = 0;
         for (Report report : reports) {
-            if (report.getReadStatus() == Report.ReadStatus.UNREAD) {
+            if (report.getReadStatus() == Report.ReadStatus.UNREAD || report.getReadStatus() == Report.ReadStatus.TO_BE_UPDATED) {
                 unreadReportsCount++;
             }
             if (report.getReadStatus() == null) {
@@ -495,12 +533,51 @@ public class ReportServiceImpl implements ReportService {
                 unreadReportsCount++;
             }
         }
+        reportsRepository.flush();
         return unreadReportsCount > 0;
     }
 
+    /**
+     * Метод считает количество фотографий отчета
+     * @param report Отчет
+     * @return количетсво фотографий
+     */
     @Override
     public int getNumberOfPicturesByReport(Report report) {
 
         return getReportPicturesNames(report.getId()).size();
     }
+
+    /**
+     * Метод создает копию отчета для того, чтобы обновить в нем данные: текст или фото.
+     * @param report Отчет
+     * @return обновленный отчет
+     */
+    @Override
+    public Report createUpdatedReport(Report report) {
+
+        Report updatedReport = new Report();
+
+        updatedReport.setReportText(report.getReportText());
+        updatedReport.setReportDate(report.getReportDate());
+        updatedReport.setUser(report.getUser());
+        updatedReport.setStatus(report.getStatus());
+        updatedReport.setReadStatus(report.getReadStatus());
+
+        Report savedReport = saveReport(updatedReport);
+
+        Collection<ReportPicture> pictures = getReportPicturesByReportId(report.getId());
+        pictures.forEach(picture -> picture.setReport(savedReport));
+        picturesRepository.saveAll(pictures);
+
+        List<PictureName> names = new ArrayList<>(pictureNameRepository.findAllByReportId(report.getId()));
+        names.forEach(name -> name.setReport(savedReport));
+        pictureNameRepository.saveAll(names);
+
+        reportsRepository.delete(report);
+        reportsRepository.flush();
+        return savedReport;
+    }
+
+
 }

@@ -36,11 +36,15 @@ public interface MenuService {
     SendLocation sendLocationLoader(Update update, Float latitude, Float longitude);
     String getHashFromButton(String message);
     List<List<String>> generateListOfLastReports();
+    List<List<String>> generateListOfAllUserReports(Long chatId);
+    List<List<String>> generateListOfUpdateRequestedUserReports(Long chatId);
 
     List<List<String>> generateListOfUsers(String name);
     SendMessage sendUserNames(Long chatId, String text, String name);
 
     SendMessage sendReportNotificationMessage(Long chatId, Long reportId, String text);
+
+
 
 
 }
