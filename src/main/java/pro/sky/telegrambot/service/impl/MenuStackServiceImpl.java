@@ -8,6 +8,9 @@ import pro.sky.telegrambot.model.User;
 import pro.sky.telegrambot.repository.MenuStackRepository;
 import pro.sky.telegrambot.service.MenuStackService;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class MenuStackServiceImpl implements MenuStackService {
 
@@ -47,6 +50,17 @@ public class MenuStackServiceImpl implements MenuStackService {
     }
 
     @Override
+    public MenuStack createMenuStack(User user, String textPackKey, String textKey, String menuStateKey, MenuStack.MessageType expectedTypeCurrentMessage) {
+        logger.info("====Processing create MenuStack with textPackKey {}, menuStateKey: {}, textKey: {} and expectedTypeCurrentMessage {}", textPackKey, menuStateKey, textKey, expectedTypeCurrentMessage);
+        MenuStack menuStack = new MenuStack(user);
+        menuStack.setTextPackKey(textPackKey);
+        menuStack.setMenuState(menuStateKey);
+        menuStack.setTextKey(textKey);
+        menuStack.setExpect(expectedTypeCurrentMessage);
+        return menuStackRepository.save(menuStack);
+    }
+
+    @Override
     public void saveMenuStackParam(User user, String textKey, String menuStateKey) {
         logger.info("====Processing create MenuStack with menuStateKey: {} and textKey: {}", menuStateKey, textKey);
         MenuStack menuStack = getMenuStackByUser(user);
@@ -65,11 +79,6 @@ public class MenuStackServiceImpl implements MenuStackService {
     public void dropMenuStack(User user) {
         MenuStack menuStack = getMenuStackByUser(user);
         menuStackRepository.delete(menuStack);
-    }
-
-    @Override
-    public MenuStack.MessageType getCurrentExpectedMessageTypeByUser(User user) {
-        return getMenuStackByUser(user).getExpect();
     }
 
     @Override
@@ -100,6 +109,17 @@ public class MenuStackServiceImpl implements MenuStackService {
         menuStack.setTextKey(textKey);
         menuStackRepository.save(menuStack);
     }
+    /**
+     * Метод, возвращает ожидаемый тип следующего update
+     *
+     * @param user пользователя для поиска из репозитория
+     * @return ожидаемый тип
+     * @see MenuStack.MessageType
+     */
+    @Override
+    public MenuStack.MessageType getCurrentExpectedMessageTypeByUser(User user) {
+        return getMenuStackByUser(user).getExpect();
+    }
 
     /**
      * Метод, возвращает строку с именем меню,
@@ -109,21 +129,8 @@ public class MenuStackServiceImpl implements MenuStackService {
      * @return возвращает ключ для поиска в хранилище меню
      */
     @Override
-    public String getPreviousMenuStateByUser(User user) {
-        return getPreviousMenuStackByUser(user).getMenuState();
-    }
-
-    /**
-     * Метод, возвращает строку с кэшем кнопки
-     * выбора типа животного, в прошлый update.
-     *
-     * @param user пользователя для поиска из репозитория
-     * @return возвращает результат функции Objects.hash()
-     * на тексте кнопки
-     */
-    @Override
-    public String getPreviousTextPackKeyByUser(User user) {
-        return getPreviousMenuStackByUser(user).getTextPackKey();
+    public String getLastMenuStateByUser(User user) {
+        return getMenuStackByUser(user).getMenuState();
     }
 
     /**
@@ -135,28 +142,24 @@ public class MenuStackServiceImpl implements MenuStackService {
      * на тексте кнопки
      */
     @Override
-    public String getTextPackKeyByUser(User user) {
+    public String getLastTextPackKeyByUser(User user) {
         return getMenuStackByUser(user).getTextPackKey();
     }
 
     /**
-     * Метод, возвращает строку с текстом меню,
+     * Метод, возвращает строку с текстом ответа,
      * который пользователь получил в прошлый update
      *
      * @param user пользователя для поиска из репозитория
      * @return возвращает ключ для поиска в хранилище текстов
      */
     @Override
-    public String getPreviousTextKeyByUser(User user) {
-        return getPreviousMenuStackByUser(user).getTextKey();
+    public String getLastTextKeyByUser(User user) {
+        return getMenuStackByUser(user).getTextKey();
     }
 
     private MenuStack getMenuStackByUser(User user) {
         return menuStackRepository.findTopByUserOrderByIdDesc(user).orElseGet(() -> createMenuStack(user));
-    }
-
-    private MenuStack getPreviousMenuStackByUser(User user) {
-        return menuStackRepository.findLastMenuStateByUser(user).orElseGet(() -> createMenuStack(user));
     }
 
 }

@@ -24,4 +24,8 @@ public interface UserService {
 
     User getUserByHashCodeName(String data);
 
+    void setCompanion(User volunteer, User user);
+
+    void delCompanion(User volunteer, User user);
+
 }

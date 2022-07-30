@@ -122,6 +122,29 @@ public class MenuServiceImpl implements MenuService {
 
     /**
      * Метод, принимающий список кнопок и формирующий клавиатуру для вставки в сообщение.
+     *
+     * @param buttons - входящий список кнопок (текстов для кнопок)
+     * @return - возвращает inline-клавиатуру
+     * @see MenuServiceImpl#menuLoader(Message, String, List)
+     * @see MenuServiceImpl#menuLoader(Update, String, List)
+     */
+    private InlineKeyboardMarkup keyboardFactory(List<String> buttons, List<String> callBacks) {
+        if (buttons == null) {
+            throw new NullPointerException("Inline menu list have null");
+        }
+        buttons = buttons.stream().filter(buttonText -> !buttonText.equals(HIDDEN_BUTTON)).collect(Collectors.toList());
+        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+        Iterator<String> iterator = callBacks.listIterator();
+        buttons.stream()
+                .map(InlineKeyboardButton::new)
+                .map(button -> button.callbackData(iterator.hasNext() ? iterator.next() : getHashFromButton(button.text())))
+                .forEach(inlineKeyboardMarkup::addRow);
+
+        return inlineKeyboardMarkup;
+    }
+
+    /**
+     * Метод, принимающий список кнопок и формирующий клавиатуру для вставки в сообщение.
      * @param list - входящий список кнопок (текстов для кнопок)
      * @return - возвращает inline-клавиатуру
      * @see MenuServiceImpl#menuLoaderForObjects(Message, String, List) 
@@ -327,6 +350,16 @@ public class MenuServiceImpl implements MenuService {
         }
     }
 
+    public SendMessage sendTextLoader(Long chatId, String text, List<String> listButtons, List<String> callBacks) {
+        try {
+            SendMessage sendMessage = new SendMessage(chatId, text);
+            sendMessage.replyMarkup(keyboardFactory(listButtons, callBacks));
+            return sendMessage;
+        } catch (RuntimeException e) {
+            throw new RuntimeException("The list of buttons is invalid");
+        }
+    }
+
     @Override
     public SendMessage sendReportNotificationMessage(Long chatId, Long reportId, String text) {
         try{
@@ -390,13 +423,14 @@ public class MenuServiceImpl implements MenuService {
 
     /**
      * Перегруженный метод, формирующий обновление старого сообщения из входящих параметров:
-     * @param update - Из поля update берется id чата, куда будет отправлено сообщение и какое сообщение обновлять
-     *               (в данном случае update применяется вместо message, поскольку при нажатии inline кнопки
-     *               поле message в update равно null)
-     * @param text - текст отправляемого сообщения
+     *
+     * @param update      - Из поля update берется id чата, куда будет отправлено сообщение и какое сообщение обновлять
+     *                    (в данном случае update применяется вместо message, поскольку при нажатии inline кнопки
+     *                    поле message в update равно null)
+     * @param text        - текст отправляемого сообщения
      * @param listButtons - список кнопок (текстов кнопок) для клавиатуры
-     *                    @see MenuServiceImpl#keyboardFactory(List)
      * @return - возвращает новое сформированное сообщение
+     * @see MenuServiceImpl#keyboardFactory(List)
      */
     @Override
     public EditMessageText editMenuLoader(Update update, String text, List<String> listButtons) {
@@ -407,6 +441,41 @@ public class MenuServiceImpl implements MenuService {
                 .parseMode(ParseMode.HTML)
                 .disableWebPagePreview(true)
                 .replyMarkup(keyboardFactory(listButtons));
+    }
+    /**
+     * Перегруженный метод, формирующий обновление старого сообщения из входящих параметров:
+     *
+     * @param update      - Из поля update берется id чата, куда будет отправлено сообщение и какое сообщение обновлять
+     *                    (в данном случае update применяется вместо message, поскольку при нажатии inline кнопки
+     *                    поле message в update равно null)
+     * @param text        - текст отправляемого сообщения
+     * @param listButtons - список кнопок (текстов кнопок) для клавиатуры
+     * @param callBacks - список строк которые можно приложить как каллбэк от нажатия кнопок
+     * @return - возвращает новое сформированное сообщение
+     * @see MenuServiceImpl#keyboardFactory(List)
+     */
+    @Override
+    public EditMessageText editMenuLoader(Update update, String text, List<String> listButtons, List<String> callBacks) {
+        return editMenuLoader(update, text, listButtons).replyMarkup(keyboardFactory(listButtons, callBacks));
+    }
+    /**
+     * Перегруженный метод, формирующий обновление старого сообщения из входящих параметров:
+     *
+     * @param update      - Из поля update берется id чата, куда будет отправлено сообщение и какое сообщение обновлять
+     *                    (в данном случае update применяется вместо message, поскольку при нажатии inline кнопки
+     *                    поле message в update равно null)
+     * @param text        - текст отправляемого сообщения
+     * @return - возвращает новое сформированное сообщение
+     * @see MenuServiceImpl#keyboardFactory(List)
+     */
+    @Override
+    public EditMessageText editMenuLoader(Update update, String text) {
+        Message message = update.callbackQuery().message();
+        Object chatId = message.chat().id();
+        int messageId = message.messageId();
+        return new EditMessageText(chatId, messageId, text)
+                .parseMode(ParseMode.HTML)
+                .disableWebPagePreview(true);
     }
 
     /**
