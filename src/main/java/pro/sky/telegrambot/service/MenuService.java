@@ -45,6 +45,9 @@ public interface MenuService {
     SendMessage sendReportNotificationMessage(Long chatId, Long reportId, String text);
 
 
+    List<String> generateListOfLastReports();
 
+    List<List<String>> generateListOfUsers(String name);
+    SendMessage sendUserNames(Long chatId, String text, String name);
 
 }
