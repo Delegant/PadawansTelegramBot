@@ -54,6 +54,11 @@ public class UserServiceImpl implements pro.sky.telegrambot.service.UserService 
         return userRepository.findUserByChatId(chatId);
     }
 
+    @Override
+    public User findById(Long userId) {
+        return userRepository.findById(userId).get();
+    }
+
     /**
      * Метод, проверяющий наличие пользователя в базе и возвращающий пользователя
      * для дальнейшей работы. Если пользователя в базе нет - создает и сохраняет нового - USER
@@ -119,5 +124,10 @@ public class UserServiceImpl implements pro.sky.telegrambot.service.UserService 
             }
         }
         return targetUser.orElseThrow(() -> new UserNotFoundException("!!!! There is no user found with such hashCode from name"));
+    }
+
+    @Override
+    public List<User> getVolunteers() {
+        return userRepository.findAllVolunteers();
     }
 }

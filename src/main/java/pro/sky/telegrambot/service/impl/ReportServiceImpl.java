@@ -179,8 +179,8 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public Collection<Report> getListOfReportsByUserId(Long userId) {
-        return reportsRepository.findAllByUserId(userId);
+    public Collection<Report> getListOfReportsByUserId(Long chatId) {
+        return reportsRepository.findAllByUserChatId(chatId);
     }
 
     /**
@@ -337,7 +337,7 @@ public class ReportServiceImpl implements ReportService {
      */
     @Override
     public void getPictureFromMessage(Long userId, Message message) throws IOException {
-
+        boolean updatingReport = userRepository.findUserByChatId(userId).get().getTemp() != null;
         List<PhotoSize> photos = Arrays.asList(message.photo());
 
         String fileId = Objects.requireNonNull(photos.stream().max(Comparator.comparing(PhotoSize::fileSize))
@@ -371,6 +371,9 @@ public class ReportServiceImpl implements ReportService {
             reportsRepository.save(report);
 
             savePictures(report.getId(), userId, prepareForSavingReportPictures(fullFilePath));
+        } else if (updatingReport){
+            savePictures(Long.valueOf(userRepository.findUserByChatId(userId).get().getTemp()), userId, prepareForSavingReportPictures(fullFilePath));
+
         } else {
             savePictures(getLastReportId(userId), userId, prepareForSavingReportPictures(fullFilePath));
         }
@@ -485,7 +488,7 @@ public class ReportServiceImpl implements ReportService {
         if (report.getReportText().equals("Empty")) {
             reportText = updatedText;
         } else {
-            reportText = report.getReportText() + "\n " + updatedText;
+            reportText = report.getReportText() + "\n " + "Upd: " + "\n " + updatedText;
         }
 
         report.setReportText(reportText);
@@ -498,8 +501,7 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public String updateReport(Long userId, String text) throws ReportNotFoundException {
-        Long reportId = getLastReportId(userId);
-
+        Long reportId = Long.valueOf(userRepository.findUserByChatId(userId).get().getTemp());
         return updateReportText(reportId, text);
     }
 

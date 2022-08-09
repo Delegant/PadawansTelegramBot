@@ -141,5 +141,8 @@ public class MenuStack {
         RECEIVED_REPORT_NOTIFICATION,
         UPDATING_REPORT,
         MY_REPORTS,
+        TRIAL_PERIOD,
+        TRIAL_PERIOD_LIST,
+        TRIAL_PERIOD_ACTION
     }
 }

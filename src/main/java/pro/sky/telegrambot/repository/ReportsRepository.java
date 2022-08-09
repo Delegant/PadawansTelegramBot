@@ -15,6 +15,8 @@ public interface ReportsRepository extends JpaRepository<Report, Long> {
 
     Collection<Report> findAllByUserId(Long userId);
 
+    Collection<Report> findAllByUserChatId(Long chatId);
+
     Collection<Report> findAllByUser(User user);
 
     @Override

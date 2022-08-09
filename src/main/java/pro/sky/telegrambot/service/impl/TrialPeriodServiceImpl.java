@@ -1,8 +1,14 @@
 package pro.sky.telegrambot.service.impl;
 
+import com.pengrad.telegrambot.TelegramBot;
+import com.pengrad.telegrambot.request.SendMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import pro.sky.telegrambot.Dao.Impl.TrialPeriodDao;
 import pro.sky.telegrambot.exceptions.UserNotFoundException;
 import pro.sky.telegrambot.model.TrialPeriod;
 import pro.sky.telegrambot.model.User;
@@ -12,23 +18,35 @@ import pro.sky.telegrambot.service.UserService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Formatter;
+import java.util.List;
 
 @Service
+@EnableScheduling
 public class TrialPeriodServiceImpl implements TrialPeriodService {
 
     private final TrialPeriodRepository trialPeriodRepository;
     private final UserService userService;
 
+    @Autowired
+    private TelegramBot telegramBot;
+
+    private final TrialPeriodDao tpDAO;
+
     private final Logger logger = LoggerFactory.getLogger(TrialPeriodServiceImpl.class);
 
-    public TrialPeriodServiceImpl(TrialPeriodRepository trialPeriodRepository, UserService userService) {
+    public TrialPeriodServiceImpl(TrialPeriodRepository trialPeriodRepository,
+                                  UserService userService,
+                                  TrialPeriodDao tpDAO) {
         this.trialPeriodRepository = trialPeriodRepository;
         this.userService = userService;
+        this.tpDAO = tpDAO;
     }
 
     @Override
@@ -100,4 +118,52 @@ public class TrialPeriodServiceImpl implements TrialPeriodService {
 
         return result;
     }
+
+    @Override
+    public Collection<TrialPeriod> getAllTrialPeriods() {
+        return trialPeriodRepository.findAll();
+    }
+
+    @Override
+    public TrialPeriod getById(Long periodId) {
+        return trialPeriodRepository.getById(periodId);
+    }
+
+    @Override
+    public User getUser(TrialPeriod trialPeriod) {
+        return userService.findById(trialPeriodRepository.getUserId(trialPeriod.getId()));
+    }
+
+    /**
+     * Метод получает все испытательные периоды, исключает из них те, которые завершаются более чем через 24 часа и те, которые завершены
+     * и отправляет всем волонтерам сообщение о том, что испытательный период заканчивается
+     * (если остался хоть один, удовлетворяющий требованиям, т.е. до конца которого меньше 24 часов)
+     * и надо принять решение
+     * @param periods коллекция из всех испытательных периодов
+     */
+    @Override
+    public void checkTrialPeriodDate(Collection<TrialPeriod> periods) {
+        List<User> volunteers = userService.getVolunteers();
+        periods.removeIf(trialPeriod -> trialPeriod.getEndDate().isBefore(LocalDateTime.now()));
+        periods.removeIf(trialPeriod -> trialPeriod.getEndDate().minusHours(24).isAfter(LocalDateTime.now()));
+        if (periods.size() > 0) {
+            for (TrialPeriod period : periods) {
+                LocalTime endTime = period.getEndDate().toLocalTime();
+                String userName = userService.findById(period.getUserId().getId()).getName();
+                long hours = ChronoUnit.HOURS.between(endTime, LocalTime.now());
+                for (User volunteer : volunteers) {
+                    telegramBot.execute(new SendMessage(volunteer.getChatId(), "Испытательный период родителя " + userName + " закончится через " + hours + " часов. Требуется принять решение!" ));
+                }
+            }
+        }
+    }
+
+    /**
+     * Метод ежедневно вызывает проверку испытательных периодов.
+     * @see #checkTrialPeriodDate(Collection)
+     */
+    @Scheduled(cron = "@daily")
+    public void sendTrialPeriodNotificationMessage(){
+        checkTrialPeriodDate(trialPeriodRepository.findAll());
+    };
 }

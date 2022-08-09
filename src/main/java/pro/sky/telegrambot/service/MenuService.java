@@ -8,6 +8,7 @@ import com.pengrad.telegrambot.request.SendLocation;
 import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.request.SendPhoto;
 import pro.sky.telegrambot.model.PictureName;
+import pro.sky.telegrambot.model.User;
 
 import java.io.File;
 import java.util.Collection;
@@ -32,11 +33,15 @@ public interface MenuService {
     SendPhoto sendPhotoLoader (Update update, File address);
     SendPhoto sendPhotoLoader (Long chatId, File address);
     void multiplePhotoSend(Long chatId, Long reportId);
-    SendMessage sendTextWithMarkedCallBack(Long chatId, String text, Long reportId);
+    SendMessage sendTextWithMarkedCallBack(User user, String text, Long reportId);
+
+    SendMessage sendTrialPeriod(User user, Long trialPeriodId);
     SendLocation sendLocationLoader(Update update, Float latitude, Float longitude);
     String getHashFromButton(String message);
     List<List<String>> generateListOfLastReports();
     List<List<String>> generateListOfAllUserReports(Long chatId);
+    List<List<String>> generateListOfAllTrialPeriods();
+
     List<List<String>> generateListOfUpdateRequestedUserReports(Long chatId);
 
     SendMessage sendUserNames(Long chatId, String text, String name);

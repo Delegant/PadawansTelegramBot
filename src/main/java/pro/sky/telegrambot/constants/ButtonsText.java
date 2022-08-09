@@ -115,9 +115,10 @@ public class ButtonsText {
                 List.of(
                         bundle.getString("ADD_PARENT"),
                         bundle.getString("CHECK_REPORTS"),
-                        bundle.getString("VIEW_INCOMING_MESSAGES"),
-                        bundle.getString("TRIAL_PERIOD_FOR_VOLUNTEERS_MENU"),
-                        bundle.getString("CONTACT_PARENT")
+//                        bundle.getString("VIEW_INCOMING_MESSAGES"),
+//                        bundle.getString("TRIAL_PERIOD_FOR_VOLUNTEERS_MENU"),
+                        bundle.getString("CONTACT_PARENT"),
+                        bundle.getString("TRIAL_PERIODS")
                 ));
         menuMap.put(bundle.getString("BACK_TO_VOLUNTEERS_MENU"),
                 List.of(

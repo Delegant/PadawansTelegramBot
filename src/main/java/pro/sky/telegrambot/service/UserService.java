@@ -12,6 +12,8 @@ public interface UserService {
 
     User updateUser(User user);
 
+    User findById(Long userId);
+
     Optional<User> markRole(Long chatId, User.Role role);
 
     Optional<User> getUserByChatId(Long chatId);
@@ -23,5 +25,7 @@ public interface UserService {
     List<User> getUsersByName(String name);
 
     User getUserByHashCodeName(String data);
+
+    List<User> getVolunteers();
 
 }

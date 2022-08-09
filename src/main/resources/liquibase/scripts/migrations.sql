@@ -157,3 +157,8 @@ ALTER TABLE users
 
 ALTER TABLE reports
     ADD COLUMN read_status varchar(255) NOT NULL DEFAULT 'UNREAD';
+
+-- changeset algmironov:22
+
+ALTER TABLE users
+    ADD COLUMN temp varchar(255);
