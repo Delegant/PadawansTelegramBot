@@ -45,7 +45,7 @@ public class MenuStackServiceImpl implements MenuStackService {
      *
      * @param user        пользователя для поиска из репозитория
      * @param textPackKey языковой пакет пользователя
-     * @param expected    ожидаемый тип сообщений
+     * @param expected ожидаемый тип сообщений
      */
     @Override
     public MenuStack createMenuStack(User user, String textPackKey, MenuStack.MessageType expected) {
@@ -87,6 +87,11 @@ public class MenuStackServiceImpl implements MenuStackService {
     public void dropMenuStack(User user) {
         MenuStack menuStack = getMenuStackByUser(user);
         menuStackRepository.delete(menuStack);
+    }
+
+    @Override
+    public MenuStack.MessageType getCurrentExpectedMessageTypeByUser(User user) {
+        return getMenuStackByUser(user).getExpect();
     }
 
     /**
@@ -169,6 +174,8 @@ public class MenuStackServiceImpl implements MenuStackService {
      * @return возвращает ключ для поиска в хранилище текстов
      */
     @Override
+    public String getLastTextKeyByUser(User user) {
+        return getMenuStackByUser(user).getTextKey();
     public String getLastTextKeyByUser(User user) {
         return getMenuStackByUser(user).getTextKey();
     }

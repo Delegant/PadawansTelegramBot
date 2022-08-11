@@ -17,6 +17,7 @@ public class User {
         PARENT,
         VOLUNTEER,
         ADMIN,
+        CHANNEL,
     }
 
     @Schema(description = "Идентификатор пользователя")

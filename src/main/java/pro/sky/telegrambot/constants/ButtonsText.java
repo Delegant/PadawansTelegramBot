@@ -191,9 +191,15 @@ public class ButtonsText {
                 List.of(bundle.getString("CALL_VOLUNTEER_BUTTON"),
                         bundle.getString("BACK_TO_MAIN_MENU_BUTTON")
                 ));
-        menuMap.put(bundle.getString("TO_SUPPORT_MENU"),
-                List.of(bundle.getString("ACCEPT_DIALOG"),
-                        bundle.getString("DENY_DIALOG")
+        menuMap.put(bundle.getString("TO_SUPPORT_ACCEPT_MENU"),
+                List.of(bundle.getString("ACCEPT_DIALOG")
+                ));
+        menuMap.put(bundle.getString("TO_SUPPORT_DENY_MENU"),
+                List.of(bundle.getString("DENY_DIALOG")
+                ));
+        menuMap.put(bundle.getString("BACK_TO_ONLY_MAIN_MENU"),
+                List.of(
+                        bundle.getString("BACK_TO_MAIN_MENU_BUTTON")
                 ));
 
         ASK_TO_SEND_TEXT = bundle.getString("ASK_TO_SEND_TEXT");

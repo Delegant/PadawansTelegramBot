@@ -135,4 +135,26 @@ public class UserServiceImpl implements pro.sky.telegrambot.service.UserService 
     public List<User> getParents() {
         return userRepository.findAllParents();
     }
+    /**
+     * Проставляем номера чат ID для юзера и волонтера, что бы зеркалить общение
+     * @param volunteer - объект User, где отражаеться волонтер, который ответил на призыв
+     * @param user - объект User запросивший помощь
+     */
+    @Override
+    public void setCompanion(User volunteer, User user) {
+        volunteer.setCompanion(user.getChatId());
+        user.setCompanion(volunteer.getChatId());
+        userRepository.saveAll(List.of(volunteer, user));
+    }
+    /**
+     * Проставляем номера чат ID для юзера и волонтера, что бы зеркалить общение
+     * @param volunteer - объект User, где отражаеться волонтер, который ответил на призыв
+     * @param user - объект User запросивший помощь
+     */
+    @Override
+    public void delCompanion(User volunteer, User user) {
+        volunteer.setCompanion(null);
+        user.setCompanion(null);
+        userRepository.saveAll(List.of(volunteer, user));
+    }
 }
