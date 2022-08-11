@@ -24,4 +24,6 @@ public interface TrialPeriodService {
     User getUser(TrialPeriod trialPeriod);
 
     void checkTrialPeriodDate(Collection<TrialPeriod> periods);
+
+    TrialPeriod findByUserChatId(Long chatId);
 }

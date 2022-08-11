@@ -22,4 +22,5 @@ public interface ReportsRepository extends JpaRepository<Report, Long> {
     @Override
     boolean existsById(@NonNull Long reportId);
 
+
 }

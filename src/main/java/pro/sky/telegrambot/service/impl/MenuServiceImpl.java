@@ -390,6 +390,7 @@ public class MenuServiceImpl implements MenuService {
     public SendMessage sendTrialPeriod(User user, Long trialPeriodId) {
         Long chatId  = user.getChatId();
         TrialPeriod trialPeriod = tpDAO.get(trialPeriodId).orElseThrow();
+        User parent = trialPeriod.getUserId();
         String addedDays = "";
         String prolongedBy = "";
         LocalDate start = LocalDate.from(trialPeriod.getStartDate());
@@ -407,7 +408,7 @@ public class MenuServiceImpl implements MenuService {
         } else {
             prolongedBy = " - ";
         }
-        String text = "id: " + trialPeriod.getId() + "\nПользователь: " + user.getName() + "\nНачался: " + start + "\nДополнительные дни: " + addedDays + "\nПродлен: " + prolongedBy + "\nЗавершится: " + end + "\nЧерез: " + endDay + " дней";
+        String text = "id: " + trialPeriod.getId() + "\nПользователь: " + parent.getName() + "\nНачался: " + start + "\nДополнительные дни: " + addedDays + "\nПродлен: " + prolongedBy + "\nЗавершится: " + end + "\nЧерез: " + endDay + " дней";
         try{
             SendMessage sendMessage = new SendMessage(chatId, text);
             sendMessage.replyMarkup(keyboardForTrialPeriodAction(trialPeriodId));

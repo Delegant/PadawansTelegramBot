@@ -130,4 +130,9 @@ public class UserServiceImpl implements pro.sky.telegrambot.service.UserService 
     public List<User> getVolunteers() {
         return userRepository.findAllVolunteers();
     }
+
+    @Override
+    public List<User> getParents() {
+        return userRepository.findAllParents();
+    }
 }

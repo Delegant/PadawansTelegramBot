@@ -4,14 +4,18 @@ import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.PhotoSize;
 import com.pengrad.telegrambot.request.GetFile;
+import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.response.GetFileResponse;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,16 +27,14 @@ import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import pro.sky.telegrambot.exceptions.ReportNotFoundException;
 import pro.sky.telegrambot.exceptions.UserIsNotAllowedToSendReportException;
 import pro.sky.telegrambot.exceptions.UserNotFoundException;
-import pro.sky.telegrambot.model.PictureName;
-import pro.sky.telegrambot.model.Report;
-import pro.sky.telegrambot.model.ReportPicture;
-import pro.sky.telegrambot.model.User;
+import pro.sky.telegrambot.model.*;
 import pro.sky.telegrambot.repository.PictureNameRepository;
 import pro.sky.telegrambot.repository.PicturesRepository;
 import pro.sky.telegrambot.repository.ReportsRepository;
 import pro.sky.telegrambot.repository.UserRepository;
 import pro.sky.telegrambot.service.PictureService;
 import pro.sky.telegrambot.service.ReportService;
+import pro.sky.telegrambot.service.TrialPeriodService;
 
 import javax.persistence.EntityManager;
 import javax.validation.constraints.NotNull;
@@ -45,7 +47,9 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -56,6 +60,7 @@ import static java.nio.file.StandardOpenOption.CREATE_NEW;
  * сохранение отчетов, сохранение фото для отчетов,
  * а так же поиск отчетов из базы данных.
  */
+@EnableScheduling
 @Service
 public class ReportServiceImpl implements ReportService {
 
@@ -94,6 +99,9 @@ public class ReportServiceImpl implements ReportService {
     private final ReportPictureDao reportPictureDao;
 
     private final PictureService pictureService;
+
+    @Autowired
+    private TrialPeriodService trialPeriodService;
 
     @Value("${path.to.reportpictures.folder}")
     private String picturesDirectory;
@@ -581,5 +589,61 @@ public class ReportServiceImpl implements ReportService {
         return savedReport;
     }
 
+    @Override
+    public void checkReportsAndSendNotification() {
+        List<User> parents = userRepository.findAllParents();
+        List<User> volunteers = userRepository.findAllVolunteers();
 
+        for (User parent : parents) {
+            Report report = getLastReportByUserId(parent.getChatId());
+            if (shouldHaveReport(parent.getChatId()) && report.getReportText() != null) {
+                LocalDateTime now = LocalDateTime.now();
+                LocalDateTime dateToCheck = report.getReportDate();
+                Period timeDiff = Period.between(now.toLocalDate(), dateToCheck.toLocalDate());
+                if (timeDiff.getDays() > 1) {
+                    telegramBot.execute(new SendMessage(parent.getChatId(), "Напоминаем о необходимости прислать ежедневный отчет о питомце. \n В тексте отчета укажите:\n- Рацион животного\n" +
+                            "- Общее самочувствие и привыкание к новому месту\n" +
+                            "- Изменение в поведении: отказ от старых привычек, приобретение новых\n" +
+                            "- Фото животного"));
+                    for (User volunteer : volunteers) {
+                        telegramBot.execute(new SendMessage(volunteer.getChatId(), "Родитель " + parent.getName() + " не присылал отчет более суток!"));
+                    }
+                }
+            } else {
+
+                    telegramBot.execute(new SendMessage(parent.getChatId(), "Напоминаем о необходимости прислать ежедневный отчет о питомце. \n В тексте отчета укажите:\n- Рацион животного\n" +
+                            "- Общее самочувствие и привыкание к новому месту\n" +
+                            "- Изменение в поведении: отказ от старых привычек, приобретение новых\n" +
+                            "- Фото животного"));
+                    for (User volunteer : volunteers) {
+                        telegramBot.execute(new SendMessage(volunteer.getChatId(), "Родитель " + parent.getName() + " еще не прислал ни одного отчета!"));
+                    }
+
+            }
+        }
+
+    }
+
+    @Scheduled(cron = "@hourly")
+//    @Scheduled(fixedDelay = 60000)
+    @Override
+    public void scheduledCheckReports() {
+        checkReportsAndSendNotification();
+    }
+
+    @Override
+    public Report getLastReportByUserId(Long chatId) {
+            return reportsRepository.findAllByUserChatId(chatId)
+                    .stream()
+                    .max(Comparator.comparing(Report::getId))
+                    .orElse(new Report());
+    }
+
+    private boolean shouldHaveReport(Long chatId) {
+        User parent = userRepository.findUserByChatId(chatId).get();
+        LocalDate startDate = trialPeriodService.findByUserChatId(parent.getChatId()).getStartDate().toLocalDate();
+        LocalDate now = LocalDate.now();
+        Period between = Period.between(startDate, now);
+        return between.getDays() > 1;
+    }
 }

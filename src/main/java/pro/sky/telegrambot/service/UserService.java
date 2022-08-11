@@ -28,4 +28,6 @@ public interface UserService {
 
     List<User> getVolunteers();
 
+    List<User> getParents();
+
 }

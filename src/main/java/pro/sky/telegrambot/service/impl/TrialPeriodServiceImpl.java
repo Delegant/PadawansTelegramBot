@@ -22,10 +22,8 @@ import java.time.LocalTime;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Formatter;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @EnableScheduling
@@ -95,8 +93,13 @@ public class TrialPeriodServiceImpl implements TrialPeriodService {
 
     @Override
     public String getTrialPeriodInformation(Long userId) {
-        TrialPeriod trialPeriod = trialPeriodRepository.findByUserChatId(userId);
-        String status = "";
+        Collection<TrialPeriod> trialPeriods = trialPeriodRepository.findByUserChatId(userId);
+        TrialPeriod trialPeriod = new TrialPeriod();
+        if (trialPeriods.size() > 1) {
+            trialPeriod = new ArrayList<>(trialPeriods).get(0);
+        } else {
+            trialPeriod = trialPeriods.stream().max(Comparator.comparing(TrialPeriod::getId)).get();
+        }
         String result = "";
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
         DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern("dd-MM-yyyy");
@@ -107,13 +110,13 @@ public class TrialPeriodServiceImpl implements TrialPeriodService {
         String formattedDate = endDate.format(formatter1);
 
         if (trialPeriod.getStatus() == TrialPeriod.TrialPeriodStatus.STARTED) {
-            result = "Ваш испытательный период закончится " + formattedDate + "\n Осталось " + leftDays.getDays() + " дней.";
+            result = "Ваш испытательный период " + trialPeriod.getId() + " закончится " + formattedDate + "\n Осталось " + leftDays.getDays() + " дней.";
         } else if (trialPeriod.getStatus() == TrialPeriod.TrialPeriodStatus.DENIED) {
-            result = "Ваш испытательный период был отменен!";
+            result = "Ваш испытательный период " + trialPeriod.getId() + " был отменен!";
         } else if (trialPeriod.getStatus() == TrialPeriod.TrialPeriodStatus.PROLONGED) {
-            result = "Ваш испытательный период продлен на " + trialPeriod.getAdditionalDays() + " дней и закончится " + endDate + "\n Осталось " + leftDays + " дней.";
+            result = "Ваш испытательный период " + trialPeriod.getId() + " продлен на " + trialPeriod.getAdditionalDays() + " дней и закончится " + endDate + "\n Осталось " + leftDays + " дней.";
         } else if (trialPeriod.getStatus() == TrialPeriod.TrialPeriodStatus.ENDED) {
-            result = "Ваш испытательный период успешно завершился " + endDate;
+            result = "Ваш испытательный период " + trialPeriod.getId() + " успешно завершился " + endDate;
         }
 
         return result;
@@ -165,5 +168,17 @@ public class TrialPeriodServiceImpl implements TrialPeriodService {
     @Scheduled(cron = "@daily")
     public void sendTrialPeriodNotificationMessage(){
         checkTrialPeriodDate(trialPeriodRepository.findAll());
-    };
+    }
+
+    @Override
+    public TrialPeriod findByUserChatId(Long chatId) {
+        Collection<TrialPeriod> trialPeriods = trialPeriodRepository.findByUserChatId(chatId);
+        TrialPeriod trialPeriod = new TrialPeriod();
+        if (trialPeriods.size() > 1) {
+            trialPeriod = new ArrayList<>(trialPeriods).get(0);
+        } else {
+            trialPeriod = trialPeriods.stream().max(Comparator.comparing(TrialPeriod::getId)).get();
+        }
+        return trialPeriod;
+    }
 }
