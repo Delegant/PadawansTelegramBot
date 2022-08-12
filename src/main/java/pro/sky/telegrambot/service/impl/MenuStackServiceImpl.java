@@ -89,10 +89,6 @@ public class MenuStackServiceImpl implements MenuStackService {
         menuStackRepository.delete(menuStack);
     }
 
-    @Override
-    public MenuStack.MessageType getCurrentExpectedMessageTypeByUser(User user) {
-        return getMenuStackByUser(user).getExpect();
-    }
 
     /**
      * Метод, задает ожидаемый тип следующего update
@@ -174,8 +170,6 @@ public class MenuStackServiceImpl implements MenuStackService {
      * @return возвращает ключ для поиска в хранилище текстов
      */
     @Override
-    public String getLastTextKeyByUser(User user) {
-        return getMenuStackByUser(user).getTextKey();
     public String getLastTextKeyByUser(User user) {
         return getMenuStackByUser(user).getTextKey();
     }

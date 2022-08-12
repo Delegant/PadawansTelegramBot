@@ -84,8 +84,6 @@ public class MenuServiceImpl implements MenuService {
     }
 
 
-
-
     /**
      * Метод, принимающий список кнопок и формирующий клавиатуру для вставки в сообщение.
      *
@@ -196,29 +194,6 @@ public class MenuServiceImpl implements MenuService {
                     new InlineKeyboardButton(list.get(list.size() - 1).get(0))
                             .callbackData(list.get(list.size() - 1).get(1)));
         }
-        return inlineKeyboardMarkup;
-    }
-
-
-    /**
-     * Метод, принимающий список кнопок и формирующий клавиатуру для вставки в сообщение.
-     *
-     * @param buttons - входящий список кнопок (текстов для кнопок)
-     * @return - возвращает inline-клавиатуру
-     * @see MenuServiceImpl#menuLoader(Message, String, List)
-     * @see MenuServiceImpl#menuLoader(Update, String, List)
-     */
-    private InlineKeyboardMarkup keyboardFactory(List<String> buttons, List<String> callBacks) {
-        if (buttons == null) {
-            throw new NullPointerException("Inline menu list have null");
-        }
-        buttons = buttons.stream().filter(buttonText -> !buttonText.equals(HIDDEN_BUTTON)).collect(Collectors.toList());
-        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-        Iterator<String> iterator = callBacks.listIterator();
-        buttons.stream()
-                .map(InlineKeyboardButton::new)
-                .forEach(button -> button.callbackData(iterator.hasNext() ? iterator.next() : getHashFromButton(button.text())));
-
         return inlineKeyboardMarkup;
     }
 
@@ -527,15 +502,6 @@ public class MenuServiceImpl implements MenuService {
         return inlineKeyboardMarkup;
     }
 
-    public SendMessage sendTextLoader(Long chatId, String text, List<String> listButtons, List<String> callBacks) {
-        try {
-            SendMessage sendMessage = new SendMessage(chatId, text);
-            sendMessage.replyMarkup(keyboardFactory(listButtons, callBacks));
-            return sendMessage;
-        } catch (RuntimeException e) {
-            throw new RuntimeException("The list of buttons is invalid");
-        }
-    }
 
     /**
      * Перегруженный метод, формирующий обновление старого сообщения из входящих параметров:
@@ -558,6 +524,7 @@ public class MenuServiceImpl implements MenuService {
                 .disableWebPagePreview(true)
                 .replyMarkup(keyboardFactory(listButtons));
     }
+
     /**
      * Перегруженный метод, формирующий обновление старого сообщения из входящих параметров:
      *

@@ -147,7 +147,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     @Override
     public int process(List<Update> updates) {
         updates.forEach(update -> {
-            try {
             logger.info("====Processing update: {}", update);
             Message message = (update.message() != null) ? update.message() : update.callbackQuery().message();
             User currentUser = userService.getUserByMessage(message);
@@ -158,270 +157,263 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             menuStackService.createMenuStack(currentUser, textPackKey, expectedTypeCurrentMessage);
             ButtonsText buttonsText = ButtonsText.getButtonText(textPackKey);
             logger.info("====Received message {} is processed as {} and from {}", message.text(), realTypeCurrentMessage, roleCurrentUser);
-                if (realTypeCurrentMessage == COMMAND_TEXT || realTypeCurrentMessage == COMMAND_CALL_BACK) {
-            logger.info("====Received message is processed as {} and from {}, log from process()", realTypeCurrentMessage, roleCurrentUser);
-            try {
-                if (checkStartCommand(update)) {
-                    switch (roleCurrentUser) {
-                        case VOLUNTEER:
-                            menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
-                            functionalInitForTextCommand(message, buttonsText);
-                            handleVolunteerMessages(whatIsMenu, doSendMessage, doSendUsersList, doSendReportList, doSendReport, currentUser, update);
-                            break;
-                        case PARENT:
-                            menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
-                            functionalInitForTextCommand(message, buttonsText);
-                            handleParentMessages(whatIsMenu, doSendMessage, doSendPhoto, goSendLocation, currentUser, update, buttonsText);
-                            break;
-                        case ADMIN:
-                            menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
-                            functionalInitForTextCommand(message, buttonsText);
-                            handleAdminMessages(whatIsMenu, doSendMessage, goSendPhoto, goBack, doSetNewVolunteer, doSendUsersList, doSendReport, currentUser, update);
-                            break;
-                        case USER:
-                            menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
-                            functionalInitForTextCommand(message, buttonsText);
-                            handleUserMessages(whatIsMenu, doSendMessage, doSendPhoto, goSendLocation, currentUser, update, buttonsText);
-                            break;
-                    }
-                }
-                else if (expectedTypeCurrentMessage == COMMAND || expectedTypeCurrentMessage == COMMAND_CALL_BACK) {
-                    if (realTypeCurrentMessage == COMMAND_CALL_BACK) {
-                        functionalInitForCallBack(update, buttonsText, currentUser);
-                    } else {
-                        functionalInitForTextCommand(message, buttonsText);
-                    }
-                    if (roleCurrentUser == USER) {
-                        handleUserMessages(whatIsMenu, doSendMessage, doSendPhoto, goSendLocation, currentUser, update, buttonsText);
-                    } else if (roleCurrentUser == PARENT) {
-                        handleParentMessages(whatIsMenu, doSendMessage, doSendPhoto, goSendLocation, currentUser, update, buttonsText);
-                    } else if (roleCurrentUser == VOLUNTEER) {
-                        handleVolunteerMessages(whatIsMenu, doSendMessage, doSendUsersList, doSendReportList, doSendReport, currentUser, update);
-                    } else if (roleCurrentUser == ADMIN) {
-                        handleAdminMessages(whatIsMenu, doSendMessage, goSendPhoto, goBack, doSetNewVolunteer, doSendUsersList, doSendReport, currentUser, update);
-                    } else if (roleCurrentUser == CHANNEL) {
-                        String command = update.callbackQuery().data();
-                        if (command.startsWith(buttonsText.getString("BEGIN_PREFIX"))) {
-                            String chatId = command.substring(buttonsText.getString("BEGIN_PREFIX").length());
-                            beginOrFinishDialog(update,
-                                    chatId,
-                                    DIALOG,
-                                    buttonsText.getString("CHAT_BEGIN_DIALOG_TEXT"),
-                                    buttonsText.getMenu("TO_SUPPORT_DENY_MENU"),
-                                    List.of(buttonsText.getString("FINISH_PREFIX") + chatId));
-                        } else if (command.startsWith(buttonsText.getString("FINISH_PREFIX"))) {
-                            String chatId = command.substring(buttonsText.getString("FINISH_PREFIX").length());
-                            beginOrFinishDialog(update,
-                                    chatId,
-                                    COMMAND,
-                                    buttonsText.getString("CHAT_FINISH_DIALOG_TEXT"),
-                                    null,
-                                    null);
+                try {
+                    if (checkStartCommand(update)) {
+                        switch (roleCurrentUser) {
+                            case VOLUNTEER:
+                                menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
+                                functionalInitForTextCommand(message, buttonsText);
+                                handleVolunteerMessages(whatIsMenu, doSendMessage, doSendUsersList, doSendReportList, doSendReport, currentUser, update);
+                                break;
+                            case PARENT:
+                                menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
+                                functionalInitForTextCommand(message, buttonsText);
+                                handleParentMessages(whatIsMenu, doSendMessage, doSendPhoto, goSendLocation, currentUser, update, buttonsText);
+                                break;
+                            case ADMIN:
+                                menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
+                                functionalInitForTextCommand(message, buttonsText);
+                                handleAdminMessages(whatIsMenu, doSendMessage, goSendPhoto, goBack, doSetNewVolunteer, doSendUsersList, doSendReport, currentUser, update);
+                                break;
+                            case USER:
+                                menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
+                                functionalInitForTextCommand(message, buttonsText);
+                                handleUserMessages(whatIsMenu, doSendMessage, doSendPhoto, goSendLocation, currentUser, update, buttonsText);
+                                break;
                         }
                     }
-                } else if (realTypeCurrentMessage == REPORT_LIST && update.callbackQuery() != null) {
-                    functionalInitForCallBack(update, buttonsText, currentUser);
-                    if (roleCurrentUser == PARENT) {
-                        doSendReport.accept(update.callbackQuery().data(), "INSIDE_PARENT_REPORT_MENU");
+                    else if (expectedTypeCurrentMessage == COMMAND || expectedTypeCurrentMessage == COMMAND_CALL_BACK) {
+                        if (realTypeCurrentMessage == COMMAND_CALL_BACK) {
+                            functionalInitForCallBack(update, buttonsText, currentUser);
+                        }
+                        else {
+                            functionalInitForTextCommand(message, buttonsText);
+                        }
+                        if (roleCurrentUser == USER) {
+                            handleUserMessages(whatIsMenu, doSendMessage, doSendPhoto, goSendLocation, currentUser, update, buttonsText);
+                        }
+                        else if (roleCurrentUser == PARENT) {
+                            handleParentMessages(whatIsMenu, doSendMessage, doSendPhoto, goSendLocation, currentUser, update, buttonsText);
+                        }
+                        else if (roleCurrentUser == VOLUNTEER) {
+                            handleVolunteerMessages(whatIsMenu, doSendMessage, doSendUsersList, doSendReportList, doSendReport, currentUser, update);
+                        }
+                        else if (roleCurrentUser == ADMIN) {
+                            handleAdminMessages(whatIsMenu, doSendMessage, goSendPhoto, goBack, doSetNewVolunteer, doSendUsersList, doSendReport, currentUser, update);
+                        }
+                        else if (roleCurrentUser == CHANNEL) {
+                            String command = update.callbackQuery().data();
+                            if (command.startsWith(buttonsText.getString("BEGIN_PREFIX"))) {
+                                String chatId = command.substring(buttonsText.getString("BEGIN_PREFIX").length());
+                                beginOrFinishDialog(update,
+                                        chatId,
+                                        DIALOG,
+                                        buttonsText.getString("CHAT_BEGIN_DIALOG_TEXT"),
+                                        buttonsText.getMenu("TO_SUPPORT_DENY_MENU"),
+                                        List.of(buttonsText.getString("FINISH_PREFIX") + chatId));
+                            } else if (command.startsWith(buttonsText.getString("FINISH_PREFIX"))) {
+                                String chatId = command.substring(buttonsText.getString("FINISH_PREFIX").length());
+                                beginOrFinishDialog(update,
+                                        chatId,
+                                        COMMAND,
+                                        buttonsText.getString("CHAT_FINISH_DIALOG_TEXT"),
+                                        null,
+                                        null);
+                            }
+                        }
+                    }
+                    else if (realTypeCurrentMessage == REPORT_LIST && update.callbackQuery() != null) {
+                        functionalInitForCallBack(update, buttonsText, currentUser);
+                        if (roleCurrentUser == PARENT) {
+                            doSendReport.accept(update.callbackQuery().data(), "INSIDE_PARENT_REPORT_MENU");
+                            menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, READING_REPORT);
+                        }
+                        doSendReport.accept(update.callbackQuery().data(), "INSIDE_REPORT_MENU");
                         menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, READING_REPORT);
                     }
-                    doSendReport.accept(update.callbackQuery().data(), "INSIDE_REPORT_MENU");
-                    menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, READING_REPORT);
-                }
-                else if (realTypeCurrentMessage == REPORT_ACTION && update.callbackQuery() != null) {
-                    functionalInitForCallBack(update, buttonsText, currentUser);
-                    if (roleCurrentUser == PARENT) {
-                        if (callBackChecker(update) == 0) {
-                            currentUser.setTemp(getIdFromCallback(update).toString());
-                            userService.updateUser(currentUser);
-                            menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, RECEIVED_REPORT_NOTIFICATION);
-                            doSendMessage.accept( "ASK_TO_SEND_PIC","IN_REPORT_SEND_TEXT_MENU");
-                        } else if (callBackChecker(update) == 1) {
-                            currentUser.setTemp(getIdFromCallback(update).toString());
-                            userService.updateUser(currentUser);
-                            menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, RECEIVED_REPORT_NOTIFICATION);
-                            doSendMessage.accept( "ASK_TO_SEND_TEXT","IN_REPORT_SEND_TEXT_MENU");
+                    else if (realTypeCurrentMessage == REPORT_ACTION && update.callbackQuery() != null) {
+                        functionalInitForCallBack(update, buttonsText, currentUser);
+                        if (roleCurrentUser == PARENT) {
+                            if (callBackChecker(update) == 0) {
+                                currentUser.setTemp(getIdFromCallback(update).toString());
+                                userService.updateUser(currentUser);
+                                menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, RECEIVED_REPORT_NOTIFICATION);
+                                doSendMessage.accept("ASK_TO_SEND_PIC", "IN_REPORT_SEND_TEXT_MENU");
+                            } else if (callBackChecker(update) == 1) {
+                                currentUser.setTemp(getIdFromCallback(update).toString());
+                                userService.updateUser(currentUser);
+                                menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, RECEIVED_REPORT_NOTIFICATION);
+                                doSendMessage.accept("ASK_TO_SEND_TEXT", "IN_REPORT_SEND_TEXT_MENU");
+
+                            } else {
+                                handleParentMessages(whatIsMenu, doSendMessage, doSendPhoto, goSendLocation, currentUser, update, buttonsText);
+                            }
 
                         }
                         else {
-                            handleParentMessages(whatIsMenu, doSendMessage, doSendPhoto, goSendLocation, currentUser, update, buttonsText);
-                        }
+                            if (callBackChecker(update) == 0) {
+                                Report report = reportService.getReportById(getIdFromCallback(update));
+                                report.setReadStatus(Report.ReadStatus.TO_BE_UPDATED);
+                                reportService.saveReport(report);
+                                doSendUserNotification.accept(report.getUser().getChatId(), report.getId(), "Пришлите фотографию для отчета с номером " + report.getId());
 
-                    }
-                    else {
-                        if (callBackChecker(update) == 0) {
-                            Report report = reportService.getReportById(getIdFromCallback(update));
-                            report.setReadStatus(Report.ReadStatus.TO_BE_UPDATED);
-                            reportService.saveReport(report);
-                            doSendUserNotification.accept(report.getUser().getChatId(), report.getId(), "Пришлите фотографию для отчета с номером " + report.getId());
+                            } else if (callBackChecker(update) == 1) {
+                                Report report = reportService.getReportById(getIdFromCallback(update));
+                                report.setReadStatus(Report.ReadStatus.TO_BE_UPDATED);
+                                reportService.saveReport(report);
+                                doSendUserNotification.accept(report.getUser().getChatId(), report.getId(), "Дополните текст отчета с номером " + report.getId());
 
-                        } else if (callBackChecker(update) == 1) {
-                            Report report = reportService.getReportById(getIdFromCallback(update));
-                            report.setReadStatus(Report.ReadStatus.TO_BE_UPDATED);
-                            reportService.saveReport(report);
-                            doSendUserNotification.accept(report.getUser().getChatId(), report.getId(), "Дополните текст отчета с номером " + report.getId());
-
-                        } else if (callBackChecker(update) == 2) {
-                            Report report = reportService.getReportById(getIdFromCallback(update));
-                            report.setReadStatus(Report.ReadStatus.READ);
-                            reportService.saveReport(report);
-                            telegramBot.execute(new SendMessage(report.getUser().getChatId(), "Отчет с номером  " + report.getId() + " принят волонтером " + currentUser.getName() + "."));
-                        } else {
-                            handleParentMessages(whatIsMenu, doSendMessage, doSendPhoto, goSendLocation, currentUser, update, buttonsText);
+                            } else if (callBackChecker(update) == 2) {
+                                Report report = reportService.getReportById(getIdFromCallback(update));
+                                report.setReadStatus(Report.ReadStatus.READ);
+                                reportService.saveReport(report);
+                                telegramBot.execute(new SendMessage(report.getUser().getChatId(), "Отчет с номером  " + report.getId() + " принят волонтером " + currentUser.getName() + "."));
+                            } else {
+                                handleParentMessages(whatIsMenu, doSendMessage, doSendPhoto, goSendLocation, currentUser, update, buttonsText);
+                            }
                         }
                     }
-                }
-                else if (realTypeCurrentMessage == RECEIVED_REPORT_NOTIFICATION){
-                    if (update.message().photo() != null) {
-                        reportService.getPictureFromMessage(currentUser.getChatId(), update.message());
-                        functionalInitForCallBack(update, buttonsText, currentUser);
-                        menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
-                        currentUser.setTemp(null);
-                        userService.updateUser(currentUser);
-                        doSendMessage.accept("SEND_REPORT_IS_CREATED", "MAIN_MENU");
-                    }
-                    else if (update.message().text() != null) {
-                        reportService.updateReport(currentUser.getChatId(), update.message().text());
-                        menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
-                        currentUser.setTemp(null);
-                        userService.updateUser(currentUser);
-                        doSendMessage.accept("SEND_REPORT_IS_CREATED", "MAIN_MENU");
-                    }
-                    else {
-                        menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
-                        handleParentMessages(whatIsMenu, doSendMessage, doSendPhoto, goSendLocation, currentUser, update, buttonsText);
-                    }
-                }
-                else if (realTypeCurrentMessage == UPDATING_REPORT) {
-                    if (update.message().photo() != null) {
-                        reportService.getPictureFromMessage(currentUser.getChatId(), update.message());
-                        if (reportService.checkNewReportByUser(currentUser.getChatId()).startsWith("Спасибо")) {
+                    else if (realTypeCurrentMessage == RECEIVED_REPORT_NOTIFICATION) {
+                        if (update.message().photo() != null) {
+                            reportService.getPictureFromMessage(currentUser.getChatId(), update.message());
                             functionalInitForCallBack(update, buttonsText, currentUser);
-                            doSendMessage.accept("ASK_TO_SEND_TEXT", "IN_REPORT_SEND_PIC_MENU");
+                            menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
+                            currentUser.setTemp(null);
+                            userService.updateUser(currentUser);
+                            doSendMessage.accept("SEND_REPORT_IS_CREATED", "MAIN_MENU");
+                        } else if (update.message().text() != null) {
+                            reportService.updateReport(currentUser.getChatId(), update.message().text());
+                            menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
+                            currentUser.setTemp(null);
+                            userService.updateUser(currentUser);
+                            doSendMessage.accept("SEND_REPORT_IS_CREATED", "MAIN_MENU");
+                        } else {
+                            menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
+                            handleParentMessages(whatIsMenu, doSendMessage, doSendPhoto, goSendLocation, currentUser, update, buttonsText);
                         }
-                        else if (reportService.checkNewReportByUser(currentUser.getChatId()).startsWith("Спасибо")) {
+                    }
+                    else if (realTypeCurrentMessage == UPDATING_REPORT) {
+                        if (update.message().photo() != null) {
+                            reportService.getPictureFromMessage(currentUser.getChatId(), update.message());
+                            if (reportService.checkNewReportByUser(currentUser.getChatId()).startsWith("Спасибо")) {
+                                functionalInitForCallBack(update, buttonsText, currentUser);
+                                doSendMessage.accept("ASK_TO_SEND_TEXT", "IN_REPORT_SEND_PIC_MENU");
+                            }
+                            else if (reportService.checkNewReportByUser(currentUser.getChatId()).startsWith("Спасибо")) {
+                                menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
+                                doSendMessage.accept("SEND_REPORT_IS_CREATED", "MAIN_MENU");
+                            }
+                        }
+                        else if (update.message().text() != null) {
+                            reportService.updateReport(currentUser.getChatId(), update.message().text());
                             menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
                             doSendMessage.accept("SEND_REPORT_IS_CREATED", "MAIN_MENU");
                         }
+
+
                     }
-                    else if (update.message().text() != null) {
-                        reportService.updateReport(currentUser.getChatId(), update.message().text());
-                        menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
-                        doSendMessage.accept("SEND_REPORT_IS_CREATED", "MAIN_MENU");
+                    else if (realTypeCurrentMessage == MY_REPORTS) {
+                        functionalInitForCallBack(update, buttonsText, currentUser);
+                        //todo Написать функцию для отправки отчета родителю (сейчас логика doSendReport работает для волонтера)
+                        doSendReport.accept(update.callbackQuery().data(), "INSIDE_PARENT_REPORT_MENU");
+
+                        menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, READING_REPORT);
                     }
-
-
-                }
-                else if (realTypeCurrentMessage == MY_REPORTS){
-                    functionalInitForCallBack(update, buttonsText, currentUser);
-                    //todo Написать функцию для отправки отчета родителю (сейчас логика doSendReport работает для волонтера)
-                    doSendReport.accept(update.callbackQuery().data(), "INSIDE_PARENT_REPORT_MENU");
-
-                    menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, READING_REPORT);
-                }
-                else if (realTypeCurrentMessage == REPORT_PIC || realTypeCurrentMessage == REPORT_TEXT) {
-                    if (realTypeCurrentMessage == REPORT_PIC) {
-                        functionalInitForTextCommand(message, buttonsText);
-                        if (roleCurrentUser == PARENT) {
-                            reportService.getPictureFromMessage(currentUser.getChatId(), update.message());
-                            if (reportService.checkNewReportByUser(currentUser.getChatId()).startsWith("Напишите")) {
-                                doSendMessage.accept("ASK_TO_SEND_TEXT", "IN_REPORT_SEND_PIC_MENU");
-                            } else if (reportService.checkNewReportByUser(currentUser.getChatId()).startsWith("Спасибо")) {
-                                menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
-                                doSendMessage.accept("SEND_REPORT_IS_CREATED", "MAIN_MENU");
+                    else if (realTypeCurrentMessage == REPORT_PIC || realTypeCurrentMessage == REPORT_TEXT) {
+                        if (realTypeCurrentMessage == REPORT_PIC) {
+                            functionalInitForTextCommand(message, buttonsText);
+                            if (roleCurrentUser == PARENT) {
+                                reportService.getPictureFromMessage(currentUser.getChatId(), update.message());
+                                if (reportService.checkNewReportByUser(currentUser.getChatId()).startsWith("Напишите")) {
+                                    doSendMessage.accept("ASK_TO_SEND_TEXT", "IN_REPORT_SEND_PIC_MENU");
+                                }
+                                else if (reportService.checkNewReportByUser(currentUser.getChatId()).startsWith("Спасибо")) {
+                                    menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
+                                    doSendMessage.accept("SEND_REPORT_IS_CREATED", "MAIN_MENU");
+                                }
                             }
                         }
-                    } else {
-                        functionalInitForTextCommand(message, buttonsText);
-                        if (roleCurrentUser == PARENT) {
-                            Report report = reportService.saveReport(currentUser.getChatId(), update.message().text());
-                            if (reportService.getReportPicturesNames(report.getId()).size() == 0) {
-                                doSendMessage.accept("ASK_TO_SEND_PIC", "IN_REPORT_SEND_TEXT_MENU");
-                            } else {
-                                menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
-                                doSendMessage.accept("SEND_REPORT_IS_CREATED", "MAIN_MENU");
+                        else {
+                            functionalInitForTextCommand(message, buttonsText);
+                            if (roleCurrentUser == PARENT) {
+                                Report report = reportService.saveReport(currentUser.getChatId(), update.message().text());
+                                if (reportService.getReportPicturesNames(report.getId()).size() == 0) {
+                                    doSendMessage.accept("ASK_TO_SEND_PIC", "IN_REPORT_SEND_TEXT_MENU");
+                                }
+                                else {
+                                    menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
+                                    doSendMessage.accept("SEND_REPORT_IS_CREATED", "MAIN_MENU");
+                                }
                             }
                         }
                     }
-                }
-                else if (expectedTypeCurrentMessage == REPORT && realTypeCurrentMessage == COMMAND_TEXT) {
-                    functionalInitForCallBack(update, buttonsText, currentUser);
+                    else if (expectedTypeCurrentMessage == REPORT && realTypeCurrentMessage == COMMAND_TEXT) {
+                        functionalInitForCallBack(update, buttonsText, currentUser);
 
-                    if (whatIsMenu.apply("FINISH_SENDING_REPORT")) {
-                        menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
-                        doSendMessage.accept("SEND_REPORT_IS_CREATED", "MAIN_MENU");
-                    } else if (whatIsMenu.apply("SEND_REPORT_TEXT_BUTTON")) {
-                        telegramBot.execute(new SendMessage(currentUser.getChatId(), "ASK_TO_SEND_TEXT"));
-                    } else if (whatIsMenu.apply("BACK_TO_MAIN_MENU_BUTTON")) {
-                        menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
-                        doSendMessage.accept("DEFAULT_MENU_TEXT", "MAIN_MENU");
-                    } else {
-                        handleVolunteerMessages(whatIsMenu, doSendMessage, doSendUsersList, doSendReportList, doSendReport, currentUser, update);
-                    }
-                }
-                else if (realTypeCurrentMessage == DIALOG_TEXT) {
-                    telegramBot.execute(menuService.sendTextLoader(currentUser.getCompanion(), message.text()));
-                    if (roleCurrentUser == VOLUNTEER) {
-                        if (realTypeCurrentMessage == DIALOG_REQUEST) {
-
+                        if (whatIsMenu.apply("FINISH_SENDING_REPORT")) {
+                            menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
+                            doSendMessage.accept("SEND_REPORT_IS_CREATED", "MAIN_MENU");
                         }
-                        //todo добавить меню завершения диалога
+                        else if (whatIsMenu.apply("SEND_REPORT_TEXT_BUTTON")) {
+                            telegramBot.execute(new SendMessage(currentUser.getChatId(), "ASK_TO_SEND_TEXT"));
+                        }
+                        else if (whatIsMenu.apply("BACK_TO_MAIN_MENU_BUTTON")) {
+                            menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
+                            doSendMessage.accept("DEFAULT_MENU_TEXT", "MAIN_MENU");
+                        }
+                        else {
+                            handleVolunteerMessages(whatIsMenu, doSendMessage, doSendUsersList, doSendReportList, doSendReport, currentUser, update);
+                        }
                     }
-                }
-                else if (realTypeCurrentMessage == DIALOG_REQUEST) {
-                    if (roleCurrentUser == USER || roleCurrentUser == PARENT) {
-                        //добавить метод записи текста
-                        //поиск всех волонтеров
-                        Collection<User> allVolunteer = userService.usersWithEqualRole(VOLUNTEER);
-                        allVolunteer.forEach((volunteer) -> telegramBot.execute(menuService.sendTextLoader(volunteer.getChatId(), message.text(), buttonsText.getMenu("DENY_DIALOG")))
-                        );
-                        //отправка волонтерам меню с подтверждением
+                    else if (realTypeCurrentMessage == DIALOG_TEXT) {
+                        if (roleCurrentUser == VOLUNTEER || roleCurrentUser == USER || roleCurrentUser == PARENT) {
+                            telegramBot.execute(menuService.sendTextLoader(currentUser.getCompanion(), update.message().text()));
+                        }
                     }
-                    else if
-                    (roleCurrentUser == VOLUNTEER) {
-                        //todo добавить меню завершения диaлога
-                    if (roleCurrentUser == VOLUNTEER || roleCurrentUser == USER || roleCurrentUser == PARENT) {
-                        telegramBot.execute(menuService.sendTextLoader(currentUser.getCompanion(), update.message().text()));
-                    }
-                }
-                else if (realTypeCurrentMessage == USER_NAME) {
-                    functionalInitForCallBack(update, buttonsText, currentUser);
-                    doSendUsersList.accept("CHOOSE_USER_TO_MAKE_PARENT", "BACK_TO_VOLUNTEERS_MENU");
-                    menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, ADDING_PARENT);
-                }
-                else if (realTypeCurrentMessage == ADDING_PARENT) {
-                    functionalInitForCallBack(update, buttonsText, currentUser);
-                    User newParent = userService.getUser(Long.valueOf(update.callbackQuery().data()));
-                    administrativeService.setParent(currentUser.getChatId(), newParent.getChatId());
-                    telegramBot.execute(new SendMessage(newParent.getChatId(), "Поздравляем, вы взяли питомца. Ваш испытательный период начался!"));
-                    menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
-                    doSendMessage.accept("AFTER_ADDING_PARENT", "VOLUNTEER_MAIN_MENU");
-                }
-                else if (realTypeCurrentMessage == TRIAL_PERIOD_LIST) {
-                    menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, TRIAL_PERIOD);
-                    doSendTrialPeriod.accept(Long.valueOf(update.callbackQuery().data()), "TRIAL_PERIOD_MENU");
-                } else if (realTypeCurrentMessage == TRIAL_PERIOD) {
-                    TrialPeriod period = trialPeriodService.getById(Long.valueOf(update.callbackQuery().data()));
-                    User parent = trialPeriodService.getUser(period);
-                    if (callBackChecker(update) == 3) {
-                        administrativeService.applyTrialPeriod(currentUser.getChatId(), parent.getChatId());
-                    } else if (callBackChecker(update) == 4) {
+                        else if (realTypeCurrentMessage == USER_NAME) {
+                            functionalInitForCallBack(update, buttonsText, currentUser);
+                            doSendUsersList.accept("CHOOSE_USER_TO_MAKE_PARENT", "BACK_TO_VOLUNTEERS_MENU");
+                            menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, ADDING_PARENT);
+                        }
+                        else if (realTypeCurrentMessage == ADDING_PARENT) {
+                            functionalInitForCallBack(update, buttonsText, currentUser);
+                            User newParent = userService.getUser(Long.valueOf(update.callbackQuery().data()));
+                            administrativeService.setParent(currentUser.getChatId(), newParent.getChatId());
+                            telegramBot.execute(new SendMessage(newParent.getChatId(), "Поздравляем, вы взяли питомца. Ваш испытательный период начался!"));
+                            menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
+                            doSendMessage.accept("AFTER_ADDING_PARENT", "VOLUNTEER_MAIN_MENU");
+                        }
+                        else if (realTypeCurrentMessage == TRIAL_PERIOD_LIST) {
+                            menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, TRIAL_PERIOD);
+                            doSendTrialPeriod.accept(Long.valueOf(update.callbackQuery().data()), "TRIAL_PERIOD_MENU");
+                        }
+                        else if (realTypeCurrentMessage == TRIAL_PERIOD) {
+                            TrialPeriod period = trialPeriodService.getById(Long.valueOf(update.callbackQuery().data()));
+                            User parent = trialPeriodService.getUser(period);
+                            if (callBackChecker(update) == 3) {
+                                administrativeService.applyTrialPeriod(currentUser.getChatId(), parent.getChatId());
+                            }
+                            else if (callBackChecker(update) == 4) {
 
-                    } else if (callBackChecker(update) == 5) {
+                            }
+                            else if (callBackChecker(update) == 5) {
 
-                    } else {
-                        menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
-                        handleVolunteerMessages(whatIsMenu, doSendMessage, doSendUsersList, doSendReportList, doSendReport, currentUser, update);
+                            }
+                            else {
+                                menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
+                                handleVolunteerMessages(whatIsMenu, doSendMessage, doSendUsersList, doSendReportList, doSendReport, currentUser, update);
 
-                    }
+                            }
+                        }
+                } catch (Exception e) {
+                    logger.warn("====Exception: ", e);
                 }
-                /// TODO: 29.07.2022 Дописать логику вывода списка отчетов у парента и механизм просмотра/редактирования отчета
-            } catch (Exception e) {
-                logger.warn("====Exception: ", e);
-            }
         });
+
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
+
+
 
     /**
      * Метод для начала или завершения диалога между волонтером и пользователем
@@ -744,9 +736,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                                      BiConsumer<Float, Float> doSendLocation,
                                      User currentUser, Update update,
                                      ButtonsText buttonsText) throws IOException {
-        //todo Дописать логику реакций на кнопки под полученной локацией
 
-        //todo Дописать логику реакций на кнопки под уведомлением о необходимости дополнить отчет
         if (whatIsMenu.apply("START_BUTTON")) {
             doSendMessage.accept("START_TEXT", "SPECIES_PET_SELECTION_MENU");
         } else if (whatIsMenu.apply("BACK_BUTTON")) {
@@ -866,24 +856,22 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
              } else if (whatIsMenu.apply("BACK_TO_REPORT_LIST")) {
                  doSendReportList.accept("UNREAD_REPORTS_TEXT", "BACK_TO_VOLUNTEERS_MENU");
              }
-            else if (whatIsMenu.apply("ACCEPT_DIALOG")) {
-                //todo
-            }
             else if (whatIsMenu.apply("VOLUNTEER_MAIN_MENU_BUTTON")) {
                 doSendMessage.accept("VOLUNTEER_START_TEXT", "VOLUNTEER_MAIN_MENU");
                  menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
             } else if (whatIsMenu.apply("TRIAL_PERIODS")) {
                 doSendTrialPeriodsList.accept("VOLUNTEER_START_TEXT", "VOLUNTEER_MAIN_MENU");
-            } else {
-                doSendMessage.accept("ERROR_TEXT", "VOLUNTEER_MAIN_MENU");
-            }
-            else if (menuStackService.getCurrentExpectedMessageTypeByUser(currentUser).equals(ADDING_PARENT)) {
+            } else if (menuStackService.getCurrentExpectedMessageTypeByUser(currentUser).equals(ADDING_PARENT)) {
                 User newParent = userService.getUser(Long.valueOf(update.callbackQuery().data()));
                 administrativeService.setParent(currentUser.getChatId(), newParent.getChatId());
                 telegramBot.execute(new SendMessage(newParent.getChatId(), "Поздравляем, вы взяли питомца. Ваш испытательный период начался!"));
                 menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
                 doSendMessage.accept("AFTER_ADDING_PARENT", "VOLUNTEER_MAIN_MENU");
-             }
+            }
+            else {
+                doSendMessage.accept("ERROR_TEXT", "VOLUNTEER_MAIN_MENU");
+            }
+
         }
 
 

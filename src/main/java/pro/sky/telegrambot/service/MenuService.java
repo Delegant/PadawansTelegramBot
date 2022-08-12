@@ -51,5 +51,5 @@ public interface MenuService {
     SendMessage sendReportNotificationMessage(Long chatId, Long reportId, String text);
     List<List<String>> generateListOfUsers(String name);
 
-    SendMessage sendTextLoader(Long volunteer_chatId, String volunteer_request_text, List<String> to_support_menu, List<String> user_chatId);
+//    SendMessage sendTextLoader(Long volunteer_chatId, String volunteer_request_text, List<String> to_support_menu, List<String> user_chatId);
 }

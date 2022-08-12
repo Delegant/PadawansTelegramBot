@@ -3,14 +3,12 @@ package pro.sky.telegrambot.service.impl;
 import com.pengrad.telegrambot.model.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.Dao.Impl.UserDao;
 import pro.sky.telegrambot.exceptions.UserNotFoundException;
 import pro.sky.telegrambot.listener.TelegramBotUpdatesListener;
 import pro.sky.telegrambot.model.User;
 import pro.sky.telegrambot.repository.UserRepository;
-import pro.sky.telegrambot.service.UserService;
 
 import java.util.*;
 
