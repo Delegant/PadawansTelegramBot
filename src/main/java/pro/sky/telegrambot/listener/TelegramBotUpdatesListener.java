@@ -103,9 +103,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     BiConsumer<String, String> doSendTrialPeriodsList;
     BiConsumer<Long, String> doSendTrialPeriod;
 
-
-
-
     /**
      * конструктор класса
      *
@@ -159,25 +156,19 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             logger.info("====Received message {} is processed as {} and from {}", message.text(), realTypeCurrentMessage, roleCurrentUser);
                 try {
                     if (checkStartCommand(update)) {
+                        menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
+                        functionalInitForTextCommand(message, buttonsText);
                         switch (roleCurrentUser) {
                             case VOLUNTEER:
-                                menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
-                                functionalInitForTextCommand(message, buttonsText);
                                 handleVolunteerMessages(whatIsMenu, doSendMessage, doSendUsersList, doSendReportList, doSendReport, currentUser, update);
                                 break;
                             case PARENT:
-                                menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
-                                functionalInitForTextCommand(message, buttonsText);
                                 handleParentMessages(whatIsMenu, doSendMessage, doSendPhoto, goSendLocation, currentUser, update, buttonsText);
                                 break;
                             case ADMIN:
-                                menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
-                                functionalInitForTextCommand(message, buttonsText);
                                 handleAdminMessages(whatIsMenu, doSendMessage, goSendPhoto, goBack, doSetNewVolunteer, doSendUsersList, doSendReport, currentUser, update);
                                 break;
                             case USER:
-                                menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
-                                functionalInitForTextCommand(message, buttonsText);
                                 handleUserMessages(whatIsMenu, doSendMessage, doSendPhoto, goSendLocation, currentUser, update, buttonsText);
                                 break;
                         }
@@ -211,7 +202,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                                         buttonsText.getString("CHAT_BEGIN_DIALOG_TEXT"),
                                         buttonsText.getMenu("TO_SUPPORT_DENY_MENU"),
                                         List.of(buttonsText.getString("FINISH_PREFIX") + chatId));
-                            } else if (command.startsWith(buttonsText.getString("FINISH_PREFIX"))) {
+                            }
+                            else if (command.startsWith(buttonsText.getString("FINISH_PREFIX"))) {
                                 String chatId = command.substring(buttonsText.getString("FINISH_PREFIX").length());
                                 beginOrFinishDialog(update,
                                         chatId,
@@ -222,7 +214,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                             }
                         }
                     }
-                    else if (realTypeCurrentMessage == REPORT_LIST && update.callbackQuery() != null) {
+                    else if (realTypeCurrentMessage == REPORT_LIST) {
                         functionalInitForCallBack(update, buttonsText, currentUser);
                         if (roleCurrentUser == PARENT) {
                             doSendReport.accept(update.callbackQuery().data(), "INSIDE_PARENT_REPORT_MENU");
@@ -231,7 +223,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                         doSendReport.accept(update.callbackQuery().data(), "INSIDE_REPORT_MENU");
                         menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, READING_REPORT);
                     }
-                    else if (realTypeCurrentMessage == REPORT_ACTION && update.callbackQuery() != null) {
+                    else if (realTypeCurrentMessage == REPORT_ACTION) {
                         functionalInitForCallBack(update, buttonsText, currentUser);
                         if (roleCurrentUser == PARENT) {
                             if (callBackChecker(update) == 0) {
@@ -239,16 +231,17 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                                 userService.updateUser(currentUser);
                                 menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, RECEIVED_REPORT_NOTIFICATION);
                                 doSendMessage.accept("ASK_TO_SEND_PIC", "IN_REPORT_SEND_TEXT_MENU");
-                            } else if (callBackChecker(update) == 1) {
+                            }
+                            else if (callBackChecker(update) == 1) {
                                 currentUser.setTemp(getIdFromCallback(update).toString());
                                 userService.updateUser(currentUser);
                                 menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, RECEIVED_REPORT_NOTIFICATION);
                                 doSendMessage.accept("ASK_TO_SEND_TEXT", "IN_REPORT_SEND_TEXT_MENU");
 
-                            } else {
+                            }
+                            else {
                                 handleParentMessages(whatIsMenu, doSendMessage, doSendPhoto, goSendLocation, currentUser, update, buttonsText);
                             }
-
                         }
                         else {
                             if (callBackChecker(update) == 0) {
@@ -257,18 +250,21 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                                 reportService.saveReport(report);
                                 doSendUserNotification.accept(report.getUser().getChatId(), report.getId(), "Пришлите фотографию для отчета с номером " + report.getId());
 
-                            } else if (callBackChecker(update) == 1) {
+                            }
+                            else if (callBackChecker(update) == 1) {
                                 Report report = reportService.getReportById(getIdFromCallback(update));
                                 report.setReadStatus(Report.ReadStatus.TO_BE_UPDATED);
                                 reportService.saveReport(report);
                                 doSendUserNotification.accept(report.getUser().getChatId(), report.getId(), "Дополните текст отчета с номером " + report.getId());
 
-                            } else if (callBackChecker(update) == 2) {
+                            }
+                            else if (callBackChecker(update) == 2) {
                                 Report report = reportService.getReportById(getIdFromCallback(update));
                                 report.setReadStatus(Report.ReadStatus.READ);
                                 reportService.saveReport(report);
                                 telegramBot.execute(new SendMessage(report.getUser().getChatId(), "Отчет с номером  " + report.getId() + " принят волонтером " + currentUser.getName() + "."));
-                            } else {
+                            }
+                            else {
                                 handleParentMessages(whatIsMenu, doSendMessage, doSendPhoto, goSendLocation, currentUser, update, buttonsText);
                             }
                         }
@@ -281,13 +277,15 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                             currentUser.setTemp(null);
                             userService.updateUser(currentUser);
                             doSendMessage.accept("SEND_REPORT_IS_CREATED", "MAIN_MENU");
-                        } else if (update.message().text() != null) {
+                        }
+                        else if (update.message().text() != null) {
                             reportService.updateReport(currentUser.getChatId(), update.message().text());
                             menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
                             currentUser.setTemp(null);
                             userService.updateUser(currentUser);
                             doSendMessage.accept("SEND_REPORT_IS_CREATED", "MAIN_MENU");
-                        } else {
+                        }
+                        else {
                             menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
                             handleParentMessages(whatIsMenu, doSendMessage, doSendPhoto, goSendLocation, currentUser, update, buttonsText);
                         }
@@ -309,8 +307,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                             menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
                             doSendMessage.accept("SEND_REPORT_IS_CREATED", "MAIN_MENU");
                         }
-
-
                     }
                     else if (realTypeCurrentMessage == MY_REPORTS) {
                         functionalInitForCallBack(update, buttonsText, currentUser);
@@ -319,8 +315,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
                         menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, READING_REPORT);
                     }
-                    else if (realTypeCurrentMessage == REPORT_PIC || realTypeCurrentMessage == REPORT_TEXT) {
-                        if (realTypeCurrentMessage == REPORT_PIC) {
+                    else if (realTypeCurrentMessage == REPORT_PIC ) {
                             functionalInitForTextCommand(message, buttonsText);
                             if (roleCurrentUser == PARENT) {
                                 reportService.getPictureFromMessage(currentUser.getChatId(), update.message());
@@ -332,24 +327,22 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                                     doSendMessage.accept("SEND_REPORT_IS_CREATED", "MAIN_MENU");
                                 }
                             }
-                        }
-                        else {
-                            functionalInitForTextCommand(message, buttonsText);
-                            if (roleCurrentUser == PARENT) {
-                                Report report = reportService.saveReport(currentUser.getChatId(), update.message().text());
-                                if (reportService.getReportPicturesNames(report.getId()).size() == 0) {
-                                    doSendMessage.accept("ASK_TO_SEND_PIC", "IN_REPORT_SEND_TEXT_MENU");
-                                }
-                                else {
-                                    menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
-                                    doSendMessage.accept("SEND_REPORT_IS_CREATED", "MAIN_MENU");
-                                }
+                    }
+                    else if (realTypeCurrentMessage == REPORT_TEXT) {
+                        functionalInitForTextCommand(message, buttonsText);
+                        if (roleCurrentUser == PARENT) {
+                            Report report = reportService.saveReport(currentUser.getChatId(), update.message().text());
+                            if (reportService.getReportPicturesNames(report.getId()).size() == 0) {
+                                doSendMessage.accept("ASK_TO_SEND_PIC", "IN_REPORT_SEND_TEXT_MENU");
+                            }
+                            else {
+                                menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
+                                doSendMessage.accept("SEND_REPORT_IS_CREATED", "MAIN_MENU");
                             }
                         }
                     }
                     else if (expectedTypeCurrentMessage == REPORT && realTypeCurrentMessage == COMMAND_TEXT) {
                         functionalInitForCallBack(update, buttonsText, currentUser);
-
                         if (whatIsMenu.apply("FINISH_SENDING_REPORT")) {
                             menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
                             doSendMessage.accept("SEND_REPORT_IS_CREATED", "MAIN_MENU");
@@ -370,12 +363,12 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                             telegramBot.execute(menuService.sendTextLoader(currentUser.getCompanion(), update.message().text()));
                         }
                     }
-                        else if (realTypeCurrentMessage == USER_NAME) {
+                    else if (realTypeCurrentMessage == USER_NAME) {
                             functionalInitForCallBack(update, buttonsText, currentUser);
                             doSendUsersList.accept("CHOOSE_USER_TO_MAKE_PARENT", "BACK_TO_VOLUNTEERS_MENU");
                             menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, ADDING_PARENT);
                         }
-                        else if (realTypeCurrentMessage == ADDING_PARENT) {
+                    else if (realTypeCurrentMessage == ADDING_PARENT) {
                             functionalInitForCallBack(update, buttonsText, currentUser);
                             User newParent = userService.getUser(Long.valueOf(update.callbackQuery().data()));
                             administrativeService.setParent(currentUser.getChatId(), newParent.getChatId());
@@ -383,11 +376,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                             menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
                             doSendMessage.accept("AFTER_ADDING_PARENT", "VOLUNTEER_MAIN_MENU");
                         }
-                        else if (realTypeCurrentMessage == TRIAL_PERIOD_LIST) {
+                    else if (realTypeCurrentMessage == TRIAL_PERIOD_LIST) {
                             menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, TRIAL_PERIOD);
                             doSendTrialPeriod.accept(Long.valueOf(update.callbackQuery().data()), "TRIAL_PERIOD_MENU");
                         }
-                        else if (realTypeCurrentMessage == TRIAL_PERIOD) {
+                    else if (realTypeCurrentMessage == TRIAL_PERIOD) {
                             TrialPeriod period = trialPeriodService.getById(Long.valueOf(update.callbackQuery().data()));
                             User parent = trialPeriodService.getUser(period);
                             if (callBackChecker(update) == 3) {
@@ -409,11 +402,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     logger.warn("====Exception: ", e);
                 }
         });
-
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
-
-
 
     /**
      * Метод для начала или завершения диалога между волонтером и пользователем
@@ -874,11 +864,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
         }
 
-
-
-
-
-
     /**
      * Метод, обрабатывающий сообщения и нажатия кнопок от пользователя с ролью ADMIN
      *
@@ -955,7 +940,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         }else if (data.startsWith("dec")) {
             status = 5;
         }
-
 
         return status;
     }
