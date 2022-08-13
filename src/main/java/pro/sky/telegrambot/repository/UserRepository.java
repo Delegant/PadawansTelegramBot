@@ -19,4 +19,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findAllByNameContainsIgnoreCase(String name);
 
+    List<User> findAllByNameContainingIgnoreCase(String name);
+
+    @Query(value = "SELECT * from users where users.role = 'VOLUNTEER'", nativeQuery = true)
+    List<User> findAllVolunteers();
+
+    @Query(value = "SELECT * from users where users.role = 'PARENT'", nativeQuery = true)
+    List<User> findAllParents();
+
 }

@@ -21,7 +21,9 @@ public class PictureServiceImpl implements PictureService {
     @Override
     public ReportPicture savePicture(ReportPicture picture) throws IOException {
         if (picture.getId() == null) {
-           picture.setId(picturesRepository.findAll().stream().max(Comparator.comparing(ReportPicture::getId)).get().getId() + 1);
+            if (picturesRepository.findAll().size() != 0) {
+                picture.setId(picturesRepository.findAll().stream().max(Comparator.comparing(ReportPicture::getId)).get().getId() + 1);
+            }
         }
         return picturesRepository.save(picture);
     }

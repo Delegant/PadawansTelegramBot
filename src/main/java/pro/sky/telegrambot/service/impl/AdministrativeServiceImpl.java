@@ -96,7 +96,7 @@ public class AdministrativeServiceImpl implements AdministrativeService {
     }
 
     /**
-     * Устанавлявает роль юзера - PARENT
+     * Устанавливает роль юзера - PARENT
      * @param volunteerId id волонтера
      * @param userId id пользователя
      */

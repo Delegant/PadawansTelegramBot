@@ -17,6 +17,7 @@ public class User {
         PARENT,
         VOLUNTEER,
         ADMIN,
+        CHANNEL,
     }
 
     @Schema(description = "Идентификатор пользователя")
@@ -41,15 +42,19 @@ public class User {
 
     @Schema(description = "Список испытательных периодов (на случай если пользователь заберет несколько животных")
     @JsonIgnore
-    @OneToMany
+    @OneToMany(fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id")
     private Collection<TrialPeriod> trialPeriods;
 
     @Schema(description = "Стэк переходов пользователя по меню")
     @OneToMany(mappedBy = "user")
     private Set<MenuStack> menuStackSet;
 
-    @Schema(description = "у пользователя ID волонтера, у волонтера ID пользователя с который идет диалог")
+    @Schema(description = "у пользователя ID волонтера, у волонтера ID пользователя с которым идет диалог")
     private Long companion;
+
+    @Schema(description = "Временные данные для использования в процессе обновления отчетов")
+    private String temp;
 
     public User() {
     }
@@ -105,6 +110,14 @@ public class User {
 
     public Long getCompanion() {
         return this.companion;
+    }
+
+    public String getTemp() {
+        return temp;
+    }
+
+    public void setTemp(String temp) {
+        this.temp = temp;
     }
 
     @Override

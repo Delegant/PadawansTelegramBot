@@ -59,5 +59,11 @@ public interface ReportService {
 
     Report createUpdatedReport(Report report);
 
+    void checkReportsAndSendNotification();
+
+    void scheduledCheckReports();
+
+    Report getLastReportByUserId(Long chatId);
+
 
 }

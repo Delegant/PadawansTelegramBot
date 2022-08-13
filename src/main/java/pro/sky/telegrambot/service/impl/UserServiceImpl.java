@@ -3,14 +3,12 @@ package pro.sky.telegrambot.service.impl;
 import com.pengrad.telegrambot.model.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.Dao.Impl.UserDao;
 import pro.sky.telegrambot.exceptions.UserNotFoundException;
 import pro.sky.telegrambot.listener.TelegramBotUpdatesListener;
 import pro.sky.telegrambot.model.User;
 import pro.sky.telegrambot.repository.UserRepository;
-import pro.sky.telegrambot.service.UserService;
 
 import java.util.*;
 
@@ -52,6 +50,11 @@ public class UserServiceImpl implements pro.sky.telegrambot.service.UserService 
     @Override
     public Optional<User> getUserByChatId(Long chatId) {
         return userRepository.findUserByChatId(chatId);
+    }
+
+    @Override
+    public User findById(Long userId) {
+        return userRepository.findById(userId).get();
     }
 
     /**
@@ -119,5 +122,37 @@ public class UserServiceImpl implements pro.sky.telegrambot.service.UserService 
             }
         }
         return targetUser.orElseThrow(() -> new UserNotFoundException("!!!! There is no user found with such hashCode from name"));
+    }
+
+    @Override
+    public List<User> getVolunteers() {
+        return userRepository.findAllVolunteers();
+    }
+
+    @Override
+    public List<User> getParents() {
+        return userRepository.findAllParents();
+    }
+    /**
+     * Проставляем номера чат ID для юзера и волонтера, что бы зеркалить общение
+     * @param volunteer - объект User, где отражаеться волонтер, который ответил на призыв
+     * @param user - объект User запросивший помощь
+     */
+    @Override
+    public void setCompanion(User volunteer, User user) {
+        volunteer.setCompanion(user.getChatId());
+        user.setCompanion(volunteer.getChatId());
+        userRepository.saveAll(List.of(volunteer, user));
+    }
+    /**
+     * Проставляем номера чат ID для юзера и волонтера, что бы зеркалить общение
+     * @param volunteer - объект User, где отражаеться волонтер, который ответил на призыв
+     * @param user - объект User запросивший помощь
+     */
+    @Override
+    public void delCompanion(User volunteer, User user) {
+        volunteer.setCompanion(null);
+        user.setCompanion(null);
+        userRepository.saveAll(List.of(volunteer, user));
     }
 }

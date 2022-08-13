@@ -15,20 +15,21 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.Dao.Impl.ReportDao;
+import pro.sky.telegrambot.Dao.Impl.TrialPeriodDao;
 import pro.sky.telegrambot.listener.TelegramBotUpdatesListener;
-import pro.sky.telegrambot.model.PictureName;
-import pro.sky.telegrambot.model.Report;
-import pro.sky.telegrambot.model.ReportPicture;
-import pro.sky.telegrambot.model.User;
+import pro.sky.telegrambot.model.*;
 import pro.sky.telegrambot.repository.PicturesRepository;
 import pro.sky.telegrambot.service.MenuService;
 import pro.sky.telegrambot.service.ReportService;
+import pro.sky.telegrambot.service.TrialPeriodService;
 import pro.sky.telegrambot.service.UserService;
 
 import static pro.sky.telegrambot.constants.ButtonsText.HIDDEN_BUTTON;
 
 import java.io.File;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -54,7 +55,13 @@ public class MenuServiceImpl implements MenuService {
     private ReportService reportService;
 
     @Autowired
+    private TrialPeriodDao tpDAO;
+
+    @Autowired
     private TelegramBot telegramBot;
+
+    @Autowired
+    private TrialPeriodService trialPeriodService;
 
     @Autowired
     private PicturesRepository picturesRepository;
@@ -75,8 +82,6 @@ public class MenuServiceImpl implements MenuService {
 
         return new ReplyKeyboardMarkup(buttons);
     }
-
-
 
 
     /**
@@ -126,6 +131,29 @@ public class MenuServiceImpl implements MenuService {
 
     /**
      * Метод, принимающий список кнопок и формирующий клавиатуру для вставки в сообщение.
+     *
+     * @param buttons - входящий список кнопок (текстов для кнопок)
+     * @return - возвращает inline-клавиатуру
+     * @see MenuServiceImpl#menuLoader(Message, String, List)
+     * @see MenuServiceImpl#menuLoader(Update, String, List)
+     */
+    private InlineKeyboardMarkup keyboardFactory(List<String> buttons, List<String> callBacks) {
+        if (buttons == null) {
+            throw new NullPointerException("Inline menu list have null");
+        }
+        buttons = buttons.stream().filter(buttonText -> !buttonText.equals(HIDDEN_BUTTON)).collect(Collectors.toList());
+        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+        Iterator<String> iterator = callBacks.listIterator();
+        buttons.stream()
+                .map(InlineKeyboardButton::new)
+                .map(button -> button.callbackData(iterator.hasNext() ? iterator.next() : getHashFromButton(button.text())))
+                .forEach(inlineKeyboardMarkup::addRow);
+
+        return inlineKeyboardMarkup;
+    }
+
+    /**
+     * Метод, принимающий список кнопок и формирующий клавиатуру для вставки в сообщение.
      * @param list - входящий список кнопок (текстов для кнопок)
      * @return - возвращает inline-клавиатуру
      * @see MenuServiceImpl#menuLoaderForObjects(Message, String, List)
@@ -166,29 +194,6 @@ public class MenuServiceImpl implements MenuService {
                     new InlineKeyboardButton(list.get(list.size() - 1).get(0))
                             .callbackData(list.get(list.size() - 1).get(1)));
         }
-        return inlineKeyboardMarkup;
-    }
-
-
-    /**
-     * Метод, принимающий список кнопок и формирующий клавиатуру для вставки в сообщение.
-     *
-     * @param buttons - входящий список кнопок (текстов для кнопок)
-     * @return - возвращает inline-клавиатуру
-     * @see MenuServiceImpl#menuLoader(Message, String, List)
-     * @see MenuServiceImpl#menuLoader(Update, String, List)
-     */
-    private InlineKeyboardMarkup keyboardFactory(List<String> buttons, List<String> callBacks) {
-        if (buttons == null) {
-            throw new NullPointerException("Inline menu list have null");
-        }
-        buttons = buttons.stream().filter(buttonText -> !buttonText.equals(HIDDEN_BUTTON)).collect(Collectors.toList());
-        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-        Iterator<String> iterator = callBacks.listIterator();
-        buttons.stream()
-                .map(InlineKeyboardButton::new)
-                .forEach(button -> button.callbackData(iterator.hasNext() ? iterator.next() : getHashFromButton(button.text())));
-
         return inlineKeyboardMarkup;
     }
 
@@ -352,6 +357,16 @@ public class MenuServiceImpl implements MenuService {
         }
     }
 
+    public SendMessage sendTextLoader(Long chatId, String text, List<String> listButtons, List<String> callBacks) {
+        try {
+            SendMessage sendMessage = new SendMessage(chatId, text);
+            sendMessage.replyMarkup(keyboardFactory(listButtons, callBacks));
+            return sendMessage;
+        } catch (RuntimeException e) {
+            throw new RuntimeException("The list of buttons is invalid");
+        }
+    }
+
     @Override
     public SendMessage sendReportNotificationMessage(Long chatId, Long reportId, String text) {
         try{
@@ -364,13 +379,51 @@ public class MenuServiceImpl implements MenuService {
 
     }
 
-    public SendMessage sendTextWithMarkedCallBack(Long chatId, String text, Long reportId) {
+    public SendMessage sendTextWithMarkedCallBack(User user, String text, Long reportId) {
+        Long chatId  = user.getChatId();
+        User.Role role = user.getRole();
         try{
             SendMessage sendMessage = new SendMessage(chatId, text);
-            sendMessage.replyMarkup(keyboardForReportAction(reportId));
+            if (role == User.Role.VOLUNTEER || role == User.Role.ADMIN) {
+                sendMessage.replyMarkup(keyboardForReportAction(reportId));
+            } else {
+                sendMessage.replyMarkup(keyboardForParentReportAction(reportId));
+            }
             return sendMessage;
         } catch (RuntimeException e) {
-            throw new RuntimeException("Error on creating message");
+            throw new RuntimeException("Error on creating message at MenuServiceImpl.sendTextWithMarkedCallBack() ");
+        }
+    }
+
+    public SendMessage sendTrialPeriod(User user, Long trialPeriodId) {
+        Long chatId  = user.getChatId();
+        TrialPeriod trialPeriod = tpDAO.get(trialPeriodId).orElseThrow();
+        User parent = trialPeriod.getUserId();
+        String addedDays = "";
+        String prolongedBy = "";
+        LocalDate start = LocalDate.from(trialPeriod.getStartDate());
+        LocalDate end = LocalDate.from(trialPeriod.getEndDate());
+        Period daysLeft = Period.between(LocalDate.now(), end);
+        String endDay = String.valueOf(daysLeft.getDays());
+        if (trialPeriod.getAdditionalDays() != null) {
+            LocalDateTime additionalDays = trialPeriod.getAdditionalDays();
+            addedDays = additionalDays.toString();
+        } else {
+            addedDays = "0";
+        }
+        if (trialPeriod.getProlongedBy() != null) {
+            prolongedBy = userService.getUserByChatId(trialPeriod.getProlongedBy()).get().getName();
+        } else {
+            prolongedBy = " - ";
+        }
+        String text = "id: " + trialPeriod.getId() + "\nПользователь: " + parent.getName() + "\nНачался: " + start + "\nДополнительные дни: " + addedDays + "\nПродлен: " + prolongedBy + "\nЗавершится: " + end + "\nЧерез: " + endDay + " дней";
+        try{
+            SendMessage sendMessage = new SendMessage(chatId, text);
+            sendMessage.replyMarkup(keyboardForTrialPeriodAction(trialPeriodId));
+
+            return sendMessage;
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Error on creating message at MenuServiceImpl.sendTrialPeriod() ");
         }
     }
 
@@ -412,25 +465,54 @@ public class MenuServiceImpl implements MenuService {
         return inlineKeyboardMarkup;
     }
 
-    public SendMessage sendTextLoader(Long chatId, String text, List<String> listButtons, List<String> callBacks) {
-        try {
-            SendMessage sendMessage = new SendMessage(chatId, text);
-            sendMessage.replyMarkup(keyboardFactory(listButtons, callBacks));
-            return sendMessage;
-        } catch (RuntimeException e) {
-            throw new RuntimeException("The list of buttons is invalid");
-        }
+    private InlineKeyboardMarkup keyboardForTrialPeriodAction(Long trialPeriodId) {
+        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+        inlineKeyboardMarkup.addRow(
+                new InlineKeyboardButton("Завершить испытательный период")
+                        .callbackData("acc_" + trialPeriodId));
+        inlineKeyboardMarkup.addRow(
+                new InlineKeyboardButton("Продлить испытательный период")
+                        .callbackData("pro_" + trialPeriodId));
+        inlineKeyboardMarkup.addRow(
+                new InlineKeyboardButton("Отменить как неудачный")
+                        .callbackData("dec_" + trialPeriodId));
+        inlineKeyboardMarkup.addRow(
+                new InlineKeyboardButton("Назад к списку испытательных периодов")
+                        .callbackData(getHashFromButton("Назад к списку испытательных периодов")));
+        inlineKeyboardMarkup.addRow(
+                new InlineKeyboardButton("Вернуться в меню волонтера")
+                        .callbackData(getHashFromButton("Вернуться в меню волонтера")));
+
+        return inlineKeyboardMarkup;
     }
+
+    private InlineKeyboardMarkup keyboardForParentReportAction(Long reportId) {
+
+        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+        inlineKeyboardMarkup.addRow(
+                new InlineKeyboardButton("Дополнить текст")
+                        .callbackData("txt_" + reportId));
+        inlineKeyboardMarkup.addRow(
+                new InlineKeyboardButton("Прислать фотографию")
+                        .callbackData("pic_" + reportId));
+        inlineKeyboardMarkup.addRow(
+                new InlineKeyboardButton("Вернуться в главное меню")
+                        .callbackData(getHashFromButton("Вернуться в главное меню")));
+
+        return inlineKeyboardMarkup;
+    }
+
 
     /**
      * Перегруженный метод, формирующий обновление старого сообщения из входящих параметров:
-     * @param update - Из поля update берется id чата, куда будет отправлено сообщение и какое сообщение обновлять
-     *               (в данном случае update применяется вместо message, поскольку при нажатии inline кнопки
-     *               поле message в update равно null)
-     * @param text - текст отправляемого сообщения
+     *
+     * @param update      - Из поля update берется id чата, куда будет отправлено сообщение и какое сообщение обновлять
+     *                    (в данном случае update применяется вместо message, поскольку при нажатии inline кнопки
+     *                    поле message в update равно null)
+     * @param text        - текст отправляемого сообщения
      * @param listButtons - список кнопок (текстов кнопок) для клавиатуры
-     *                    @see MenuServiceImpl#keyboardFactory(List)
      * @return - возвращает новое сформированное сообщение
+     * @see MenuServiceImpl#keyboardFactory(List)
      */
     @Override
     public EditMessageText editMenuLoader(Update update, String text, List<String> listButtons) {
@@ -441,6 +523,42 @@ public class MenuServiceImpl implements MenuService {
                 .parseMode(ParseMode.HTML)
                 .disableWebPagePreview(true)
                 .replyMarkup(keyboardFactory(listButtons));
+    }
+
+    /**
+     * Перегруженный метод, формирующий обновление старого сообщения из входящих параметров:
+     *
+     * @param update      - Из поля update берется id чата, куда будет отправлено сообщение и какое сообщение обновлять
+     *                    (в данном случае update применяется вместо message, поскольку при нажатии inline кнопки
+     *                    поле message в update равно null)
+     * @param text        - текст отправляемого сообщения
+     * @param listButtons - список кнопок (текстов кнопок) для клавиатуры
+     * @param callBacks - список строк которые можно приложить как каллбэк от нажатия кнопок
+     * @return - возвращает новое сформированное сообщение
+     * @see MenuServiceImpl#keyboardFactory(List)
+     */
+    @Override
+    public EditMessageText editMenuLoader(Update update, String text, List<String> listButtons, List<String> callBacks) {
+        return editMenuLoader(update, text, listButtons).replyMarkup(keyboardFactory(listButtons, callBacks));
+    }
+    /**
+     * Перегруженный метод, формирующий обновление старого сообщения из входящих параметров:
+     *
+     * @param update      - Из поля update берется id чата, куда будет отправлено сообщение и какое сообщение обновлять
+     *                    (в данном случае update применяется вместо message, поскольку при нажатии inline кнопки
+     *                    поле message в update равно null)
+     * @param text        - текст отправляемого сообщения
+     * @return - возвращает новое сформированное сообщение
+     * @see MenuServiceImpl#keyboardFactory(List)
+     */
+    @Override
+    public EditMessageText editMenuLoader(Update update, String text) {
+        Message message = update.callbackQuery().message();
+        Object chatId = message.chat().id();
+        int messageId = message.messageId();
+        return new EditMessageText(chatId, messageId, text)
+                .parseMode(ParseMode.HTML)
+                .disableWebPagePreview(true);
     }
 
     /**
@@ -531,19 +649,39 @@ public class MenuServiceImpl implements MenuService {
     @Override
     public List<List<String>> generateListOfAllUserReports(Long chatId) {
         List<List<String>> reportButtons = new ArrayList<>();
-        List<Report> reportsList = new ArrayList<>(reportService.getUnreadReports());
+        List<Report> reportsList = new ArrayList<>(reportService.getListOfReportsByUserId(chatId));
         User user = userService.getUserByChatId(chatId).orElseThrow();
 
         if (!reportsList.isEmpty()) {
             reportsList.removeIf(report -> !report.getUser().equals(user));
             for (Report report : reportsList) {
+                LocalDate date = LocalDate.parse(report.getReportDate().toString().substring(0, 10), DateTimeFormatter.ISO_LOCAL_DATE);
                 List<String> button = new ArrayList<>();
-                button.add(0, report.getId() + " " + report.getReportDate() + " " + report.getReadStatus());
+                button.add(0, report.getId() + " " + date + " " + report.getReadStatus());
                 button.add(1, report.getId().toString());
                 reportButtons.add(button);
             }
         }
         return reportButtons;
+    }
+
+    @Override
+    public List<List<String>> generateListOfAllTrialPeriods() {
+        List<List<String>> periodButtons = new ArrayList<>();
+        List<TrialPeriod> perodsList = new ArrayList<>(trialPeriodService.getAllTrialPeriods());
+        if (!perodsList.isEmpty()) {
+            perodsList.removeIf(trialPeriod -> trialPeriod.getStatus().equals(TrialPeriod.TrialPeriodStatus.ENDED));
+            perodsList.removeIf(trialPeriod -> trialPeriod.getStatus().equals(TrialPeriod.TrialPeriodStatus.DENIED));
+            for (TrialPeriod trialPeriod : perodsList) {
+                List<String> button = new ArrayList<>();
+                button.add(0, "Id: " + trialPeriod.getId() + " UserId: " + trialPeriod.getUserId() + " " + trialPeriod.getStatus());
+                button.add(1, trialPeriod.getId().toString());
+                periodButtons.add(button);
+            }
+        }
+        List<String> backButton = List.of("Вернуться в меню волонтера", getHashFromButton("Вернуться в меню волонтера"));
+        periodButtons.add(backButton);
+        return periodButtons;
     }
 
     @Override

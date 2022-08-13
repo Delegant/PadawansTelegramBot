@@ -3,6 +3,7 @@ package pro.sky.telegrambot.model;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import javax.persistence.*;
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -33,8 +34,9 @@ public class TrialPeriod {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @Schema(description = "Идентификатор пользователя-усыновителя")
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
     private User user;
 
     @Schema(description = "Дата начала испытательного периода")
@@ -81,6 +83,7 @@ public class TrialPeriod {
         this.id = id;
     }
 
+    @Transactional
     public User getUserId() {
         return user;
     }
