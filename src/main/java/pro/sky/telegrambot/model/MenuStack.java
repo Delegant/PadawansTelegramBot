@@ -143,6 +143,7 @@ public class MenuStack {
         MY_REPORTS,
         TRIAL_PERIOD,
         TRIAL_PERIOD_LIST,
-        TRIAL_PERIOD_ACTION
+        TRIAL_PERIOD_ACTION,
+        TRIAL_PERIOD_PROLONG
     }
 }
