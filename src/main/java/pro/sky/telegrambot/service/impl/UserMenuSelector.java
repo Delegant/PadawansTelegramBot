@@ -2,33 +2,27 @@ package pro.sky.telegrambot.service.impl;
 
 import com.pengrad.telegrambot.model.Update;
 import org.apache.logging.log4j.util.TriConsumer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.constants.ButtonsText;
-import pro.sky.telegrambot.listener.TelegramBotUpdatesListener;
-import pro.sky.telegrambot.model.MenuStack;
 import pro.sky.telegrambot.model.User;
 import pro.sky.telegrambot.service.MenuSelector;
 import pro.sky.telegrambot.service.MenuStackService;
 
 import java.io.File;
-import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-@Component
-public class UserMenuSelector implements MenuSelector {
+@Service
+public class UserMenuSelector extends AbstractMenuSelector {
 
     final MenuStackService menuStackService;
-    /**
-     * Логгер для класса
-     */
-    private final Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
-    @Value("${path.to.address.pic}")
-    private String addressPath;
-    private final java.io.File address = new File(addressPath);
+
+//    @Value("${path.to.address.pic}")
+//    private static String addressPath;
+//    private final java.io.File address = new File(addressPath);
+    private final java.io.File address = new File("src/main/resources/MapPhoto/address.png");
 
     public UserMenuSelector(MenuStackService menuStackService) {
         this.menuStackService = menuStackService;
@@ -40,31 +34,7 @@ public class UserMenuSelector implements MenuSelector {
     }
 
     @Override
-    public void handleMessages(Function<String, Boolean> whatIsMenu,
-                               BiConsumer<String, String> doSendMessage,
-                               TriConsumer<File, String, String> doSendPhoto,
-                               BiConsumer<Float, Float> doSendLocation,
-                               User currentUser, Update update, ButtonsText buttonsText) {
-
-//        Function<String, Boolean> whatIsMenu,00000000000000000000000000000000000
-//        TriConsumer<File, String, String> doSendPhoto,
-//        BiConsumer<Float, Float> doSendLocation,
-        Function<String, Boolean> whatIsMenu = (someButtonNameKey) -> {
-            String someButtonNameValue = buttonsText.getString(someButtonNameKey);
-            String hashSomeButton = menuService.getHashFromButton(someButtonNameValue);
-            return update.callbackQuery().data().equals(hashSomeButton);
-        };
-        BiConsumer<String, String> doSendMessage = (textKey, menuKey) -> {
-            logger.info("====Processing doSendMessage with callback: {}", update.callbackQuery().data());
-            String textPackKey = menuStackService.getLastTextPackKeyByUser(currentUser);
-            MenuStack.MessageType expectedTypeCurrentMessage = menuStackService.getCurrentExpectedMessageTypeByUser(currentUser);
-            menuStackService.createMenuStack(currentUser, textPackKey, textKey, menuKey, expectedTypeCurrentMessage);
-            String textValue = buttonsText.getString(textKey);
-            List<String> menuValue = buttonsText.getMenu(menuKey);
-            telegramBot.execute(menuService.editMenuLoader(update, textValue, menuValue));
-        };
-
-
+    public void handleMessages() {
         if (whatIsMenu.apply("START_BUTTON")) {
             doSendMessage.accept("START_TEXT", "SPECIES_PET_SELECTION_MENU");
         } else if (whatIsMenu.apply("BACK_BUTTON")) {
@@ -113,11 +83,7 @@ public class UserMenuSelector implements MenuSelector {
         } else if (whatIsMenu.apply("DENY_LIST_BUTTON")) {
             doSendMessage.accept("DENY_LIST", "BACK_TO_MAIN_MENU");
         } else if (whatIsMenu.apply("CALL_VOLUNTEER_BUTTON")) {
-            telegramBot.execute(menuService.sendTextLoader(
-                    channelId,
-                    buttonsText.getString("VOLUNTEER_REQUEST_TEXT"),
-                    buttonsText.getMenu("TO_SUPPORT_ACCEPT_MENU"),
-                    List.of(buttonsText.getString("BEGIN_PREFIX") + currentUser.getChatId().toString())));
+            doSendHelpRequest.accept("VOLUNTEER_REQUEST_TEXT", "TO_SUPPORT_ACCEPT_MENU");
             doSendMessage.accept("CALL_VOLUNTEER_TEXT", "BACK_TO_ONLY_MAIN_MENU");
         } else if (whatIsMenu.apply("BACK_TO_MAIN_MENU_BUTTON")) {
             doSendMessage.accept("DEFAULT_MENU_TEXT", "MAIN_MENU");

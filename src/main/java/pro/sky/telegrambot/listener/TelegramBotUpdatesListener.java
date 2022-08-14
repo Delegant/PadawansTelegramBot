@@ -94,6 +94,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     BiConsumer<String, String> doSendNotification;
     TriConsumer<Long, Long, String> doSendUserNotification;
     BiConsumer<Long, String> doSendParentReport;
+    BiConsumer<String, String> doSendHelpRequest;
     @Value("${pro.sky.channel.id}")
     private Long channelId;
 
@@ -157,15 +158,19 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     } else {
                         functionalInitForTextCommand(message, buttonsText);
                     }
-                    if (roleCurrentUser == USER) {
-                        menuSelectorFactory.getMenuSelector(roleCurrentUser).handleMessages(whatIsMenu, doSendMessage, doSendPhoto, goSendLocation, currentUser, update, buttonsText);
-                    } else if (roleCurrentUser == PARENT) {
-                        handleParentMessages(whatIsMenu, doSendMessage, doSendPhoto, goSendLocation, currentUser, update, buttonsText);
-                    } else if (roleCurrentUser == VOLUNTEER) {
+                    if (roleCurrentUser == USER || roleCurrentUser == PARENT) {
+                        menuSelectorFactory.getMenuSelectorForCallBack(roleCurrentUser, currentUser, update, buttonsText).handleMessages();
+                    }
+//                    else if (roleCurrentUser == PARENT) {
+//                        handleParentMessages(whatIsMenu, doSendMessage, doSendPhoto, goSendLocation, currentUser, update, buttonsText);
+//                    }
+                    else if (roleCurrentUser == VOLUNTEER) {
                         handleVolunteerMessages(whatIsMenu, doSendMessage, doSendUsersList, doSendReportList, doSendReport, currentUser, update);
-                    } else if (roleCurrentUser == ADMIN) {
+                    }
+                    else if (roleCurrentUser == ADMIN) {
                         handleAdminMessages(whatIsMenu, doSendMessage, goSendPhoto, goBack, doSetNewVolunteer, doSendUsersList, doSendReport, currentUser, update);
-                    } else if (roleCurrentUser == CHANNEL) {
+                    }
+                    else if (roleCurrentUser == CHANNEL) {
                         String command = update.callbackQuery().data();
                         if (command.startsWith(buttonsText.getString("BEGIN_PREFIX"))) {
                             String chatId = command.substring(buttonsText.getString("BEGIN_PREFIX").length());
@@ -308,6 +313,14 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                     functionalInitForCallBack(update, buttonsText, currentUser);
                     handleVolunteerMessages(whatIsMenu, doSendMessage, doSendUsersList, doSendReportList, doSendReport, currentUser, update);
                 }
+             else if (expectedTypeCurrentMessage.equals(REPORT_TEXT)) {
+                reportService.saveReport(currentUser.getChatId(), update.message().text());
+                telegramBot.execute(new SendMessage(currentUser.getChatId(), reportService.checkNewReportByUser(currentUser.getChatId())));
+                doSendMessage.accept("WHAT_NEXT_TEXT", "IN_REPORT_SEND_TEXT_MENU");
+            } else if (expectedTypeCurrentMessage.equals(REPORT_PIC)) {
+                reportService.getPictureFromMessage(currentUser.getChatId(), update.message());
+                telegramBot.execute(new SendMessage(currentUser.getChatId(), reportService.checkNewReportByUser(currentUser.getChatId())));
+                doSendMessage.accept("WHAT_NEXT_TEXT", "IN_REPORT_SEND_PIC_MENU");}
                 /// TODO: 29.07.2022 Дописать логику вывода списка отчетов у парента и механизм просмотра/редактирования отчета
             } catch (Exception e) {
                 logger.warn("====Exception: ", e);
@@ -343,7 +356,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Метод инициализирует функциональные интерфейсы в ситуации для update с текстом callBack.
      * Применяются интерфейсы как действия по отношению к ключам в методе для пользователя:
-     * {@link #handleUserMessages(Function, BiConsumer, TriConsumer, BiConsumer, User, Update, ButtonsText)}
      * и в методе для волонтера
      * {@link #handleVolunteerMessages(Function, BiConsumer, BiConsumer, BiConsumer, BiConsumer, User, Update)}
      */
@@ -356,13 +368,14 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             }
             return update.callbackQuery().data().equals(hashSomeButton);
         };
-        /**
-         *             telegramBot.execute(menuService.sendTextLoader(
-         *                     channelId,
-         *                     buttonsText.getString("VOLUNTEER_REQUEST_TEXT"),
-         *                     buttonsText.getMenu("TO_SUPPORT_ACCEPT_MENU"),
-         *                     List.of(buttonsText.getString("BEGIN_PREFIX") + currentUser.getChatId().toString())));
-         */
+        doSendHelpRequest = (textKey, menuKey) -> {
+            logger.info("====Processing doSendMessage with callback: {}", update.callbackQuery().data());
+            telegramBot.execute(menuService.sendTextLoader(
+                    channelId,
+                    buttonsText.getString(textKey),
+                    buttonsText.getMenu(menuKey),
+                    List.of(buttonsText.getString("BEGIN_PREFIX") + currentUser.getChatId().toString())));
+        };
         doSendMessage = (textKey, menuKey) -> {
             logger.info("====Processing doSendMessage with callback: {}", update.callbackQuery().data());
             String textPackKey = menuStackService.getLastTextPackKeyByUser(currentUser);
@@ -452,7 +465,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     /**
      * Метод инициализирует функциональные интерфейсы в ситуации для update с текстовой командой.
      * Применяются интерфейсы как действия по отношению к ключам в методе для пользователя:
-     * {@link #handleUserMessages(Function, BiConsumer, TriConsumer, BiConsumer, User, Update, ButtonsText)}
      * и в методе для волонтера {@link #handleVolunteerMessages(Function, BiConsumer, BiConsumer, BiConsumer, BiConsumer, User, Update)}
      */
     private void functionalInitForTextCommand(Message message, ButtonsText buttonsText) {
@@ -518,88 +530,85 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         }
     }
 
-    /**
-     * Метод обрабатывает сообщения и нажатия кнопок от пользователя с ролью USER
-     * метод принимает параметрами функциональные интерфейсы.
-     * В параметрах описаны действия, которые нужно применить к ключам этого метода.
-     *
-     * @param whatIsMenu     функция для попадания в нужную ветку условий
-     * @param doSendMessage  биконсьюмер для отправки текста
-     * @param doSendPhoto    консьюмер для отправки фото
-     * @param doSendLocation биконсьюмер для отправки локации
-     * @see pro.sky.telegrambot.listener.TelegramBotUpdatesListener
-     */
-    public void handleUserMessages(Function<String, Boolean> whatIsMenu,
-                                   BiConsumer<String, String> doSendMessage,
-                                   TriConsumer<File, String, String> doSendPhoto,
-                                   BiConsumer<Float, Float> doSendLocation,
-                                   User currentUser, Update update, ButtonsText buttonsText) throws IOException {
-        if (whatIsMenu.apply("START_BUTTON")) {
-            doSendMessage.accept("START_TEXT", "SPECIES_PET_SELECTION_MENU");
-        } else if (whatIsMenu.apply("BACK_BUTTON")) {
-            menuStackService.dropMenuStack(currentUser);
-            String lastTextKey = menuStackService.getLastTextKeyByUser(currentUser);
-            String lastMenuState = menuStackService.getLastMenuStateByUser(currentUser);
-            menuStackService.dropMenuStack(currentUser);
-            doSendMessage.accept(lastTextKey, lastMenuState);
-        } else if (whatIsMenu.apply("CAT_BUTTON") || whatIsMenu.apply("DOG_BUTTON")) {
-            menuStackService.setTextPackKey(currentUser, update.callbackQuery().data());
-            buttonsText.changeCurrentTextKey(update.callbackQuery().data());
-            doSendMessage.accept("GREETING_TEXT", "MAIN_MENU");
-        } else if (whatIsMenu.apply("CHANGE_PET_BUTTON")) {
-            doSendMessage.accept("START_TEXT", "SPECIES_PET_SELECTION_MENU");
-        } else if (whatIsMenu.apply("INFO_BUTTON")) {
-            doSendMessage.accept("INFO_TEXT", "INFO_MENU");
-        } else if (whatIsMenu.apply("ABOUT_US_BUTTON")) {
-            doSendMessage.accept("ABOUT_US", "BACK_TO_MAIN_MENU");
-        } else if (whatIsMenu.apply("CONTACTS_BUTTON")) {
-            doSendLocation.accept(51.165973F, 71.403983F);
-            doSendPhoto.accept(address, "SHELTER_CONTACTS", "BACK_TO_MAIN_MENU");
-        } else if (whatIsMenu.apply("SAFETY_REGULATIONS_BUTTON")) {
-            doSendMessage.accept("SAFETY_REGULATIONS", "BACK_TO_MAIN_MENU");
-        } else if (whatIsMenu.apply("SHARE_CONTACT_BUTTON")) {
-            doSendMessage.accept("SHARE_CONTACT", "BACK_TO_MAIN_MENU");
-        } else if (whatIsMenu.apply("HOW_TO_GET_PET_BUTTON")) {
-            doSendMessage.accept("CONSULT_MENU_MESSAGE", "HOW_TO_GET_PET_MENU");
-        } else if (whatIsMenu.apply("MEETING_WITH_PET_BUTTON")) {
-            doSendMessage.accept("MEETING_WITH_PET", "BACK_TO_MAIN_MENU");
-        } else if (whatIsMenu.apply("LIST_OF_DOCUMENTS_BUTTON")) {
-            doSendMessage.accept("LIST_OF_DOCUMENTS", "BACK_TO_MAIN_MENU");
-        } else if (whatIsMenu.apply("HOW_TO_CARRY_ANIMAL_BUTTON")) {
-            doSendMessage.accept("HOW_TO_CARRY_ANIMAL", "BACK_TO_MAIN_MENU");
-        } else if (whatIsMenu.apply("MAKING_HOUSE_BUTTON")) {
-            doSendMessage.accept("DEFAULT_MENU_TEXT", "MAKING_HOUSE_MENU");
-        } else if (whatIsMenu.apply("FOR_PUPPY_BUTTON")) {
-            doSendMessage.accept("MAKING_HOUSE_FOR_PUPPY", "BACK_TO_MAIN_MENU");
-        } else if (whatIsMenu.apply("FOR_PET_BUTTON")) {
-            doSendMessage.accept("MAKING_HOUSE_FOR_PET", "BACK_TO_MAIN_MENU");
-        } else if (whatIsMenu.apply("FOR_PET_WITH_DISABILITIES_BUTTON")) {
-            doSendMessage.accept("MAKING_HOUSE_FOR_PET_WITH_DISABILITIES", "BACK_TO_MAIN_MENU");
-        } else if (whatIsMenu.apply("DOG_HANDLER_ADVICES_BUTTON")) {
-            doSendMessage.accept("DOG_HANDLER_ADVICES", "BACK_TO_MAIN_MENU");
-        } else if (whatIsMenu.apply("DOG_HANDLERS_BUTTON")) {
-            doSendMessage.accept("DOG_HANDLERS", "BACK_TO_MAIN_MENU");
-        } else if (whatIsMenu.apply("DENY_LIST_BUTTON")) {
-            doSendMessage.accept("DENY_LIST", "BACK_TO_MAIN_MENU");
-        } else if (whatIsMenu.apply("CALL_VOLUNTEER_BUTTON")) {
-            telegramBot.execute(menuService.sendTextLoader(
-                    channelId,
-                    buttonsText.getString("VOLUNTEER_REQUEST_TEXT"),
-                    buttonsText.getMenu("TO_SUPPORT_ACCEPT_MENU"),
-                    List.of(buttonsText.getString("BEGIN_PREFIX") + currentUser.getChatId().toString())));
-            doSendMessage.accept("CALL_VOLUNTEER_TEXT", "BACK_TO_ONLY_MAIN_MENU");
-        } else if (whatIsMenu.apply("BACK_TO_MAIN_MENU_BUTTON")) {
-            doSendMessage.accept("DEFAULT_MENU_TEXT", "MAIN_MENU");
-        } else {
-            if (currentUser.getRole() == VOLUNTEER) {
-                doSendMessage.accept("SOMETHING_WENT_WRONG", "VOLUNTEER_MAIN_MENU");
-            } else if (currentUser.getRole() == ADMIN) {
-                doSendMessage.accept("SOMETHING_WENT_WRONG", "ADMIN_MAIN_MENU");
-            } else {
-                doSendMessage.accept("ERROR_COMMAND_TEXT", "CALL_VOLUNTEER_MENU");
-            }
-        }
-    }
+//    /**
+//     * Метод обрабатывает сообщения и нажатия кнопок от пользователя с ролью USER
+//     * метод принимает параметрами функциональные интерфейсы.
+//     * В параметрах описаны действия, которые нужно применить к ключам этого метода.
+//     *
+//     * @param whatIsMenu     функция для попадания в нужную ветку условий
+//     * @param doSendMessage  биконсьюмер для отправки текста
+//     * @param doSendPhoto    консьюмер для отправки фото
+//     * @param doSendLocation биконсьюмер для отправки локации
+//     * @see pro.sky.telegrambot.listener.TelegramBotUpdatesListener
+//     */
+//    public void handleUserMessages(Function<String, Boolean> whatIsMenu,
+//                                   BiConsumer<String, String> doSendMessage,
+//                                   TriConsumer<File, String, String> doSendPhoto,
+//                                   BiConsumer<Float, Float> doSendLocation,
+//                                   User currentUser, Update update, ButtonsText buttonsText,
+//                                   BiConsumer<String, String> doSendHelpRequest) {
+//        if (whatIsMenu.apply("START_BUTTON")) {
+//            doSendMessage.accept("START_TEXT", "SPECIES_PET_SELECTION_MENU");
+//        } else if (whatIsMenu.apply("BACK_BUTTON")) {
+//            menuStackService.dropMenuStack(currentUser);
+//            String lastTextKey = menuStackService.getLastTextKeyByUser(currentUser);
+//            String lastMenuState = menuStackService.getLastMenuStateByUser(currentUser);
+//            menuStackService.dropMenuStack(currentUser);
+//            doSendMessage.accept(lastTextKey, lastMenuState);
+//        } else if (whatIsMenu.apply("CAT_BUTTON") || whatIsMenu.apply("DOG_BUTTON")) {
+//            menuStackService.setTextPackKey(currentUser, update.callbackQuery().data());
+//            buttonsText.changeCurrentTextKey(update.callbackQuery().data());
+//            doSendMessage.accept("GREETING_TEXT", "MAIN_MENU");
+//        } else if (whatIsMenu.apply("CHANGE_PET_BUTTON")) {
+//            doSendMessage.accept("START_TEXT", "SPECIES_PET_SELECTION_MENU");
+//        } else if (whatIsMenu.apply("INFO_BUTTON")) {
+//            doSendMessage.accept("INFO_TEXT", "INFO_MENU");
+//        } else if (whatIsMenu.apply("ABOUT_US_BUTTON")) {
+//            doSendMessage.accept("ABOUT_US", "BACK_TO_MAIN_MENU");
+//        } else if (whatIsMenu.apply("CONTACTS_BUTTON")) {
+//            doSendLocation.accept(51.165973F, 71.403983F);
+//            doSendPhoto.accept(address, "SHELTER_CONTACTS", "BACK_TO_MAIN_MENU");
+//        } else if (whatIsMenu.apply("SAFETY_REGULATIONS_BUTTON")) {
+//            doSendMessage.accept("SAFETY_REGULATIONS", "BACK_TO_MAIN_MENU");
+//        } else if (whatIsMenu.apply("SHARE_CONTACT_BUTTON")) {
+//            doSendMessage.accept("SHARE_CONTACT", "BACK_TO_MAIN_MENU");
+//        } else if (whatIsMenu.apply("HOW_TO_GET_PET_BUTTON")) {
+//            doSendMessage.accept("CONSULT_MENU_MESSAGE", "HOW_TO_GET_PET_MENU");
+//        } else if (whatIsMenu.apply("MEETING_WITH_PET_BUTTON")) {
+//            doSendMessage.accept("MEETING_WITH_PET", "BACK_TO_MAIN_MENU");
+//        } else if (whatIsMenu.apply("LIST_OF_DOCUMENTS_BUTTON")) {
+//            doSendMessage.accept("LIST_OF_DOCUMENTS", "BACK_TO_MAIN_MENU");
+//        } else if (whatIsMenu.apply("HOW_TO_CARRY_ANIMAL_BUTTON")) {
+//            doSendMessage.accept("HOW_TO_CARRY_ANIMAL", "BACK_TO_MAIN_MENU");
+//        } else if (whatIsMenu.apply("MAKING_HOUSE_BUTTON")) {
+//            doSendMessage.accept("DEFAULT_MENU_TEXT", "MAKING_HOUSE_MENU");
+//        } else if (whatIsMenu.apply("FOR_PUPPY_BUTTON")) {
+//            doSendMessage.accept("MAKING_HOUSE_FOR_PUPPY", "BACK_TO_MAIN_MENU");
+//        } else if (whatIsMenu.apply("FOR_PET_BUTTON")) {
+//            doSendMessage.accept("MAKING_HOUSE_FOR_PET", "BACK_TO_MAIN_MENU");
+//        } else if (whatIsMenu.apply("FOR_PET_WITH_DISABILITIES_BUTTON")) {
+//            doSendMessage.accept("MAKING_HOUSE_FOR_PET_WITH_DISABILITIES", "BACK_TO_MAIN_MENU");
+//        } else if (whatIsMenu.apply("DOG_HANDLER_ADVICES_BUTTON")) {
+//            doSendMessage.accept("DOG_HANDLER_ADVICES", "BACK_TO_MAIN_MENU");
+//        } else if (whatIsMenu.apply("DOG_HANDLERS_BUTTON")) {
+//            doSendMessage.accept("DOG_HANDLERS", "BACK_TO_MAIN_MENU");
+//        } else if (whatIsMenu.apply("DENY_LIST_BUTTON")) {
+//            doSendMessage.accept("DENY_LIST", "BACK_TO_MAIN_MENU");
+//        } else if (whatIsMenu.apply("CALL_VOLUNTEER_BUTTON")) {
+//            doSendHelpRequest.accept("VOLUNTEER_REQUEST_TEXT", "TO_SUPPORT_ACCEPT_MENU");
+//            doSendMessage.accept("CALL_VOLUNTEER_TEXT", "BACK_TO_ONLY_MAIN_MENU");
+//        } else if (whatIsMenu.apply("BACK_TO_MAIN_MENU_BUTTON")) {
+//            doSendMessage.accept("DEFAULT_MENU_TEXT", "MAIN_MENU");
+//        } else {
+//            if (currentUser.getRole() == VOLUNTEER) {
+//                doSendMessage.accept("SOMETHING_WENT_WRONG", "VOLUNTEER_MAIN_MENU");
+//            } else if (currentUser.getRole() == ADMIN) {
+//                doSendMessage.accept("SOMETHING_WENT_WRONG", "ADMIN_MAIN_MENU");
+//            } else {
+//                doSendMessage.accept("ERROR_COMMAND_TEXT", "CALL_VOLUNTEER_MENU");
+//            }
+//        }
+//    }
 
     /**
      * Метод, обрабатывающий сообщения и нажатия кнопок от пользователя с ролью PARENT
@@ -744,7 +753,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 doSendMessage.accept("AFTER_ADDING_PARENT", "VOLUNTEER_MAIN_MENU");
             }
         }
-
     }
 
 
