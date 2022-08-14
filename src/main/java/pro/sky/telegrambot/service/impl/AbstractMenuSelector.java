@@ -16,24 +16,25 @@ import java.util.function.Function;
 
 public class AbstractMenuSelector implements MenuSelector {
 
-    MenuStackService menuStackService;
-    UserServiceImpl userService;
-    AdministrativeService administrativeService;
-    TelegramBot telegramBot;
+    protected MenuStackService menuStackService;
+    protected UserServiceImpl userService;
+    protected AdministrativeService administrativeService;
+    protected TelegramBot telegramBot;
 
 
-    Function<String, Boolean> whatIsMenu;
-    BiConsumer<String, String> doSendMessage;
-    TriConsumer<File, String, String> doSendPhoto;
-    BiConsumer<Float, Float> doSendLocation;
-    BiConsumer<String, String> doSendHelpRequest;
-    BiConsumer<String, String> doSendParentReportList;
-    BiConsumer<String, String> doSendCustomMessage;
-    BiConsumer<String, String> doSendReportList;
-    BiConsumer<String, String> doSendUsersList;
-    User currentUser;
-    Update update;
-    ButtonsText buttonsText;
+    protected Function<String, Boolean> whatIsMenu;
+    protected BiConsumer<String, String> doSendMessage;
+    protected TriConsumer<File, String, String> doSendPhoto;
+    protected BiConsumer<Float, Float> doSendLocation;
+    protected BiConsumer<String, String> doSendHelpRequest;
+    protected BiConsumer<String, String> doSendParentReportList;
+    protected BiConsumer<String, String> doSendCustomMessage;
+    protected BiConsumer<String, String> doSendReportList;
+    protected BiConsumer<String, String> doSendUsersList;
+    protected BiConsumer<String, String> doSendTrialPeriodsList;
+    protected User currentUser;
+    protected Update update;
+    protected ButtonsText buttonsText;
 
     @Override
     public User.Role getRole() {
@@ -120,4 +121,11 @@ public class AbstractMenuSelector implements MenuSelector {
         this.doSendUsersList = doSendUsersList;
         return this;
     }
+
+    @Override
+    public MenuSelector setDoSendTrialPeriodsList(BiConsumer<String, String> doSendTrialPeriodsList) {
+        this.doSendTrialPeriodsList = doSendTrialPeriodsList;
+        return this;
+    }
+
 }

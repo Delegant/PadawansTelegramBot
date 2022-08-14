@@ -26,5 +26,6 @@ public interface MenuSelector {
     MenuSelector setCurrentUser(User currentUser);
     MenuSelector setUpdate(Update update);
     MenuSelector setButtonsText(ButtonsText buttonsText);
+    MenuSelector setDoSendTrialPeriodsList(BiConsumer<String, String> doSendTrialPeriodsList);
     MenuSelector setDoSendHelpRequest(BiConsumer<String, String> doSendHelpRequest);
 }

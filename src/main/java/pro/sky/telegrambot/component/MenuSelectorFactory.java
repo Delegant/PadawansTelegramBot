@@ -129,6 +129,19 @@ public class MenuSelectorFactory {
                     List<String> menuValue = buttonsText.getMenu(menuKey);
                     telegramBot.execute(menuService.editMenuLoader(update, textToSend, menuValue));
                 })
+                .setDoSendTrialPeriodsList((menuKey, textKey) -> {
+                    logger.info("==== Sending list of Trial_Periods: {}", update.callbackQuery().data());
+                    List<List<String>> buttons = menuService.generateListOfAllTrialPeriods();
+                    String menuText = buttonsText.getString(menuKey);
+                    if (buttons.size() == 0) {
+                        telegramBot.execute(menuService.menuLoader(update, "Список испытательных периодов пуст!", buttonsText.getMenu("VOLUNTEER_MAIN_MENU")));
+                        menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
+                    }
+                    else {
+                        telegramBot.execute(menuService.menuLoaderForObjects(update, menuText, buttons));
+                        menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, TRIAL_PERIOD_LIST);
+                        }
+                })
                 .setCurrentUser(currentUser)
                 .setUpdate(update)
                 .setButtonsText(buttonsText);

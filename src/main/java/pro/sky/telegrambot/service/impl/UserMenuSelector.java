@@ -11,8 +11,14 @@ import pro.sky.telegrambot.service.MenuSelector;
 import pro.sky.telegrambot.service.MenuStackService;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+
+import static pro.sky.telegrambot.model.MenuStack.MessageType.COMMAND;
+import static pro.sky.telegrambot.model.User.Role.ADMIN;
+import static pro.sky.telegrambot.model.User.Role.VOLUNTEER;
 
 @Service
 public class UserMenuSelector extends AbstractMenuSelector {
@@ -86,9 +92,18 @@ public class UserMenuSelector extends AbstractMenuSelector {
             doSendHelpRequest.accept("VOLUNTEER_REQUEST_TEXT", "TO_SUPPORT_ACCEPT_MENU");
             doSendMessage.accept("CALL_VOLUNTEER_TEXT", "BACK_TO_ONLY_MAIN_MENU");
         } else if (whatIsMenu.apply("BACK_TO_MAIN_MENU_BUTTON")) {
+            menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
             doSendMessage.accept("DEFAULT_MENU_TEXT", "MAIN_MENU");
-        } else {
-            doSendMessage.accept("ERROR_COMMAND_TEXT", "CALL_VOLUNTEER_MENU");
         }
+//        else {
+//            if (currentUser.getRole() == VOLUNTEER) {
+//                doSendMessage.accept("SOMETHING_WENT_WRONG", "VOLUNTEER_MAIN_MENU");
+//            }
+//            else if (currentUser.getRole() == ADMIN) {
+//                doSendMessage.accept("SOMETHING_WENT_WRONG", "ADMIN_MAIN_MENU");
+//            } else {
+//                doSendMessage.accept("ERROR_COMMAND_TEXT", "CALL_VOLUNTEER_MENU");
+//            }
+//        }
     }
 }

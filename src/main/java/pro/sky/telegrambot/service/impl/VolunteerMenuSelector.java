@@ -32,35 +32,37 @@ public class VolunteerMenuSelector extends AbstractMenuSelector {
      */
     public void handleMessages() {
 
-        if (update.message() != null) {
-            if (whatIsMenu.apply("START_BUTTON")) {
-                doSendMessage.accept("VOLUNTEER_START_TEXT", "VOLUNTEER_MAIN_MENU");
-            } else if (menuStackService.getCurrentExpectedMessageTypeByUser(currentUser).equals(USER_NAME)) {
-                doSendUsersList.accept("CHOOSE_USER_TO_MAKE_PARENT", "BACK_TO_VOLUNTEERS_MENU");
-                menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, ADDING_PARENT);
-            }
-        } else if (update.callbackQuery() != null) {
-            if (whatIsMenu.apply("ADD_PARENT_BUTTON_VOLUNTEER")) {
-                doSendMessage.accept("ADD_PARENT_TEXT", "BACK_TO_VOLUNTEERS_MENU");
-                menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, USER_NAME);
-            } else if (whatIsMenu.apply("CHECK_REPORTS_BUTTON")) {
-                doSendReportList.accept("CHECK_REPORTS", "REPORTS_MENU");
-            } else if (whatIsMenu.apply("UNREAD_REPORTS")) {
-                doSendReportList.accept("UNREAD_REPORTS_TEXT", "BACK_TO_VOLUNTEERS_MENU");
-            } else if (whatIsMenu.apply("BACK_TO_REPORT_LIST")) {
-                doSendReportList.accept("UNREAD_REPORTS_TEXT", "BACK_TO_VOLUNTEERS_MENU");
-            } else if (whatIsMenu.apply("ACCEPT_DIALOG")) {
-                //todo
-            } else if (whatIsMenu.apply("VOLUNTEER_MAIN_MENU_BUTTON")) {
-                doSendMessage.accept("VOLUNTEER_START_TEXT", "VOLUNTEER_MAIN_MENU");
-                menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
-            } else if (menuStackService.getCurrentExpectedMessageTypeByUser(currentUser).equals(ADDING_PARENT)) {
-                User newParent = userService.getUser(Long.valueOf(update.callbackQuery().data()));
-                administrativeService.setParent(currentUser.getChatId(), newParent.getChatId());
-                telegramBot.execute(new SendMessage(newParent.getChatId(), "Поздравляем, вы взяли питомца. Ваш испытательный период начался!"));
-                menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
-                doSendMessage.accept("AFTER_ADDING_PARENT", "VOLUNTEER_MAIN_MENU");
-            }
+        if (whatIsMenu.apply("START_BUTTON")) {
+            doSendMessage.accept("VOLUNTEER_START_TEXT", "VOLUNTEER_MAIN_MENU");
+        } else if (menuStackService.getCurrentExpectedMessageTypeByUser(currentUser).equals(USER_NAME)) {
+            doSendUsersList.accept("CHOOSE_USER_TO_MAKE_PARENT", "BACK_TO_VOLUNTEERS_MENU");
+            menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, ADDING_PARENT);
+        } else if  (whatIsMenu.apply("ADD_PARENT_BUTTON_VOLUNTEER")) {
+            doSendMessage.accept("ADD_PARENT_TEXT", "BACK_TO_VOLUNTEERS_MENU");
+            menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, USER_NAME);
+        }
+        else if (whatIsMenu.apply("CHECK_REPORTS_BUTTON")) {
+            doSendReportList.accept("CHECK_REPORTS", "REPORTS_MENU");
+        }
+        else if (whatIsMenu.apply("UNREAD_REPORTS")) {
+            doSendReportList.accept("UNREAD_REPORTS_TEXT", "BACK_TO_VOLUNTEERS_MENU");
+        } else if (whatIsMenu.apply("BACK_TO_REPORT_LIST")) {
+            doSendReportList.accept("UNREAD_REPORTS_TEXT", "BACK_TO_VOLUNTEERS_MENU");
+        }
+        else if (whatIsMenu.apply("VOLUNTEER_MAIN_MENU_BUTTON")) {
+            doSendMessage.accept("VOLUNTEER_START_TEXT", "VOLUNTEER_MAIN_MENU");
+            menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
+        } else if (whatIsMenu.apply("TRIAL_PERIODS")) {
+            doSendTrialPeriodsList.accept("VOLUNTEER_START_TEXT", "VOLUNTEER_MAIN_MENU");
+        } else if (menuStackService.getCurrentExpectedMessageTypeByUser(currentUser).equals(ADDING_PARENT)) {
+            User newParent = userService.getUser(Long.valueOf(update.callbackQuery().data()));
+            administrativeService.setParent(currentUser.getChatId(), newParent.getChatId());
+            telegramBot.execute(new SendMessage(newParent.getChatId(), "Поздравляем, вы взяли питомца. Ваш испытательный период начался!"));
+            menuStackService.setCurrentExpectedMessageTypeByUser(currentUser, COMMAND);
+            doSendMessage.accept("AFTER_ADDING_PARENT", "VOLUNTEER_MAIN_MENU");
+        }
+        else {
+            doSendMessage.accept("ERROR_TEXT", "VOLUNTEER_MAIN_MENU");
         }
     }
 
