@@ -12,6 +12,8 @@ public interface UserService {
 
     User updateUser(User user);
 
+    void clearTemp(User user);
+
     Optional<User> markRole(Long chatId, User.Role role);
 
     Optional<User> getUserByChatId(Long chatId);

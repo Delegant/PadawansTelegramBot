@@ -47,6 +47,11 @@ public class TrialPeriodServiceImpl implements TrialPeriodService {
         this.tpDAO = tpDAO;
     }
 
+    /**
+     * Метод запускает испытательный период для юзера, взявшего животное из питомца
+     * @param userId id юзера
+     * @param volunteerId id волонтера
+     */
     @Override
     public void startTrialPeriod(Long userId, Long volunteerId) {
         User parent = userService.getUserByChatId(userId).orElseThrow(() -> new UserNotFoundException("!!!! user not found"));
@@ -55,43 +60,68 @@ public class TrialPeriodServiceImpl implements TrialPeriodService {
         periods.add(trialPeriod);
         trialPeriodRepository.save(trialPeriod);
         parent.setTrialPeriods(periods);
+        userService.updateUser(parent);
         logger.info("Trial period started successfully");
     }
 
+    /**
+     * Метод завершает испытательный период. (успешное прохождение испытательного периода)
+     * @param userId id юзера
+     * @param volunteerId id волонтера
+     */
     @Override
     public void closeTrialPeriod(Long userId, Long volunteerId) {
         User parent = userService.getUserByChatId(userId).orElseThrow(() -> new UserNotFoundException("!!!! user not found"));
-        TrialPeriod period = trialPeriodRepository.findByUser(parent);
+        TrialPeriod period = trialPeriodRepository.getTrialPeriodById(Long.valueOf(parent.getTemp()));
         period.setStatus(TrialPeriod.TrialPeriodStatus.ENDED);
         period.setEndDate(LocalDateTime.now());
         period.setAcceptedBy(volunteerId);
-        trialPeriodRepository.save(period);
+        trialPeriodRepository.saveAndFlush(period);
+        userService.clearTemp(parent);
         logger.info("Trial period finished successfully");
     }
 
+    /**
+     * Метод продлевает испытательный период на указанное количество дней
+     * @param userId id юзера
+     * @param volunteerId id волонтера
+     * @param addedDays дополнительные дни
+     */
     @Override
     public void prolongTrialPeriod(Long userId, int addedDays, Long volunteerId) {
         User parent = userService.getUserByChatId(userId).orElseThrow(() -> new UserNotFoundException("!!!! user not found"));
-        TrialPeriod period = trialPeriodRepository.findByUser(parent);
+        TrialPeriod period = trialPeriodRepository.getTrialPeriodById(Long.valueOf(parent.getTemp()));
         period.setAdditionalDays(addedDays);
         period.setEndDate(period.getEndDate().plusDays(addedDays));
         period.setStatus(TrialPeriod.TrialPeriodStatus.PROLONGED);
         period.setProlongedBy(volunteerId);
-        trialPeriodRepository.save(period);
+        trialPeriodRepository.saveAndFlush(period);
+        userService.clearTemp(parent);
         logger.info("Trial period was prolonged for " + addedDays + " days");
     }
 
+    /**
+     * Метод закрывает испытательный период (в случае когда он не пройден)
+     * @param userId id юзера
+     * @param volunteerId id волонтера
+     */
     @Override
     public void declineTrialPeriod(Long userId, Long volunteerId) {
         User parent = userService.getUserByChatId(userId).orElseThrow(() -> new UserNotFoundException("!!!! user not found"));
-        TrialPeriod period = trialPeriodRepository.findByUser(parent);
+        TrialPeriod period = trialPeriodRepository.getTrialPeriodById(Long.valueOf(parent.getTemp()));
         period.setStatus(TrialPeriod.TrialPeriodStatus.DENIED);
         period.setDeniedBy(volunteerId);
         period.setEndDate(LocalDateTime.now());
-        trialPeriodRepository.save(period);
+        trialPeriodRepository.saveAndFlush(period);
+        userService.clearTemp(parent);
         logger.info("Trial period was cancelled");
     }
 
+    /**
+     * Метод возвращает сообщение для пользователя с информацией об испытательном периоде
+     * @param userId id юзера
+     * @return сообщение
+     */
     @Override
     public String getTrialPeriodInformation(Long userId) {
         Collection<TrialPeriod> trialPeriods = trialPeriodRepository.findByUserChatId(userId);
@@ -123,16 +153,30 @@ public class TrialPeriodServiceImpl implements TrialPeriodService {
         return result;
     }
 
+    /**
+     * Метод возвращает список из всех испытательных периодов
+     * @return список из всех испытательных периодов
+     */
     @Override
     public Collection<TrialPeriod> getAllTrialPeriods() {
-        return trialPeriodRepository.getAll();
+        return trialPeriodRepository.findAll();
     }
 
+    /**
+     * Метод находит испытательный период по id
+     * @param periodId id испытательного периода
+     * @return испытательный период
+     */
     @Override
     public TrialPeriod getById(Long periodId) {
         return trialPeriodRepository.getById(periodId);
     }
 
+    /**
+     * Метод возвращает юзера по испытательному периоду
+     * @param trialPeriod испытательный период
+     * @return юзер
+     */
     @Override
     public User getUser(TrialPeriod trialPeriod) {
         return userService.findById(trialPeriodRepository.getUserId(trialPeriod.getId()));
@@ -171,6 +215,11 @@ public class TrialPeriodServiceImpl implements TrialPeriodService {
         checkTrialPeriodDate(trialPeriodRepository.findAll());
     }
 
+    /**
+     * Метод находит испытательный период (последний) по chat_id юзера
+     * @param chatId юзер id в Телеграм
+     * @return испытательный период
+     */
     @Override
     public TrialPeriod findByUserChatId(Long chatId) {
         Collection<TrialPeriod> trialPeriods = trialPeriodRepository.findByUserChatId(chatId);

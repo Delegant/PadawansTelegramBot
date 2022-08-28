@@ -646,6 +646,7 @@ public class MenuServiceImpl implements MenuService {
                 button.add(1, report.getId().toString());
                 reportButtons.add(button);
             }
+            reportButtons.add(List.of("Назад", "/back"));
         }
 
         return reportButtons;
@@ -678,12 +679,12 @@ public class MenuServiceImpl implements MenuService {
             periodsList.removeIf(trialPeriod -> trialPeriod.getStatus().equals(TrialPeriod.TrialPeriodStatus.DENIED));
             for (TrialPeriod trialPeriod : periodsList) {
                 List<String> button = new ArrayList<>();
-                button.add(0, "Id: " + trialPeriod.getId() + " UserId: " + trialPeriod.getUserId() + " " + trialPeriod.getStatus());
+                button.add(0, "Id: " + trialPeriod.getId() + " " + trialPeriod.getUserId().getName() + " " + trialPeriod.getStatus());
                 button.add(1, trialPeriod.getId().toString());
                 periodButtons.add(button);
             }
         }
-        List<String> backButton = List.of("Вернуться в меню волонтера", getHashFromButton("Вернуться в меню волонтера"));
+        List<String> backButton = List.of("Вернуться в меню волонтера", "/back_" + getHashFromButton("Вернуться в меню волонтера"));
         periodButtons.add(backButton);
         return periodButtons;
     }

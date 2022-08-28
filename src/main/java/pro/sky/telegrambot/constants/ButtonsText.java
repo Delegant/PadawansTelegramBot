@@ -58,7 +58,7 @@ public class ButtonsText {
                 List.of(
                         bundle.getString("BACK_BUTTON"),
                         bundle.getString("BACK_TO_MAIN_MENU_BUTTON")));
-        menuMap.put("BACK_TO_VOLUNTEERS_MENU",
+        menuMap.put(bundle.getString("BACK_TO_VOLUNTEERS_MENU"),
                 List.of(
                         bundle.getString("BACK_BUTTON"),
                         bundle.getString("BACK_TO_VOLUNTEERS_MENU")
@@ -116,7 +116,7 @@ public class ButtonsText {
                         bundle.getString("ADD_PARENT"),
                         bundle.getString("CHECK_REPORTS"),
 //                        bundle.getString("VIEW_INCOMING_MESSAGES"),
-//                        bundle.getString("TRIAL_PERIOD_FOR_VOLUNTEERS_MENU"),
+                        bundle.getString("ADD_VOLUNTEER"),
                         bundle.getString("CONTACT_PARENT"),
                         bundle.getString("TRIAL_PERIODS")
                 ));
@@ -165,7 +165,7 @@ public class ButtonsText {
                 List.of(
                         bundle.getString("ADD_PARENT"),
                         bundle.getString("CHECK_REPORTS"),
-                        bundle.getString("VIEW_INCOMING_MESSAGES"),
+//                        bundle.getString("VIEW_INCOMING_MESSAGES"),
                         bundle.getString("TRIAL_PERIOD_FOR_ADMIN_MENU"),
                         bundle.getString("CONTACT_PARENT"),
                         bundle.getString("ADD_VOLUNTEER"),
