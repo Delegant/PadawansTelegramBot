@@ -471,10 +471,10 @@ public class MenuServiceImpl implements MenuService {
                         .callbackData("dec_" + trialPeriodId));
         inlineKeyboardMarkup.addRow(
                 new InlineKeyboardButton("Назад к списку испытательных периодов")
-                        .callbackData(getHashFromButton("Назад к списку испытательных периодов")));
+                        .callbackData("back"));
         inlineKeyboardMarkup.addRow(
                 new InlineKeyboardButton("Вернуться в меню волонтера")
-                        .callbackData(getHashFromButton("Вернуться в меню волонтера")));
+                        .callbackData("main"));
 
         return inlineKeyboardMarkup;
     }
