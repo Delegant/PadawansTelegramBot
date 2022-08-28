@@ -5,18 +5,13 @@ import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.request.*;
 import com.pengrad.telegrambot.model.request.ParseMode;
-import com.pengrad.telegrambot.request.EditMessageText;
-import com.pengrad.telegrambot.request.SendLocation;
-import com.pengrad.telegrambot.request.SendMessage;
-import com.pengrad.telegrambot.request.SendPhoto;
-import io.swagger.v3.oas.models.security.SecurityScheme;
+import com.pengrad.telegrambot.request.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.Dao.Impl.ReportDao;
 import pro.sky.telegrambot.Dao.Impl.TrialPeriodDao;
-import pro.sky.telegrambot.listener.TelegramBotUpdatesListener;
 import pro.sky.telegrambot.model.*;
 import pro.sky.telegrambot.repository.PicturesRepository;
 import pro.sky.telegrambot.service.MenuService;
@@ -33,8 +28,6 @@ import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static pro.sky.telegrambot.constants.ButtonsText.HIDDEN_BUTTON;
 
 /**
  * Класс, создающий сообщения с inline-клавиатурой
@@ -406,7 +399,7 @@ public class MenuServiceImpl implements MenuService {
         Period daysLeft = Period.between(LocalDate.now(), end);
         String endDay = String.valueOf(daysLeft.getDays());
         if (trialPeriod.getAdditionalDays() != null) {
-            LocalDateTime additionalDays = trialPeriod.getAdditionalDays();
+            Integer additionalDays = trialPeriod.getAdditionalDays();
             addedDays = additionalDays.toString();
         } else {
             addedDays = "0";
@@ -522,6 +515,17 @@ public class MenuServiceImpl implements MenuService {
         return new EditMessageText(chatId, messageId, text)
                 .parseMode(ParseMode.HTML)
                 .disableWebPagePreview(true)
+                .replyMarkup(keyboardFactory(listButtons));
+    }
+
+    @Override
+    public EditMessageCaption editMenuLoaderForCaption(Update update, String text, List<String> listButtons) {
+        Message message = update.callbackQuery().message();
+        Object chatId = message.chat().id();
+        int messageId = message.messageId();
+        return new EditMessageCaption(chatId, messageId)
+                .caption(text)
+                .parseMode(ParseMode.HTML)
                 .replyMarkup(keyboardFactory(listButtons));
     }
 
@@ -668,11 +672,11 @@ public class MenuServiceImpl implements MenuService {
     @Override
     public List<List<String>> generateListOfAllTrialPeriods() {
         List<List<String>> periodButtons = new ArrayList<>();
-        List<TrialPeriod> perodsList = new ArrayList<>(trialPeriodService.getAllTrialPeriods());
-        if (!perodsList.isEmpty()) {
-            perodsList.removeIf(trialPeriod -> trialPeriod.getStatus().equals(TrialPeriod.TrialPeriodStatus.ENDED));
-            perodsList.removeIf(trialPeriod -> trialPeriod.getStatus().equals(TrialPeriod.TrialPeriodStatus.DENIED));
-            for (TrialPeriod trialPeriod : perodsList) {
+        List<TrialPeriod> periodsList = new ArrayList<>(trialPeriodService.getAllTrialPeriods());
+        if (!periodsList.isEmpty()) {
+            periodsList.removeIf(trialPeriod -> trialPeriod.getStatus().equals(TrialPeriod.TrialPeriodStatus.ENDED));
+            periodsList.removeIf(trialPeriod -> trialPeriod.getStatus().equals(TrialPeriod.TrialPeriodStatus.DENIED));
+            for (TrialPeriod trialPeriod : periodsList) {
                 List<String> button = new ArrayList<>();
                 button.add(0, "Id: " + trialPeriod.getId() + " UserId: " + trialPeriod.getUserId() + " " + trialPeriod.getStatus());
                 button.add(1, trialPeriod.getId().toString());

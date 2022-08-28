@@ -73,7 +73,8 @@ public class TrialPeriodServiceImpl implements TrialPeriodService {
     public void prolongTrialPeriod(Long userId, int addedDays, Long volunteerId) {
         User parent = userService.getUserByChatId(userId).orElseThrow(() -> new UserNotFoundException("!!!! user not found"));
         TrialPeriod period = trialPeriodRepository.findByUser(parent);
-        period.setAdditionalDays(period.getEndDate().plusDays(addedDays));
+        period.setAdditionalDays(addedDays);
+        period.setEndDate(period.getEndDate().plusDays(addedDays));
         period.setStatus(TrialPeriod.TrialPeriodStatus.PROLONGED);
         period.setProlongedBy(volunteerId);
         trialPeriodRepository.save(period);
@@ -124,7 +125,7 @@ public class TrialPeriodServiceImpl implements TrialPeriodService {
 
     @Override
     public Collection<TrialPeriod> getAllTrialPeriods() {
-        return trialPeriodRepository.findAll();
+        return trialPeriodRepository.getAll();
     }
 
     @Override

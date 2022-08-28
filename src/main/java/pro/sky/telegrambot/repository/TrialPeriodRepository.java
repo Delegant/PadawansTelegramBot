@@ -13,6 +13,8 @@ import java.util.Collection;
 public interface TrialPeriodRepository extends JpaRepository<TrialPeriod, Long> {
     public TrialPeriod findByUser(User user);
 
+    @Query(value = "SELECT * FROM trial_periods", nativeQuery = true)
+    public Collection<TrialPeriod> getAll();
     Collection<TrialPeriod> findByUserChatId(Long userId);
 
     @Query(value = "SELECT user_id from trial_periods where id = :trialPeriodId", nativeQuery = true)

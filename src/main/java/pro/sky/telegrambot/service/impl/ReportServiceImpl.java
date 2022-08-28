@@ -625,7 +625,6 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Scheduled(cron = "@hourly")
-//    @Scheduled(fixedDelay = 60000)
     @Override
     public void scheduledCheckReports() {
         checkReportsAndSendNotification();

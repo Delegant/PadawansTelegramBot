@@ -154,7 +154,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             String textPackKey = menuStackService.getLastTextPackKeyByUser(currentUser);
             MessageType expectedTypeCurrentMessage = menuStackService.getCurrentExpectedMessageTypeByUser(currentUser);
             MessageType realTypeCurrentMessage = getCurrentMessageType(expectedTypeCurrentMessage, update, message);
-            menuStackService.createMenuStack(currentUser, textPackKey, expectedTypeCurrentMessage);
+//            menuStackService.createMenuStack(currentUser, textPackKey, expectedTypeCurrentMessage);
             ButtonsText buttonsText = ButtonsText.getButtonText(textPackKey);
             logger.info("====Received message {} is processed as {} and from {}", message.text(), realTypeCurrentMessage, roleCurrentUser);
                 try {
@@ -462,7 +462,11 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             menuStackService.createMenuStack(currentUser, textPackKey, textKey, menuKey, expectedTypeCurrentMessage);
             String textValue = buttonsText.getString(textKey);
             List<String> menuValue = buttonsText.getMenu(menuKey);
-            telegramBot.execute(menuService.editMenuLoader(update, textValue, menuValue));
+            if (update.message() != null && update.message().photo() != null) {
+                telegramBot.execute(menuService.editMenuLoaderForCaption(update, textKey, menuValue));
+            } else {
+                telegramBot.execute(menuService.editMenuLoader(update, textValue, menuValue));
+            }
         };
         doSendPhoto = (filePath, textKey, buttonsValue) -> {
             logger.info("====Processing update with callback: {}", update.callbackQuery().data());

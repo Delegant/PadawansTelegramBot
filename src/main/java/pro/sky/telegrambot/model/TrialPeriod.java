@@ -46,7 +46,7 @@ public class TrialPeriod {
     private LocalDateTime endDate;
 
     @Schema(description = "Дополнительные дни для испытательного периода")
-    private LocalDateTime additionalDays;
+    private Integer additionalDays;
 
     @Schema(description = "Кем открыт испытательный период")
     private Long setBy;
@@ -108,11 +108,11 @@ public class TrialPeriod {
         this.endDate = endDate;
     }
 
-    public LocalDateTime getAdditionalDays() {
+    public Integer getAdditionalDays() {
         return additionalDays;
     }
 
-    public void setAdditionalDays(LocalDateTime additionalDays) {
+    public void setAdditionalDays(Integer additionalDays) {
         this.additionalDays = additionalDays;
     }
 
