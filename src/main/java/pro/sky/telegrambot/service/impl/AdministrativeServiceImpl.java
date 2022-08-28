@@ -84,6 +84,12 @@ public class AdministrativeServiceImpl implements AdministrativeService {
         return admin.getRole().equals(User.Role.ADMIN);
     }
 
+    private boolean checkIfVolunteerOrAdmin(Long userId) {
+        User user = userService.getUserByChatId(userId)
+                .orElseThrow(() -> new UserNotFoundException("!!!! There is no user with such ID"));
+        return !user.getRole().equals(User.Role.USER) && !user.getRole().equals(User.Role.PARENT);
+    }
+
 
     /**
      * Проверка пользователя на наличие в базе данных
@@ -235,12 +241,12 @@ public class AdministrativeServiceImpl implements AdministrativeService {
     @Override
     public void setNewVolunteer(Long adminId, Long userId) {
         User user = userService.getUserByChatId(userId).orElseThrow(() -> new UserNotFoundException("!!!! There is no user with such ID"));
-        if (checkIfAdmin(adminId)) {
+        if (checkIfVolunteerOrAdmin(adminId)) {
             user.setRole(User.Role.VOLUNTEER);
-            userRepository.save(user);
+            userService.updateUser(user);
             logger.info("**** New volunteer has been added!");
         } else {
-            logger.warn("!!!! User with ID: " + adminId + " is not an admin!");
+            logger.warn("!!!! User with ID: " + adminId + " is not an admin or volunteer!");
         }
     }
 

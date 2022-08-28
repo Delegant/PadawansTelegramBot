@@ -34,7 +34,13 @@ public class UserServiceImpl implements pro.sky.telegrambot.service.UserService 
 
     @Override
     public User updateUser(User user) {
-        return userRepository.save(user);
+        return userRepository.saveAndFlush(user);
+    }
+
+    @Override
+    public void clearTemp(User user) {
+        user.setTemp(null);
+        userRepository.saveAndFlush(user);
     }
 
     public Optional<User> markRole(Long chatId, User.Role role) {

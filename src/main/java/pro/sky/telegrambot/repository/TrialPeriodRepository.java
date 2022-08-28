@@ -11,7 +11,9 @@ import java.util.Collection;
 
 @Repository
 public interface TrialPeriodRepository extends JpaRepository<TrialPeriod, Long> {
-    public TrialPeriod findByUser(User user);
+    TrialPeriod findByUser(User user);
+
+    TrialPeriod getTrialPeriodById(Long id);
 
     Collection<TrialPeriod> findByUserChatId(Long userId);
 

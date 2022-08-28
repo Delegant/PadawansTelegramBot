@@ -406,7 +406,7 @@ public class MenuServiceImpl implements MenuService {
         Period daysLeft = Period.between(LocalDate.now(), end);
         String endDay = String.valueOf(daysLeft.getDays());
         if (trialPeriod.getAdditionalDays() != null) {
-            LocalDateTime additionalDays = trialPeriod.getAdditionalDays();
+            Integer additionalDays = trialPeriod.getAdditionalDays();
             addedDays = additionalDays.toString();
         } else {
             addedDays = "0";
@@ -642,6 +642,7 @@ public class MenuServiceImpl implements MenuService {
                 button.add(1, report.getId().toString());
                 reportButtons.add(button);
             }
+            reportButtons.add(List.of("Назад", "/back"));
         }
 
         return reportButtons;
@@ -668,18 +669,18 @@ public class MenuServiceImpl implements MenuService {
     @Override
     public List<List<String>> generateListOfAllTrialPeriods() {
         List<List<String>> periodButtons = new ArrayList<>();
-        List<TrialPeriod> perodsList = new ArrayList<>(trialPeriodService.getAllTrialPeriods());
-        if (!perodsList.isEmpty()) {
-            perodsList.removeIf(trialPeriod -> trialPeriod.getStatus().equals(TrialPeriod.TrialPeriodStatus.ENDED));
-            perodsList.removeIf(trialPeriod -> trialPeriod.getStatus().equals(TrialPeriod.TrialPeriodStatus.DENIED));
-            for (TrialPeriod trialPeriod : perodsList) {
+        List<TrialPeriod> periodsList = new ArrayList<>(trialPeriodService.getAllTrialPeriods());
+        if (!periodsList.isEmpty()) {
+            periodsList.removeIf(trialPeriod -> trialPeriod.getStatus().equals(TrialPeriod.TrialPeriodStatus.ENDED));
+            periodsList.removeIf(trialPeriod -> trialPeriod.getStatus().equals(TrialPeriod.TrialPeriodStatus.DENIED));
+            for (TrialPeriod trialPeriod : periodsList) {
                 List<String> button = new ArrayList<>();
-                button.add(0, "Id: " + trialPeriod.getId() + " UserId: " + trialPeriod.getUserId() + " " + trialPeriod.getStatus());
+                button.add(0, "Id: " + trialPeriod.getId() + " " + trialPeriod.getUserId().getName() + " " + trialPeriod.getStatus());
                 button.add(1, trialPeriod.getId().toString());
                 periodButtons.add(button);
             }
         }
-        List<String> backButton = List.of("Вернуться в меню волонтера", getHashFromButton("Вернуться в меню волонтера"));
+        List<String> backButton = List.of("Вернуться в меню волонтера", "/back_" + getHashFromButton("Вернуться в меню волонтера"));
         periodButtons.add(backButton);
         return periodButtons;
     }
