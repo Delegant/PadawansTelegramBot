@@ -545,8 +545,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             menuStackService.createMenuStack(currentUser, textPackKey, textKey, menuKey, expectedTypeCurrentMessage);
             String textValue = buttonsText.getString(textKey);
             List<String> menuValue = buttonsText.getMenu(menuKey);
-            if (update.message() != null && update.message().photo() != null) {
-                telegramBot.execute(menuService.editMenuLoaderForCaption(update, textKey, menuValue));
+            if (update.callbackQuery() != null && update.callbackQuery().message().photo() != null) {
+                telegramBot.execute(menuService.editMenuLoaderForCaption(update, textValue, menuValue));
             } else {
                 telegramBot.execute(menuService.editMenuLoader(update, textValue, menuValue));
             }
@@ -772,7 +772,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         } else if (whatIsMenu.apply("CAT_BUTTON") || whatIsMenu.apply("DOG_BUTTON")) {
             menuStackService.setTextPackKey(currentUser, update.callbackQuery().data());
             buttonsText.changeCurrentTextKey(update.callbackQuery().data());
-            doSendMessage.accept("GREETING_TEXT", "MAIN_MENU");
+            doSendMessage.accept("DEFAULT_MENU_TEXT", "MAIN_MENU");
         } else if (whatIsMenu.apply("CHANGE_PET_BUTTON")) {
             doSendMessage.accept("START_TEXT", "SPECIES_PET_SELECTION_MENU");
         } else if (whatIsMenu.apply("INFO_BUTTON")) {
@@ -853,7 +853,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         } else if (whatIsMenu.apply("CAT_BUTTON") || whatIsMenu.apply("DOG_BUTTON")) {
             menuStackService.setTextPackKey(currentUser, update.callbackQuery().data());
             buttonsText.changeCurrentTextKey(update.callbackQuery().data());
-            doSendMessage.accept("GREETING_TEXT", "MAIN_MENU");
+            doSendMessage.accept("DEFAULT_MENU_TEXT", "MAIN_MENU");
         } else if (whatIsMenu.apply("CHANGE_PET_BUTTON")) {
             doSendMessage.accept("START_TEXT", "SPECIES_PET_SELECTION_MENU");
         } else if (whatIsMenu.apply("INFO_BUTTON")) {

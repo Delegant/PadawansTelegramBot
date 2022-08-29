@@ -514,7 +514,6 @@ public class MenuServiceImpl implements MenuService {
         int messageId = message.messageId();
         return new EditMessageText(chatId, messageId, text)
                 .parseMode(ParseMode.HTML)
-                .disableWebPagePreview(true)
                 .replyMarkup(keyboardFactory(listButtons));
     }
 
@@ -525,7 +524,6 @@ public class MenuServiceImpl implements MenuService {
         int messageId = message.messageId();
         return new EditMessageCaption(chatId, messageId)
                 .caption(text)
-                .parseMode(ParseMode.HTML)
                 .replyMarkup(keyboardFactory(listButtons));
     }
 
