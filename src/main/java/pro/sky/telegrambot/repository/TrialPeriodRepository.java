@@ -15,6 +15,8 @@ public interface TrialPeriodRepository extends JpaRepository<TrialPeriod, Long> 
 
     TrialPeriod getTrialPeriodById(Long id);
 
+    @Query(value = "SELECT * FROM trial_periods", nativeQuery = true)
+    public Collection<TrialPeriod> getAll();
     Collection<TrialPeriod> findByUserChatId(Long userId);
 
     @Query(value = "SELECT user_id from trial_periods where id = :trialPeriodId", nativeQuery = true)

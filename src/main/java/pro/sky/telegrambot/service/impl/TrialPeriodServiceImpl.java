@@ -92,8 +92,7 @@ public class TrialPeriodServiceImpl implements TrialPeriodService {
         User parent = userService.getUserByChatId(userId).orElseThrow(() -> new UserNotFoundException("!!!! user not found"));
         TrialPeriod period = trialPeriodRepository.getTrialPeriodById(Long.valueOf(parent.getTemp()));
         period.setAdditionalDays(addedDays);
-        LocalDateTime newEndDate = period.getEndDate().plusDays(addedDays);
-        period.setEndDate(newEndDate);
+        period.setEndDate(period.getEndDate().plusDays(addedDays));
         period.setStatus(TrialPeriod.TrialPeriodStatus.PROLONGED);
         period.setProlongedBy(volunteerId);
         trialPeriodRepository.saveAndFlush(period);
